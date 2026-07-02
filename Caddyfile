@@ -1,0 +1,12 @@
+# Caddy reverse proxy with automatic TLS.
+# Replace `bbr.example.com` with your domain (and set an email for ACME).
+# For local testing use `http://localhost { reverse_proxy app:3000 }`.
+
+{
+	# email you@example.com
+}
+
+bbr.example.com {
+	encode zstd gzip
+	reverse_proxy app:3000
+}

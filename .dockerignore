@@ -1,0 +1,32 @@
+# VCS / CI
+.git
+.gitignore
+.github
+
+# Node / Next build artifacts (rebuilt inside the image)
+node_modules
+.next
+.next-dev
+out
+coverage
+*.tsbuildinfo
+
+# Env / secrets (real values are injected at runtime)
+.env
+.env.*
+!.env.example
+
+# Local tooling / editor / agent state
+.specstory
+.agents
+.claude
+.vscode
+
+# Logs
+*.log
+
+# Design references + docs not needed in the image
+mockups
+BBR design
+*.md
+!README.md

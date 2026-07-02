@@ -1,0 +1,89 @@
+# Production compose — lives on the server at /opt/docker/bbr/docker-compose.yml.
+# Runs the prebuilt image from GHCR (built by .github/workflows/build.yml) and
+# is (re)deployed by .github/workflows/deploy.yml. The app entrypoint applies
+# pending drizzle migrations on start.
+#
+# Required env (/opt/docker/bbr/.env):
+#   GITHUB_REPOSITORY    owner/repo (e.g. polnikov/spb-squash-statistic)
+#   IMAGE_TAG            image tag to run (default: latest)
+#   POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB
+#   AUTH_SECRET          session cookie signing secret (32-byte random hex)
+#   APP_URL              public https URL
+#   RANKEDIN_BASE_URL    (optional) defaults to https://rankedin.com
+#
+# For local development / building the image locally see docker-compose.dev.yml.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bbr-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bbr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bbr}
+      POSTGRES_DB: ${POSTGRES_DB:-bbr}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bbr} -d ${POSTGRES_DB:-bbr}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: bbr-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-polnikov/spb-squash-statistic}:${IMAGE_TAG:-latest}
+    container_name: bbr-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-bbr}:${POSTGRES_PASSWORD:-bbr}@postgres:5432/${POSTGRES_DB:-bbr}
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      AUTH_SECRET: ${AUTH_SECRET}
+      APP_URL: ${APP_URL}
+      RANKEDIN_BASE_URL: ${RANKEDIN_BASE_URL:-https://rankedin.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: bbr-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:

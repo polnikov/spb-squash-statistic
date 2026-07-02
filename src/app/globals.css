@@ -1,0 +1,259 @@
+@import url("https://rsms.me/inter/inter.css");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Flat 2.0 dark palette, aligned with BBR design/Mobile.dc.html:
+ * neutral deep-night surfaces with green used only as the primary action/accent.
+ * M3 role names stay as compatibility tokens for existing Tailwind utilities.
+ */
+@theme inline {
+  /* M3 color roles */
+  --color-primary: var(--m3-primary);
+  --color-on-primary: var(--m3-on-primary);
+  --color-primary-container: var(--m3-primary-container);
+  --color-on-primary-container: var(--m3-on-primary-container);
+  --color-secondary: var(--m3-secondary);
+  --color-on-secondary: var(--m3-on-secondary);
+  --color-secondary-container: var(--m3-secondary-container);
+  --color-on-secondary-container: var(--m3-on-secondary-container);
+  --color-tertiary: var(--m3-tertiary);
+  --color-on-tertiary: var(--m3-on-tertiary);
+  --color-tertiary-container: var(--m3-tertiary-container);
+  --color-on-tertiary-container: var(--m3-on-tertiary-container);
+  --color-error: var(--m3-error);
+  --color-on-error: var(--m3-on-error);
+  --color-error-container: var(--m3-error-container);
+  --color-on-error-container: var(--m3-on-error-container);
+  --color-background: var(--m3-background);
+  --color-on-background: var(--m3-on-background);
+  --color-surface: var(--m3-surface);
+  --color-on-surface: var(--m3-on-surface);
+  --color-surface-variant: var(--m3-surface-variant);
+  --color-on-surface-variant: var(--m3-on-surface-variant);
+  --color-surface-dim: var(--m3-surface-dim);
+  --color-surface-bright: var(--m3-surface-bright);
+  --color-surface-container-lowest: var(--m3-surface-container-lowest);
+  --color-surface-container-low: var(--m3-surface-container-low);
+  --color-surface-container: var(--m3-surface-container);
+  --color-surface-container-high: var(--m3-surface-container-high);
+  --color-surface-container-highest: var(--m3-surface-container-highest);
+  --color-outline: var(--m3-outline);
+  --color-outline-variant: var(--m3-outline-variant);
+  --color-inverse-surface: var(--m3-inverse-surface);
+  --color-inverse-on-surface: var(--m3-inverse-on-surface);
+  --color-inverse-primary: var(--m3-inverse-primary);
+  --color-scrim: var(--m3-scrim);
+  --color-shadow: var(--m3-shadow);
+
+  /* compatibility aliases (semantic + brand names map onto M3 roles) */
+  --color-foreground: var(--m3-on-surface);
+  --color-card: var(--m3-surface-container);
+  --color-card-foreground: var(--m3-on-surface);
+  --color-popover: var(--m3-surface-container-high);
+  --color-popover-foreground: var(--m3-on-surface);
+  --color-muted: var(--m3-surface-container-high);
+  --color-muted-foreground: var(--m3-on-surface-variant);
+  --color-accent: var(--m3-surface-container-high);
+  --color-accent-foreground: var(--m3-on-surface);
+  --color-destructive: var(--m3-error);
+  --color-destructive-foreground: var(--m3-on-error);
+  --color-border: var(--m3-outline-variant);
+  --color-input: var(--m3-outline-variant);
+  --color-ring: var(--m3-primary);
+  --color-primary-foreground: var(--m3-on-primary);
+  --color-secondary-foreground: var(--m3-on-secondary);
+  --color-brand-bg: var(--m3-surface);
+  --color-brand-surface: var(--m3-surface-container);
+  --color-brand-surface-2: var(--m3-surface-container-high);
+  --color-brand-ink: var(--m3-on-surface);
+  --color-brand-ink-2: var(--m3-on-surface-variant);
+  --color-brand-line: var(--m3-outline-variant);
+  --color-brand-accent: var(--m3-primary);
+  --color-brand-accent-2: var(--m3-inverse-primary);
+  --color-brand-accent-ink: var(--m3-primary);
+  --color-brand-accent-soft: var(--m3-primary-container);
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* type + shape + motion */
+  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.375rem;
+  --ease-m3-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-m3-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-m3-emphasized-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-m3-emphasized-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
+  /* Flat 2.0 elevation (soft drop shadow + faint top highlight) */
+  --shadow-e1: 0 2px 6px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --shadow-e2: 0 6px 20px -8px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-e3: 0 20px 48px -16px rgba(0, 0, 0, 0.72), 0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Flat 2.0 dark (default, so the app paints without a light flash) */
+:root {
+  color-scheme: dark;
+  --m3-primary: #20c7d9;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: rgba(32, 199, 217, 0.16);
+  --m3-on-primary-container: #8ef3ff;
+  --m3-secondary: #1dafe8;
+  --m3-on-secondary: #ffffff;
+  --m3-secondary-container: rgba(29, 175, 232, 0.16);
+  --m3-on-secondary-container: #8bdcff;
+  --m3-tertiary: #ffa52a;
+  --m3-on-tertiary: #171717;
+  --m3-tertiary-container: rgba(255, 165, 42, 0.16);
+  --m3-on-tertiary-container: #ffcf82;
+  --m3-error: #ff6b63;
+  --m3-on-error: #ffffff;
+  --m3-error-container: rgba(255, 79, 71, 0.15);
+  --m3-on-error-container: #ffd7d3;
+  --m3-background: #252525;
+  --m3-on-background: #ededed;
+  --m3-surface: #252525;
+  --m3-on-surface: #ededed;
+  --m3-surface-variant: #303030;
+  --m3-on-surface-variant: #b6b6b6;
+  --m3-surface-dim: #171717;
+  --m3-surface-bright: #333333;
+  --m3-surface-container-lowest: #171717;
+  --m3-surface-container-low: #1e1e1f;
+  --m3-surface-container: #222222;
+  --m3-surface-container-high: #2c2c2c;
+  --m3-surface-container-highest: #333333;
+  --m3-outline: #747474;
+  --m3-outline-variant: rgba(255, 255, 255, 0.09);
+  --m3-inverse-surface: #dedede;
+  --m3-inverse-on-surface: #212121;
+  --m3-inverse-primary: #7eeaf5;
+  --m3-scrim: #000000;
+  --m3-shadow: #000000;
+}
+
+/* Keep optional light mode close to the same neutral system if toggled later. */
+.light {
+  color-scheme: light;
+  --m3-primary: #20c7d9;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: rgba(32, 199, 217, 0.14);
+  --m3-on-primary-container: #087b88;
+  --m3-secondary: #1dafe8;
+  --m3-on-secondary: #ffffff;
+  --m3-secondary-container: rgba(29, 175, 232, 0.14);
+  --m3-on-secondary-container: #116f94;
+  --m3-tertiary: #ffa52a;
+  --m3-on-tertiary: #171717;
+  --m3-tertiary-container: rgba(255, 165, 42, 0.18);
+  --m3-on-tertiary-container: #8a5100;
+  --m3-error: #d83b35;
+  --m3-on-error: #ffffff;
+  --m3-error-container: rgba(216, 59, 53, 0.14);
+  --m3-on-error-container: #8a1712;
+  --m3-background: #f4f4f4;
+  --m3-on-background: #212121;
+  --m3-surface: #f4f4f4;
+  --m3-on-surface: #212121;
+  --m3-surface-variant: #dedede;
+  --m3-on-surface-variant: #616161;
+  --m3-surface-dim: #d0d0d0;
+  --m3-surface-bright: #ffffff;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-low: #eeeeee;
+  --m3-surface-container: #e8e8e8;
+  --m3-surface-container-high: #dedede;
+  --m3-surface-container-highest: #d2d2d2;
+  --m3-outline: #747474;
+  --m3-outline-variant: rgba(0, 0, 0, 0.11);
+  --m3-inverse-surface: #212121;
+  --m3-inverse-on-surface: #ededed;
+  --m3-inverse-primary: #8ef3ff;
+  --m3-scrim: #000000;
+  --m3-shadow: #000000;
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    min-height: 100%;
+    overflow-x: clip;
+  }
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    font-feature-settings: "ss01", "ss02", "zero";
+    -webkit-font-smoothing: antialiased;
+  }
+  .tabular {
+    font-feature-settings: "ss01", "ss02", "zero", "tnum";
+  }
+
+  @media (max-width: 767px) {
+    table :where(th, td, th *, td *) {
+      font-size: 12px !important;
+    }
+  }
+}
+
+/* Number pop-in (transitions.dev) — per-digit, staggered, translate+blur. */
+:root {
+  --digit-dur: 500ms;
+  --digit-distance: 8px;
+  --digit-stagger: 70ms;
+  --digit-blur: 2px;
+  --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --digit-dir-x: 0;
+  --digit-dir-y: 1;
+}
+
+@keyframes t-digit-pop-in {
+  0% {
+    transform: translate(
+      calc(var(--digit-distance) * var(--digit-dir-x)),
+      calc(var(--digit-distance) * var(--digit-dir-y))
+    );
+    opacity: 0;
+    filter: blur(var(--digit-blur));
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.t-digit-group {
+  display: inline-flex;
+  align-items: baseline;
+}
+.t-digit {
+  display: inline-block;
+  white-space: pre;
+  will-change: transform, opacity, filter;
+}
+.t-digit-group.is-animating .t-digit {
+  animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-digit-group .t-digit {
+    animation: none !important;
+  }
+}

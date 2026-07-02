@@ -1,0 +1,1 @@
+ALTER TABLE "points_table" ALTER COLUMN "points" SET DATA TYPE numeric(7, 2);

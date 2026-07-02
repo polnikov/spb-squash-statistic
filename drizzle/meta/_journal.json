@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781932762461,
+      "tag": "0000_unusual_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782508653327,
+      "tag": "0001_wonderful_swarm",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782509881314,
+      "tag": "0002_little_blazing_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782511260361,
+      "tag": "0003_bitter_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782536477667,
+      "tag": "0004_quiet_veda",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782585017406,
+      "tag": "0005_special_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782589008874,
+      "tag": "0006_wet_lake",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782589710692,
+      "tag": "0007_steady_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782592004057,
+      "tag": "0008_early_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782633600000,
+      "tag": "0009_silver_retired",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782620406336,
+      "tag": "0010_new_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782672000000,
+      "tag": "0011_player_rankedin_aliases",
+      "breakpoints": true
+    }
+  ]
+}

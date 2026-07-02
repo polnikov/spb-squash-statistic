@@ -1,0 +1,230 @@
+"use client";
+
+import * as React from "react";
+import {
+  type ColumnDef,
+  type SortingState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { DivisionScope, RatingRow } from "@/lib/mock/league";
+import { cn } from "@/lib/utils";
+import { PlayerAvatar } from "@/components/player-avatar";
+import { RatingPositionDelta } from "@/components/rating-position-delta";
+import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { NumberPop } from "@/components/ui/number-pop";
+
+const SCOPES: { key: DivisionScope; label: string }[] = [
+  { key: 1, label: "Дивизион 1" },
+  { key: 2, label: "Дивизион 2" },
+  { key: 3, label: "Дивизион 3" },
+];
+
+function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<RatingRow>[] {
+  return [
+    {
+      accessorKey: "place",
+      header: () => <span>#</span>,
+      cell: ({ row }) => (
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.place}</span>
+      ),
+    },
+    {
+      id: "change",
+      header: () => (
+        <span className="inline-flex items-center justify-center gap-0.5">
+          <ArrowUp className="size-3" />
+          <ArrowDown className="size-3" />
+        </span>
+      ),
+      enableSorting: false,
+      cell: ({ row }) => <RatingPositionDelta delta={row.original.positionDelta} />,
+    },
+    {
+      accessorKey: "name",
+      header: "Игрок",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2.5">
+          <PlayerAvatar rid={row.original.rid} initials={row.original.initials} color={row.original.color} className="size-8 text-xs" />
+          <span className="text-[13px] font-medium text-on-surface">{row.original.name}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "points",
+      header: "Очки",
+      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.points}</span>,
+    },
+    {
+      accessorKey: "stages",
+      header: "Этапов",
+      cell: ({ row }) => (
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          {row.original.stages}/{totalStages}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "matches",
+      header: "Матчи",
+      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.matches}</span>,
+    },
+    {
+      accessorKey: "wins",
+      header: "Победы",
+      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.wins}</span>,
+    },
+    {
+      accessorKey: "lastStagePoints",
+      header: "Последний этап",
+      cell: ({ row }) =>
+        row.original.lastStagePoints > 0 ? (
+          <span className="font-mono text-[12.5px] tabular text-brand-accent-ink">+{row.original.lastStagePoints}</span>
+        ) : (
+          <span className="font-mono tabular text-on-surface-variant">x</span>
+        ),
+    },
+    {
+      id: "gap",
+      header: "Отставание",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const gap = leaderPoints - row.original.points;
+        return gap > 0 ? (
+          <span className="font-mono text-[12.5px] tabular text-on-surface-variant">−{gap}</span>
+        ) : (
+          <span className="font-mono tabular text-on-surface-variant">x</span>
+        );
+      },
+    },
+  ];
+}
+
+function StatTile({ label, value, sub, className }: { label: string; value: React.ReactNode; sub?: string; className?: string }) {
+  return (
+    <div className={cn("rounded-lg bg-card p-4 shadow-e2", className)}>
+      <div className="text-[11.5px] leading-none text-muted-foreground">{label}</div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="min-w-0 truncate font-mono text-2xl font-semibold leading-none tracking-tight tabular"><NumberPop>{value}</NumberPop></span>
+        {sub ? <span className="shrink-0 text-[11px] text-muted-foreground">{sub}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+export function RatingTable({
+  rowsByScope,
+  stagesByDivision,
+  totalStages,
+}: {
+  rowsByScope: Record<DivisionScope, RatingRow[]>;
+  stagesByDivision: Record<1 | 2 | 3, number>;
+  totalStages: number;
+}) {
+  const [scope, setScope] = React.useState<DivisionScope>(1);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const data = rowsByScope[scope];
+  const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
+  const columns = React.useMemo(() => makeColumns(leaderPoints, totalStages), [leaderPoints, totalStages]);
+  const table = useReactTable({
+    data,
+    columns,
+    enableSorting: false,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const { setRef, ind } = useTabSlider(String(scope));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-end gap-4">
+        <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
+          <TabSliderPill ind={ind} className="bg-brand-surface-2" />
+          {SCOPES.map((s) => (
+            <button
+              key={String(s.key)}
+              ref={setRef(String(s.key))}
+              onClick={() => setScope(s.key)}
+              className={cn(
+                "relative z-10 h-9 rounded-[12px] px-5 text-xs font-semibold transition-colors duration-200 ease-m3-standard",
+                scope === s.key ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {data.length > 0 ? (
+          <section className="ml-auto flex gap-3">
+            <StatTile className="w-[180px]" label="Игроков" value={data.length} />
+            <StatTile className="w-[180px]" label="Проведено этапов" value={`${stagesByDivision[scope as 1 | 2 | 3]} / ${totalStages}`} />
+          </section>
+        ) : null}
+      </div>
+
+      {data.length === 0 ? (
+        <div className="rounded-2xl bg-card px-5 py-8 text-center shadow-e2">
+          <div className="text-sm font-semibold text-on-surface">Данных по этапу пока нет</div>
+        </div>
+      ) : (
+      <div className="overflow-hidden rounded-lg bg-card shadow-e2">
+        <table className="w-full text-[12.5px]">
+          <thead>
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id} className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
+                {hg.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  return (
+                    <th key={header.id} className={cn("px-4 py-3 text-center font-medium", header.column.id === "change" && "w-px whitespace-nowrap")}>
+                      {canSort ? (
+                        <button
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="inline-flex items-center justify-center gap-1 hover:text-foreground"
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          <ArrowUpDown className="size-3 opacity-60" />
+                        </button>
+                      ) : (
+                        flexRender(header.column.columnDef.header, header.getContext())
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="border-t border-border transition-colors hover:bg-brand-surface-2/40"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className={cn(
+                      "px-4 py-3",
+                      cell.column.id === "name" ? "text-left" : "text-center",
+                      cell.column.id === "change" && "w-px whitespace-nowrap",
+                    )}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      )}
+    </div>
+  );
+}
