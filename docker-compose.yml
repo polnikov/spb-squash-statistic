@@ -13,7 +13,7 @@
 #   GITHUB_REPOSITORY    owner/repo (e.g. polnikov/spb-squash-statistic)
 #   IMAGE_TAG            image tag to run (default: latest)
 #   POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB
-#   AUTH_SECRET          session cookie signing secret (32-byte random hex)
+#   ADMIN_USERNAME / ADMIN_PASSWORD_HASH   single admin (bcrypt hash; cookie key derived from them)
 #   APP_URL              public https URL
 #   RANKEDIN_BASE_URL    (optional) defaults to https://rankedin.com
 #
@@ -57,7 +57,8 @@ services:
       REDIS_URL: redis://redis:6379
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
-      AUTH_SECRET: ${AUTH_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
       APP_URL: ${APP_URL}
       RANKEDIN_BASE_URL: ${RANKEDIN_BASE_URL:-https://rankedin.com}
     depends_on:

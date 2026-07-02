@@ -93,7 +93,7 @@ Inter из `globals.css`); админка живёт на `/manager`, поэто
 
 1. Каталог `/opt/docker/bbr` с `docker-compose.yml` (из репо) и `.env`
    (из `.env.example`): задать `GITHUB_REPOSITORY`, `IMAGE_TAG`,
-   `POSTGRES_*`, `AUTH_SECRET`, `APP_URL`, домен в `Caddyfile`.
+   `POSTGRES_*`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` (bcrypt), `APP_URL`.
 2. Аутентификация в GHCR для pull приватного образа
    (`docker login ghcr.io` токеном с `read:packages`).
 3. Зарегистрировать self-hosted GitHub Actions раннер с метками

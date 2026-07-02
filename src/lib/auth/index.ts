@@ -1,14 +1,13 @@
 /**
  * Admin authentication. The public app is open; only the admin area and write
- * actions are gated. Credentials check against the `users` table (bcrypt);
- * session is an HMAC-signed httpOnly cookie.
+ * actions are gated. A single admin is defined by ADMIN_USERNAME and
+ * ADMIN_PASSWORD_HASH (bcrypt) env vars; the session is an HMAC-signed httpOnly
+ * cookie (key derived from the username + hash — see ./session).
  */
 
-import { cookies } from "next/headers";
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
   SESSION_MAX_AGE_SEC,
@@ -19,17 +18,22 @@ import {
 
 export type { SessionPayload };
 
-export async function login(username: string, password: string): Promise<boolean> {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.username, username.trim()))
-    .limit(1);
-  if (!user) return false;
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return false;
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
 
-  cookies().set(SESSION_COOKIE, signSession({ sub: user.id, username: user.username, role: user.role }), {
+export async function login(username: string, password: string): Promise<boolean> {
+  const u = process.env.ADMIN_USERNAME ?? "";
+  const hash = process.env.ADMIN_PASSWORD_HASH ?? "";
+  if (!u || !hash) return false;
+  if (!safeEqual(username.trim(), u)) return false;
+  const okPass = await bcrypt.compare(password, hash);
+  if (!okPass) return false;
+
+  cookies().set(SESSION_COOKIE, signSession({ sub: 1, username: u, role: "admin" }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

@@ -4,7 +4,8 @@ type SessionModule = typeof import("./session");
 let m: SessionModule;
 
 beforeAll(async () => {
-  process.env.AUTH_SECRET = "test-secret-please-change";
+  process.env.ADMIN_USERNAME = "admin";
+  process.env.ADMIN_PASSWORD_HASH = "$2a$10$test.hash.value.for.signing.key.only";
   m = await import("./session");
 });
 
