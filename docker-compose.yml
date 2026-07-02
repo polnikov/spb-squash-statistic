@@ -3,6 +3,9 @@
 # is (re)deployed by .github/workflows/deploy.yml. The app entrypoint applies
 # pending drizzle migrations on start.
 #
+# TLS/ingress: the server already runs Caddy on the host — point it at
+# 127.0.0.1:3000. This compose does NOT run its own Caddy.
+#
 # Required env (/opt/docker/bbr/.env):
 #   GITHUB_REPOSITORY    owner/repo (e.g. polnikov/spb-squash-statistic)
 #   IMAGE_TAG            image tag to run (default: latest)
@@ -59,8 +62,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    expose:
-      - "3000"
+    # Bound to localhost only — the host's already-configured Caddy reverse-proxies
+    # to 127.0.0.1:3000 and terminates TLS. We do NOT run our own Caddy here.
+    ports:
+      - "127.0.0.1:3000:3000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
@@ -68,22 +73,6 @@ services:
       retries: 3
       start_period: 30s
 
-  caddy:
-    image: caddy:2-alpine
-    container_name: bbr-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddydata:/data
-      - caddyconfig:/config
-    depends_on:
-      - app
-
 volumes:
   pgdata:
   redisdata:
-  caddydata:
-  caddyconfig:

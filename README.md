@@ -80,6 +80,10 @@ CI/CD зеркалит модель Personal_event_tracker:
   `GET /api/health`. Миграции БД применяются автоматически в `entrypoint.sh`
   контейнера `app` (`drizzle-kit migrate`) при старте.
 
+TLS/ingress на сервере — уже работающий хостовый **Caddy**; прод-`docker-compose.yml`
+свой Caddy не поднимает, `app` слушает `127.0.0.1:3000`, хостовый Caddy проксирует
+на него. (Свой Caddy остаётся только в `docker-compose.dev.yml` для локали.)
+
 ### Разовая настройка сервера
 
 1. Каталог `/opt/docker/bbr` с `docker-compose.yml` (из репо) и `.env`
@@ -89,7 +93,8 @@ CI/CD зеркалит модель Personal_event_tracker:
    (`docker login ghcr.io` токеном с `read:packages`).
 3. Зарегистрировать self-hosted GitHub Actions раннер с метками
    `self-hosted, home-server`.
-4. Домен в `Caddyfile` (авто-TLS) или отдать наружу иным способом.
+4. В уже работающем хостовом Caddy добавить сайт с `reverse_proxy 127.0.0.1:3000`
+   (наружу отдаётся им; свой Caddy контейнер не поднимается).
 
 ## Дизайн
 
