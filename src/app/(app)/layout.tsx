@@ -4,6 +4,11 @@ import { BottomNav } from "@/components/shell/bottom-nav";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
 import { listSeasonsWithData } from "@/lib/db/league";
 
+// The whole app shell reads the DB (season list) at request time, so keep every
+// route under (app) dynamic — otherwise `next build` prerenders them and fails
+// with ECONNREFUSED when no DB is reachable at build.
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
