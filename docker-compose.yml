@@ -3,8 +3,11 @@
 # is (re)deployed by .github/workflows/deploy.yml. The app entrypoint applies
 # pending drizzle migrations on start.
 #
-# TLS/ingress: the server already runs Caddy on the host — point it at
-# 127.0.0.1:3000. This compose does NOT run its own Caddy.
+# TLS/ingress: the server already runs Caddy (in a container). This compose does
+# NOT run its own Caddy — the app joins the external `caddy` network and Caddy
+# reverse-proxies to `bbr-app:3000` (see deploy/caddy.bbrsquashspb.conf).
+#
+#   CADDY_NETWORK       external docker network shared with Caddy (default: caddy)
 #
 # Required env (/opt/docker/bbr/.env):
 #   GITHUB_REPOSITORY    owner/repo (e.g. polnikov/spb-squash-statistic)
@@ -62,10 +65,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Bound to localhost only — the host's already-configured Caddy reverse-proxies
-    # to 127.0.0.1:3000 and terminates TLS. We do NOT run our own Caddy here.
-    ports:
-      - "127.0.0.1:3000:3000"
+    # Not published to the host. The host's Caddy container shares the external
+    # `caddy` network and reverse-proxies to `bbr-app:3000` by container name.
+    expose:
+      - "3000"
+    networks:
+      - default
+      - caddy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
@@ -76,3 +82,10 @@ services:
 volumes:
   pgdata:
   redisdata:
+
+networks:
+  # Shared with the host Caddy. Set CADDY_NETWORK in .env to the real network
+  # name (find it: `docker inspect <caddy-container> -f '{{json .NetworkSettings.Networks}}'`).
+  caddy:
+    external: true
+    name: ${CADDY_NETWORK:-caddy}

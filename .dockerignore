@@ -25,6 +25,9 @@ coverage
 # Logs
 *.log
 
+# Server-side deploy config (not part of the app image)
+deploy
+
 # Design references + docs not needed in the image
 mockups
 BBR design

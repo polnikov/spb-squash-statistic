@@ -80,9 +80,14 @@ CI/CD зеркалит модель Personal_event_tracker:
   `GET /api/health`. Миграции БД применяются автоматически в `entrypoint.sh`
   контейнера `app` (`drizzle-kit migrate`) при старте.
 
-TLS/ingress на сервере — уже работающий хостовый **Caddy**; прод-`docker-compose.yml`
-свой Caddy не поднимает, `app` слушает `127.0.0.1:3000`, хостовый Caddy проксирует
-на него. (Свой Caddy остаётся только в `docker-compose.dev.yml` для локали.)
+TLS/ingress на сервере — уже работающий хостовый **Caddy** (контейнер). Прод-
+`docker-compose.yml` свой Caddy не поднимает: `app` (контейнер `bbr-app`) входит
+во внешнюю docker-сеть Caddy (`CADDY_NETWORK`, по умолчанию `caddy`), Caddy
+проксирует на `bbr-app:3000`. Блок сайта для домена
+**bbrsquashspb.ohmyapps.xyz** — в [`deploy/caddy.bbrsquashspb.conf`](deploy/caddy.bbrsquashspb.conf)
+(вставить в серверный Caddyfile). CSP там разрешает `https://rsms.me` (шрифт
+Inter из `globals.css`); админка живёт на `/manager`, поэтому `@hidden`-правило
+её не блокирует. (Свой Caddy остаётся только в `docker-compose.dev.yml` для локали.)
 
 ### Разовая настройка сервера
 
@@ -93,8 +98,9 @@ TLS/ingress на сервере — уже работающий хостовый
    (`docker login ghcr.io` токеном с `read:packages`).
 3. Зарегистрировать self-hosted GitHub Actions раннер с метками
    `self-hosted, home-server`.
-4. В уже работающем хостовом Caddy добавить сайт с `reverse_proxy 127.0.0.1:3000`
-   (наружу отдаётся им; свой Caddy контейнер не поднимается).
+4. Убедиться, что `CADDY_NETWORK` в `.env` = реальная сеть Caddy, и вставить блок
+   `deploy/caddy.bbrsquashspb.conf` в серверный Caddyfile (proxy на `bbr-app:3000`),
+   перезагрузить Caddy.
 
 ## Дизайн
 
