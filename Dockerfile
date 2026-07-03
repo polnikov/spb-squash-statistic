@@ -17,8 +17,7 @@ RUN npm run build
 # --- runtime (default: app; migrations run on start via entrypoint) ---
 FROM base AS runtime
 ENV NODE_ENV=production
-# Full node_modules are kept on purpose: drizzle-kit (migrations) and tsx
-# (worker in dev) need dev-time tooling at runtime.
+
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
@@ -30,5 +29,8 @@ COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 3000
+
+ENTRYPOINT []
 CMD ["/entrypoint.sh"]
+
+EXPOSE 3000
