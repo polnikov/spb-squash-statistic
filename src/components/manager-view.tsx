@@ -1173,9 +1173,9 @@ function PointsManager() {
                       </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 p-3 sm:grid-cols-3">
+                  <div className="columns-2 gap-x-6 p-3 sm:columns-3">
                     {group.rows.map((row) => (
-                      <div key={row.place} className="flex items-center justify-between rounded-[8px] px-2 py-1">
+                      <div key={row.place} className="flex break-inside-avoid items-center justify-between rounded-[8px] px-2 py-1">
                         <span className="font-mono text-[12px] tabular text-on-surface-variant">{row.place}</span>
                         <span className="font-mono text-[12.5px] font-semibold tabular">{row.points}</span>
                       </div>
