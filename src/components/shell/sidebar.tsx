@@ -12,9 +12,9 @@ export function Sidebar({ seasons }: { seasons?: string[] }) {
   const season = searchParams.get("season");
   return (
     <div className="fixed inset-x-0 top-0 z-40 hidden justify-center md:flex">
-      <header className="flex h-16 w-full max-w-[1280px] items-center rounded-b-lg border-x border-b border-border bg-[rgba(22,22,22,0.86)] px-6 backdrop-blur-xl">
+      <header className="flex h-16 w-full max-w-[1280px] items-center rounded-b-lg border-x border-b border-border bg-[rgba(22,22,22,0.86)] px-6 shadow-[0_4px_18px_rgba(0,0,0,0.5)] backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
-        <img src="/logo.png" alt="ББР Сквош" width={36} height={36} className="size-9 shrink-0 rounded-md object-contain" />
+        <img src="/icons/icon-192x192.png" alt="SPB Squash Statistic" width={36} height={36} className="size-9 shrink-0 rounded-md object-contain" />
         <div className="font-brand whitespace-nowrap text-[25px] font-semibold tracking-tight">SPB Squash Statistic</div>
         </div>
 
