@@ -746,6 +746,9 @@ function UploadManager() {
   const [delKey, setDelKey] = React.useState<string | null>(null);
   const [linkOptions, setLinkOptions] = React.useState<PlayerLinkOption[]>([]);
   const [playerLinks, setPlayerLinks] = React.useState<Record<string, string>>({});
+  const [impExpanded, setImpExpanded] = React.useState(false);
+  const [impSeason, setImpSeason] = React.useState("");
+  const [impDiv, setImpDiv] = React.useState("");
 
   const refreshImported = React.useCallback(async () => {
     setImported(await listImportedStagesAction());
@@ -866,33 +869,82 @@ function UploadManager() {
           </div>
 
           {/* right: imported stages */}
-          <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5 shadow-e2">
-            <div className="text-sm font-semibold">Загруженные этапы</div>
-            {imported.length === 0 ? (
-              <div className="py-3 text-center text-xs text-on-surface-variant">Нет загруженных этапов</div>
-            ) : (
-              imported.map((s) => {
-                const key = `${s.season}-${s.division}-${s.stage}`;
-                return (
-                  <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-container-low px-3.5 py-2.5">
-                    <div className="text-[13px]">
-                      <span className="font-semibold">{s.season} · Див {s.division} · Этап {s.stage}</span>
-                      <span className="ml-2 font-mono text-[11.5px] tabular text-on-surface-variant">
-                        {s.players} игроков · {s.matches} матчей{s.date ? ` · ${fmtDateFull(s.date)}` : ""}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => deleteImported(s)}
-                      disabled={delKey === key}
-                      className="rounded-[10px] px-3 py-1.5 text-[11.5px] font-semibold text-error hover:bg-error-container/40 disabled:opacity-60"
-                    >
-                      {delKey === key ? "…" : "Удалить"}
-                    </button>
+          {(() => {
+            const impSeasons = [...new Set(imported.map((s) => s.season))].sort().reverse();
+            const impDivs = [...new Set(imported.map((s) => s.division))].sort((a, b) => a - b);
+            const filtered = imported.filter(
+              (s) => (impSeason === "" || s.season === impSeason) && (impDiv === "" || String(s.division) === impDiv),
+            );
+            const impFirst = filtered.slice(0, 9);
+            const impRest = filtered.slice(9);
+            const renderImp = (s: ImportedStage) => {
+              const key = `${s.season}-${s.division}-${s.stage}`;
+              return (
+                <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-container-low px-3.5 py-2.5">
+                  <div className="text-[13px]">
+                    <span className="font-semibold">{s.season} · Див {s.division} · Этап {s.stage}</span>
+                    <span className="ml-2 font-mono text-[11.5px] tabular text-on-surface-variant">
+                      {s.players} игроков · {s.matches} матчей{s.date ? ` · ${fmtDateFull(s.date)}` : ""}
+                    </span>
                   </div>
-                );
-              })
-            )}
-          </div>
+                  <button
+                    onClick={() => deleteImported(s)}
+                    disabled={delKey === key}
+                    className="rounded-[10px] px-3 py-1.5 text-[11.5px] font-semibold text-error hover:bg-error-container/40 disabled:opacity-60"
+                  >
+                    {delKey === key ? "…" : "Удалить"}
+                  </button>
+                </div>
+              );
+            };
+            const selCls =
+              "h-8 rounded-[10px] border border-outline-variant bg-surface-container-low px-2 text-[12px] text-on-surface outline-none focus:border-primary";
+            return (
+              <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5 shadow-e2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold">Загруженные этапы</div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <select value={impSeason} onChange={(e) => setImpSeason(e.target.value)} className={selCls}>
+                      <option value="">Все сезоны</option>
+                      {impSeasons.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <select value={impDiv} onChange={(e) => setImpDiv(e.target.value)} className={selCls}>
+                      <option value="">Все дивизионы</option>
+                      {impDivs.map((d) => (
+                        <option key={d} value={String(d)}>Див {d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {filtered.length === 0 ? (
+                  <div className="py-3 text-center text-xs text-on-surface-variant">Нет загруженных этапов</div>
+                ) : (
+                  <>
+                    {impFirst.map(renderImp)}
+                    {impRest.length > 0 ? (
+                      <>
+                        {/* extra rows reveal via accordion expand (grid-rows 0fr -> 1fr) */}
+                        <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", impExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                          <div className="min-h-0 overflow-hidden">
+                            <div className="flex flex-col gap-2">{impRest.map(renderImp)}</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setImpExpanded((v) => !v)}
+                          className="mt-1 w-full rounded-lg bg-surface-container-high py-2.5 text-[12.5px] font-semibold text-primary transition-colors hover:bg-surface-container-highest"
+                        >
+                          {impExpanded ? "Свернуть" : `Показать ещё ${impRest.length}`}
+                        </button>
+                      </>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       ) : null}
 
