@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
-import { NumberPop } from "@/components/ui/number-pop";
 
 const SCOPES: { key: DivisionScope; label: string }[] = [
   { key: 1, label: "Дивизион 1" },
@@ -103,14 +102,21 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
   ];
 }
 
-function StatTile({ label, value, sub, className }: { label: string; value: React.ReactNode; sub?: string; className?: string }) {
+/** Season progress: 9 numbered circles; stages played (per division) are filled. */
+function StageProgress({ played }: { played: number }) {
   return (
-    <div className={cn("rounded-lg bg-card p-4 shadow-e2", className)}>
-      <div className="text-[11.5px] leading-none text-muted-foreground">{label}</div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="min-w-0 truncate font-mono text-2xl font-semibold leading-none tracking-tight tabular"><NumberPop>{value}</NumberPop></span>
-        {sub ? <span className="shrink-0 text-[11px] text-muted-foreground">{sub}</span> : null}
-      </div>
+    <div className="ml-auto flex shrink-0 items-center gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
+      {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
+        <span
+          key={n}
+          className={cn(
+            "grid size-9 shrink-0 place-items-center rounded-full font-mono text-[12px] font-semibold tabular",
+            n <= played ? "bg-[#20c7d991] text-on-primary" : "bg-brand-surface-2 text-muted-foreground",
+          )}
+        >
+          {n}
+        </span>
+      ))}
     </div>
   );
 }
@@ -163,19 +169,16 @@ export function RatingTable({
         </div>
 
         {data.length > 0 ? (
-          <section className="ml-auto flex gap-3">
-            <StatTile className="w-[180px]" label="Игроков" value={data.length} />
-            <StatTile className="w-[180px]" label="Проведено этапов" value={`${stagesByDivision[scope as 1 | 2 | 3]} / ${totalStages}`} />
-          </section>
+          <StageProgress played={stagesByDivision[scope as 1 | 2 | 3]} />
         ) : null}
       </div>
 
       {data.length === 0 ? (
-        <div className="rounded-2xl bg-card px-5 py-8 text-center shadow-e2">
+        <div className="rounded-2xl bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
-      <div className="overflow-hidden rounded-lg bg-card shadow-e2">
+      <div className="overflow-hidden rounded-lg bg-card">
         <table className="w-full text-[12.5px]">
           <thead>
             {table.getHeaderGroups().map((hg) => (

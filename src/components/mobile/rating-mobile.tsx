@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { Star } from "lucide-react";
 import type { RatingRow } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
-import { NumberPop } from "@/components/ui/number-pop";
 
 export type DivTopCard = {
   division: number;
@@ -28,15 +28,6 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Tile({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-lg bg-surface-container px-3 py-2.5 shadow-e2">
-      <div className="text-[10px] leading-tight text-on-surface-variant">{label}</div>
-      <div className="mt-1 font-mono text-[17px] font-semibold leading-none tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
-    </div>
-  );
-}
-
 export function RatingMobile({
   listByDivision,
   stagesByDivision,
@@ -53,10 +44,13 @@ export function RatingMobile({
 
   return (
     <div className="flex flex-col">
-      <h1 className="mb-3 text-[28px] font-semibold leading-tight tracking-tight">Рейтинг</h1>
+      <div className="mb-3 flex items-center gap-2.5">
+        <Star className="size-7 shrink-0" />
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Рейтинг сезона</h1>
+      </div>
 
       {/* division tabs */}
-      <div className="relative mb-4 flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+      <div className="relative mb-2 flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
         <TabSliderPill ind={ind} />
         {DIVS.map((d) => (
           <button
@@ -74,15 +68,24 @@ export function RatingMobile({
       </div>
 
       {list.length === 0 ? (
-        <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface shadow-e2">
+        <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
           Данных пока нет
         </div>
       ) : (
         <>
-          {/* tiles */}
-          <div className="mb-4 grid grid-cols-2 gap-2">
-            <Tile label="Игроков" value={list.length} />
-            <Tile label="Проведено этапов" value={`${stagesByDivision[div]}/${totalStages}`} />
+          {/* stage progress: 9 circles, played stages accent-filled; full width */}
+          <div className="mb-4 flex items-center gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+            {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
+              <span
+                key={n}
+                className={cn(
+                  "grid aspect-square flex-1 place-items-center rounded-full font-mono text-[12px] font-semibold tabular",
+                  n <= stagesByDivision[div] ? "bg-[#20c7d991] text-on-primary" : "bg-surface-container-high text-on-surface-variant",
+                )}
+              >
+                {n}
+              </span>
+            ))}
           </div>
 
           {/* player cards */}
@@ -91,7 +94,7 @@ export function RatingMobile({
               <Link
                 key={r.rid}
                 href={`/players/${encodeURIComponent(r.rid)}`}
-                className="flex flex-col gap-1.5 rounded-lg bg-surface-container px-4 py-3 shadow-e2"
+                className="flex flex-col gap-1.5 rounded-lg bg-surface-container px-4 py-3"
               >
                 <div className="flex items-center gap-2.5 border-b border-outline-variant pb-2">
                   <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-on-surface-variant">
