@@ -116,7 +116,7 @@ type H2hMode = "career" | "current";
 type H2hSort = "meetings" | "comfortable" | "uncomfortable" | "equal" | "load" | "closing" | "trend";
 
 function cardClass(className?: string) {
-  return cn("rounded-lg bg-card shadow-e2", className);
+  return cn("rounded-lg bg-card", className);
 }
 
 function labelClass() {
@@ -431,7 +431,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 md:px-[15px] md:py-[13px]")}>
+    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>{label}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{value}</NumberPop></div>
@@ -627,7 +627,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
       {/* hero — stretches to the right column's height */}
       <div
         className={cn(
-          "relative aspect-square min-h-0 overflow-hidden rounded-xl bg-card shadow-e2 md:aspect-auto md:min-h-[176px] md:h-full",
+          "relative aspect-square min-h-0 overflow-hidden rounded-xl bg-card md:aspect-auto md:min-h-[176px] md:h-full",
           avatar && "bg-cover bg-center",
         )}
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
@@ -711,7 +711,7 @@ function Filters({
 
   return (
     <div className="sticky top-[53px] z-20 -mx-2 bg-[#5b5b5b] px-2 py-2 md:static md:mx-0 md:bg-transparent md:p-0">
-      <div className="flex flex-nowrap items-center gap-2 md:flex-wrap">
+      <div className="flex flex-nowrap items-center gap-1 md:flex-wrap md:gap-2">
         <SegmentedControl
           items={seasonItems}
           value={seasonValue}
@@ -784,7 +784,7 @@ function InfoPopover({
         aria-label="Описание метрик"
         className={cn(
           "relative z-10 grid size-8 place-items-center rounded-full transition-colors duration-200",
-          open ? "bg-surface-container-highest text-on-surface shadow-e1" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
+          open ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
         )}
       >
         <span className={cn("transition-transform duration-300 ease-m3-emphasized-decel", open && "rotate-90")}>
@@ -1572,7 +1572,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
         </div>
         {/* bottom: season·division·stage left, opponent status right */}
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-[11px] text-on-surface-variant">{m.seasonId} · {m.divisionName} · {m.stageName}</span>
+          <span className="text-[11px] text-on-surface-variant">{m.seasonId} · {m.divisionName.replace(/Дивизион\s*/, "Д")} · {m.stageName.replace(/Этап\s*/, "Э")}</span>
           {status ? <Chip tone={statusTone(status)}>{formatMatchupStatus(status)}</Chip> : null}
         </div>
       </div>
@@ -1696,7 +1696,7 @@ function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-semibold";
   return (
     <div className="min-w-0">
-      <div className="min-w-0 overflow-hidden rounded-lg bg-card px-4 py-3 shadow-e2">
+      <div className="min-w-0 overflow-hidden rounded-lg bg-card px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] text-on-surface-variant">

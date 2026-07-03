@@ -45,7 +45,7 @@ const C = {
 };
 
 function cardClass(className?: string) {
-  return cn("rounded-lg bg-card shadow-e2", className);
+  return cn("rounded-lg bg-card", className);
 }
 
 function statusTone(status: MatchupStatus): "primary" | "error" | "neutral" {
@@ -71,7 +71,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className={cardClass("px-[15px] py-[13px]")}>
+    <div className={cardClass("px-[15px] py-[13px] transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5")}>
       <div className="text-[10px] leading-tight text-on-surface-variant md:text-[11px]">{label}</div>
       <div className="mt-1.5 font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-on-surface md:text-[23px]"><NumberPop>{value}</NumberPop></div>
       <div className="mt-1 text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
@@ -663,7 +663,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
               </span>
             ) : null}
           </div>
-          <div className="mt-1.5 text-[11px] text-on-surface-variant">{m.seasonId} · {m.divisionName} · {m.stageName}</div>
+          <div className="mt-1.5 text-[11px] text-on-surface-variant">{m.seasonId} · {m.divisionName.replace(/Дивизион\s*/, "Д")} · {m.stageName.replace(/Этап\s*/, "Э")}</div>
         </div>
         <MatchScoreDetails match={m} />
       </div>
@@ -869,7 +869,7 @@ export function H2hDetailView({
           aria-label={`${player.name} vs ${opponent.opponentName}`}
           tabIndex={-1}
           className={cn(
-            "app-bg absolute right-0 top-0 flex h-[100dvh] w-[min(960px,92vw)] flex-col rounded-l-2xl shadow-e3 outline-none transition-transform duration-300 ease-m3-emphasized-decel",
+            "app-bg absolute right-0 top-0 flex h-[100dvh] w-[min(960px,92vw)] flex-col rounded-l-2xl outline-none transition-transform duration-300 ease-m3-emphasized-decel",
             shown ? "translate-x-0" : "translate-x-full",
           )}
         >
