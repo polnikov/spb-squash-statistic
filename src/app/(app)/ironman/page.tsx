@@ -1,3 +1,4 @@
+import { Bot } from "lucide-react";
 import { normalizeSeason } from "@/lib/mock/league";
 import { loadLeague } from "@/lib/db/league";
 import { IronManView } from "@/components/iron-man-view";
@@ -9,7 +10,7 @@ export default async function IronManPage({ searchParams }: { searchParams?: { s
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
-      <PageHeader title="Iron Man" />
+      <PageHeader title="Iron Man" icon={Bot} />
       <IronManView league={league} />
     </div>
   );

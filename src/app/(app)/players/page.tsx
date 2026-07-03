@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import { getPlayersOverview, type PlayerOverview } from "@/lib/mock/league";
 import { loadAllLeagues } from "@/lib/db/league";
 import { PlayersList } from "@/components/players-list";
@@ -49,7 +50,7 @@ export default async function PlayersPage() {
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
-      <PageHeader title="Игроки" subtitle={playersLabel(players.length)} />
+      <PageHeader title="Игроки" subtitle={playersLabel(players.length)} icon={Users} />
       <PlayersList players={players} />
     </div>
   );

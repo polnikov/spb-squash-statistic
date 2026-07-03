@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Layers } from "lucide-react";
 import {
   getDivisionSummary,
   getRatingRows,
@@ -26,7 +27,7 @@ export default async function DivisionsPage({ searchParams }: { searchParams?: {
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
-      <PageHeader title="Дивизионы" />
+      <PageHeader title="Дивизионы" icon={Layers} />
       <Suspense fallback={null}>
         <DivisionsTable rowsByDivision={rowsByDivision} summaries={summaries} />
       </Suspense>

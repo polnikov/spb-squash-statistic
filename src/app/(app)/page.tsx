@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { getRatingRows, normalizeSeason, type DivisionScope, type RatingRow } from "@/lib/mock/league";
 import { loadLeague } from "@/lib/db/league";
 import { RatingTable } from "@/components/rating-table";
@@ -32,7 +33,7 @@ export default async function RatingPage({ searchParams }: { searchParams?: { se
 
       {/* desktop */}
       <div className="hidden flex-col gap-8 md:flex">
-        <PageHeader title="Рейтинг сезона" />
+        <PageHeader title="Рейтинг сезона" icon={Star} />
         <RatingTable rowsByScope={rowsByScope} stagesByDivision={stagesByDivision} totalStages={league.stages.length} />
       </div>
     </>

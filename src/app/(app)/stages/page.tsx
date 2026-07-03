@@ -1,3 +1,4 @@
+import { Blocks } from "lucide-react";
 import { StageSummary } from "@/components/stage-summary";
 import { PageHeader } from "@/components/page-header";
 import { normalizeSeason } from "@/lib/mock/league";
@@ -8,7 +9,7 @@ export default async function StagesPage({ searchParams }: { searchParams?: { se
   const league = await loadLeague(season);
   return (
     <div className="flex flex-col gap-3 md:gap-8">
-      <PageHeader title="Этапы" />
+      <PageHeader title="Этапы" icon={Blocks} />
       <StageSummary league={league} />
     </div>
   );
