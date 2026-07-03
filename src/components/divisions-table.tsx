@@ -76,7 +76,7 @@ function bestBy(rows: RatingRow[], value: (row: RatingRow) => number) {
 
 function MetricTile({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
   return (
-    <div className="rounded-lg bg-card px-3 py-2.5 shadow-e2 md:p-4">
+    <div className="rounded-lg bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex items-end gap-1.5 md:mt-2">
         <span className="font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl">
@@ -223,7 +223,7 @@ export function DivisionsTable({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl bg-card px-5 py-8 text-center shadow-e2">
+        <div className="rounded-2xl bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
@@ -244,7 +244,7 @@ export function DivisionsTable({
               label={tile.label}
               player={tile.player}
               value={tile.value}
-              className="min-w-[236px] shrink-0 bg-card shadow-e2"
+              className="min-w-[236px] shrink-0 bg-card"
             />
           ))}
         </div>
@@ -253,7 +253,7 @@ export function DivisionsTable({
       <div className="hidden md:block">
         <button
           onClick={() => setHlOpen((v) => !v)}
-          className="inline-flex w-fit cursor-pointer select-none items-center gap-2 rounded-lg bg-card px-4 py-3 text-[13px] font-semibold text-on-surface shadow-e2"
+          className="inline-flex w-fit cursor-pointer select-none items-center gap-2 rounded-lg bg-card px-4 py-3 text-[13px] font-semibold text-on-surface transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         >
           Highlights
           <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-200", hlOpen && "rotate-180")} />
@@ -261,7 +261,7 @@ export function DivisionsTable({
         {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
         <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", hlOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
           <div className="min-h-0 overflow-hidden rounded-lg">
-            <div className="mt-2 grid grid-cols-3 gap-3 rounded-lg bg-card p-3 shadow-e2">
+            <div className="mt-2 grid grid-cols-3 gap-3 rounded-lg bg-card p-3">
               {highlightTiles.map((tile) => (
                 <HighlightTile key={tile.label} label={tile.label} player={tile.player} value={tile.value} />
               ))}
@@ -278,7 +278,7 @@ export function DivisionsTable({
             className={cn(
               "h-8 rounded-full px-4 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
               sort.key === pill.key
-                ? "bg-brand-accent text-black shadow-e2"
+                ? "bg-brand-accent text-black"
                 : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",
             )}
           >
@@ -295,7 +295,7 @@ export function DivisionsTable({
             className={cn(
               "h-8 min-w-0 flex-1 basis-0 truncate rounded-full px-2 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
               sort.key === pill.key
-                ? "bg-brand-accent text-black shadow-e2"
+                ? "bg-brand-accent text-black"
                 : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",
             )}
           >
@@ -304,7 +304,7 @@ export function DivisionsTable({
         ))}
       </div>
 
-      <div className="min-w-0 overflow-hidden rounded-2xl bg-card shadow-e2 md:rounded-lg">
+      <div className="min-w-0 overflow-hidden rounded-2xl bg-card md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>
@@ -313,7 +313,7 @@ export function DivisionsTable({
                 <button onClick={() => setSortKey("place")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">#{sortMark("place")}</button>
                 <span className="md:hidden">#</span>
               </th>
-              <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-left">Игрок</th>
+              <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
                 <button onClick={() => setSortKey("points")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Рейтинг{sortMark("points")}</button>
                 <span className="md:hidden">Рейтинг</span>
