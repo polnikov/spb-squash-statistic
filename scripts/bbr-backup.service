@@ -1,0 +1,11 @@
+[Unit]
+Description=BBR Squash — PostgreSQL backup
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/docker/bbr
+ExecStart=/opt/docker/bbr/scripts/backup-db.sh
+Nice=10
+IOSchedulingClass=idle
