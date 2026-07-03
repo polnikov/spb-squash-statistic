@@ -28,7 +28,7 @@ export default async function AppLayout({
             <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />
           </Suspense>
         </header>
-        <main className="mx-auto min-w-0 w-full max-w-[1280px] flex-1 px-2 pb-24 pt-5 md:px-8 md:pb-10 md:pt-24">
+        <main className="mx-auto min-w-0 w-full max-w-[1280px] flex-1 px-2 pb-[calc(84px+env(safe-area-inset-bottom))] pt-5 md:px-8 md:pb-10 md:pt-24">
           {children}
         </main>
         <Suspense fallback={null}>
