@@ -114,7 +114,7 @@ function Field({
 function DesktopOnlyNotice() {
   return (
     <div className="flex min-h-[60dvh] items-center justify-center md:hidden">
-      <div className="rounded-2xl bg-card p-5 text-center shadow-e2">
+      <div className="rounded-2xl bg-card p-5 text-center">
         <div className="text-sm font-semibold">Администрирование доступно только на десктопе</div>
         <div className="mt-1 text-xs text-on-surface-variant">Откройте /manager на большом экране.</div>
       </div>
@@ -273,7 +273,7 @@ function PlayersManager({ league }: { league: League }) {
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Администрирование</h1>
         <button
           onClick={openCreate}
-          className="inline-flex h-10 items-center gap-2 rounded-[12px] bg-primary px-4 text-[13px] font-semibold text-on-primary shadow-e2"
+          className="inline-flex h-10 items-center gap-2 rounded-[12px] bg-primary px-4 text-[13px] font-semibold text-on-primary"
         >
           <Plus className="size-4" />
           Новый игрок
@@ -286,7 +286,7 @@ function PlayersManager({ league }: { league: League }) {
           onClick={() => setCreating(false)}
         >
           <div
-            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
+            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between gap-4">
@@ -331,7 +331,7 @@ function PlayersManager({ league }: { league: League }) {
               </label>
 
               {createError ? (
-                <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container shadow-e1">
+                <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container">
                   {createError}
                 </div>
               ) : null}
@@ -346,7 +346,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={saveNewPlayer}
                   disabled={createSaving || !newRid.trim() || (!newName.trim() && !newLinkPlayerId)}
-                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary shadow-e2 disabled:opacity-60"
+                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
                 >
                   {createSaving ? "Сохранение…" : newLinkPlayerId ? "Связать ID" : "Создать"}
                 </button>
@@ -377,7 +377,7 @@ function PlayersManager({ league }: { league: League }) {
           onClick={() => setEditingRid(null)}
         >
           <div
-            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
+            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between gap-4">
@@ -395,7 +395,7 @@ function PlayersManager({ league }: { league: League }) {
               {/* avatar */}
               <div className="flex flex-col items-center gap-3">
                 <span
-                  className="flex size-[216px] shrink-0 items-center justify-center rounded-full bg-surface-container-high bg-cover bg-center text-5xl font-semibold text-white shadow-e1 ring-1 ring-outline-variant"
+                  className="flex size-[216px] shrink-0 items-center justify-center rounded-full bg-surface-container-high bg-cover bg-center text-5xl font-semibold text-white ring-1 ring-outline-variant"
                   style={editingAvatar ? avatarBackgroundStyle(editingAvatar) : { background: editingPlayer.color }}
                 >
                   {editingAvatar ? null : editingPlayer.initials}
@@ -452,7 +452,7 @@ function PlayersManager({ league }: { league: League }) {
               />
 
               {saveError ? (
-                <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container shadow-e1">
+                <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container">
                   {saveError}
                 </div>
               ) : null}
@@ -467,7 +467,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={savePlayer}
                   disabled={saving}
-                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary shadow-e2 disabled:opacity-60"
+                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
                 >
                   {saving ? "Сохранение…" : "Сохранить"}
                 </button>
@@ -477,7 +477,7 @@ function PlayersManager({ league }: { league: League }) {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl bg-card shadow-e2">
+      <div className="overflow-hidden rounded-2xl bg-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] border-collapse">
             <thead>
@@ -502,7 +502,7 @@ function PlayersManager({ league }: { league: League }) {
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-3">
                         <span
-                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cover bg-center text-xs font-semibold text-white shadow-e1"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cover bg-center text-xs font-semibold text-white"
                           style={avatar ? avatarBackgroundStyle(avatar) : { background: player.color }}
                         >
                           {avatar ? null : player.initials}
@@ -522,7 +522,7 @@ function PlayersManager({ league }: { league: League }) {
                     <td className="px-5 py-3 text-center">
                       <button
                         onClick={() => setEditingRid(player.rid)}
-                        className="inline-flex items-center gap-1.5 rounded-[10px] bg-surface-container-high px-3 py-1.5 text-xs font-semibold text-on-surface-variant shadow-e1"
+                        className="inline-flex items-center gap-1.5 rounded-[10px] bg-surface-container-high px-3 py-1.5 text-xs font-semibold text-on-surface-variant"
                       >
                         <Edit3 className="size-3.5" />
                         Изменить
@@ -590,7 +590,7 @@ function UploadStepper({ step }: { step: UploadStep }) {
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "flex size-[26px] items-center justify-center rounded-full font-mono text-xs font-semibold tabular shadow-e1",
+                "flex size-[26px] items-center justify-center rounded-full font-mono text-xs font-semibold tabular",
                 index <= current ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
               )}
             >
@@ -915,7 +915,7 @@ function UploadManager() {
       {step === "input" ? (
         <div className="grid grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-6">
           {/* left: form */}
-          <div className="flex h-fit flex-col gap-5 rounded-2xl bg-card p-6 shadow-e2">
+          <div className="flex h-fit flex-col gap-5 rounded-2xl bg-card p-6">
             <Field label="ID или ссылка турнира" value={tournament} onChange={setTournament} placeholder="84213 или https://www.rankedin.com/..." />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Сезон" value={season} onChange={setSeason} placeholder="25/26" />
@@ -923,14 +923,14 @@ function UploadManager() {
               <Field label="Этап" value={stage} onChange={setStage} placeholder="7" />
               <Field label="Дата" value={date} onChange={setDate} type="date" />
             </div>
-            <div className="flex items-start gap-3 rounded-[14px] bg-surface-container-high px-4 py-3 shadow-e1">
+            <div className="flex items-start gap-3 rounded-[14px] bg-surface-container-high px-4 py-3">
               <Info className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
               <span className="text-xs text-on-surface-variant">
                 Скрипт получает результаты по турниру и список матчей турнира из RankedIn.
               </span>
             </div>
             {error ? (
-              <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container shadow-e1">
+              <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container">
                 {error}
               </div>
             ) : null}
@@ -938,7 +938,7 @@ function UploadManager() {
               <button
                 onClick={runParse}
                 disabled={parsing || !tournament.trim()}
-                className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary shadow-e2 disabled:opacity-60"
+                className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-60"
               >
                 {parsing ? "Загрузка…" : "Подгрузить данные"}
               </button>
@@ -975,7 +975,7 @@ function UploadManager() {
               );
             };
             return (
-              <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5 shadow-e2">
+              <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold">Загруженные этапы</div>
                   <div className="ml-auto flex items-center gap-2">
@@ -1028,7 +1028,7 @@ function UploadManager() {
       {step === "preview" && preview ? (
         <div className="flex flex-col gap-4">
           {preview.alreadyImported ? (
-            <div className="flex items-center gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container shadow-e1">
+            <div className="flex items-center gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container">
               <Info className="size-4" />
               <span className="text-[13px] font-medium">
                 Этап {preview.stage} (дивизион {preview.division}, {preview.season}) уже загружен. Удалите его в списке ниже, чтобы перезагрузить.
@@ -1036,22 +1036,22 @@ function UploadManager() {
             </div>
           ) : null}
           {preview.conflicts > 0 ? (
-            <div className="flex items-center gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container shadow-e1">
+            <div className="flex items-center gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container">
               <Info className="size-4" />
               <span className="text-[13px] font-medium">Найдены конфликты ID: {preview.conflicts}. Исправьте игроков перед загрузкой.</span>
             </div>
           ) : null}
           {preview.warnings.length > 0 ? (
-            <div className="flex flex-col gap-1 rounded-[14px] bg-surface-container-high px-4 py-3 text-xs text-on-surface-variant shadow-e1">
+            <div className="flex flex-col gap-1 rounded-[14px] bg-surface-container-high px-4 py-3 text-xs text-on-surface-variant">
               {preview.warnings.slice(0, 3).map((warning) => <span key={warning}>{warning}</span>)}
             </div>
           ) : null}
           {error ? (
-            <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container shadow-e1">
+            <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container">
               {error}
             </div>
           ) : null}
-          <div className="overflow-hidden rounded-2xl bg-card shadow-e2">
+          <div className="overflow-hidden rounded-2xl bg-card">
             <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
@@ -1136,7 +1136,7 @@ function UploadManager() {
             <button
               onClick={commitImport}
               disabled={importing || preview.conflicts > 0 || preview.alreadyImported}
-              className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary shadow-e2 disabled:opacity-55"
+              className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-55"
             >
               <Check className="size-4" />
               {importing ? "Загрузка…" : "Загрузить результаты"}
@@ -1146,8 +1146,8 @@ function UploadManager() {
       ) : null}
 
       {step === "done" ? (
-        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-card px-6 py-12 text-center shadow-e2">
-          <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-[#04A45A] shadow-e1">
+        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-card px-6 py-12 text-center">
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-[#04A45A]">
             <CheckCircle2 className="size-8" />
           </div>
           <h2 className="text-[24px] font-semibold tracking-tight">Этап загружен</h2>
@@ -1162,7 +1162,7 @@ function UploadManager() {
               setDone(null);
               setError(null);
             }}
-            className="mt-2 h-11 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary shadow-e2"
+            className="mt-2 h-11 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary"
           >
             Загрузить еще этап
           </button>
@@ -1256,7 +1256,7 @@ function PointsManager() {
 
       <div className="grid grid-cols-[minmax(0,480px)_minmax(0,1fr)] gap-6">
         {/* editor */}
-        <div className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-e2">
+        <div className="flex flex-col gap-4 rounded-2xl bg-card p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">{replaceFrom ? "Изменение таблицы" : "Новая таблица"}</span>
             {replaceFrom ? (
@@ -1319,7 +1319,7 @@ function PointsManager() {
           {message ? (
             <div
               className={cn(
-                "rounded-[12px] px-3.5 py-2.5 text-xs font-medium shadow-e1",
+                "rounded-[12px] px-3.5 py-2.5 text-xs font-medium",
                 message.ok ? "bg-primary-container text-primary" : "bg-error-container text-on-error-container",
               )}
             >
@@ -1330,7 +1330,7 @@ function PointsManager() {
           <button
             onClick={save}
             disabled={saving}
-            className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary shadow-e2 disabled:opacity-60"
+            className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
           >
             {saving ? "Сохранение…" : replaceFrom ? "Сохранить изменения" : "Сохранить таблицу"}
           </button>
@@ -1339,14 +1339,14 @@ function PointsManager() {
         {/* existing tables */}
         <div className="flex flex-col gap-3">
           {existing.length === 0 ? (
-            <div className="rounded-2xl bg-card p-6 text-center text-sm text-on-surface-variant shadow-e2">
+            <div className="rounded-2xl bg-card p-6 text-center text-sm text-on-surface-variant">
               Нет сохранённых таблиц очков
             </div>
           ) : (
             existing.map((group) => {
               const key = `${group.division}-${group.effectiveFrom}`;
               return (
-                <div key={key} className="overflow-hidden rounded-2xl bg-card shadow-e2">
+                <div key={key} className="overflow-hidden rounded-2xl bg-card">
                   <div className="flex items-center justify-between border-b border-outline-variant px-5 py-3.5">
                     <div>
                       <div className="text-[13.5px] font-semibold">Дивизион {group.division}</div>
