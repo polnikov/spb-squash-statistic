@@ -497,7 +497,7 @@ export type IronLongMatch = {
 
 /** Stage bounds for an Iron Man half. The 9th stage never counts (see RATING_MAX_STAGE). */
 function ironStageRange(half: 1 | 2): (stage: number) => boolean {
-  const [lo, hi] = half === 1 ? [1, 5] : [6, RATING_MAX_STAGE];
+  const [lo, hi] = half === 1 ? [1, 4] : [5, RATING_MAX_STAGE];
   return (stage: number) => stage >= lo && stage <= hi && stage <= RATING_MAX_STAGE;
 }
 
