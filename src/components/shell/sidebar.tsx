@@ -14,13 +14,11 @@ export function Sidebar({ seasons }: { seasons?: string[] }) {
     <div className="fixed inset-x-0 top-0 z-40 hidden justify-center md:flex">
       <header className="flex h-16 w-full max-w-[1280px] items-center rounded-b-lg border-x border-b border-border bg-brand-bg/72 px-6 backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-brand-accent-2 to-brand-accent shadow-e1">
-          <span className="text-xs font-bold tracking-tight text-white">BBR</span>
-        </div>
-        <div className="whitespace-nowrap font-semibold tracking-tight">ББР Сквош</div>
+        <img src="/logo.png" alt="ББР Сквош" width={36} height={36} className="size-9 shrink-0 rounded-md object-contain" />
+        <div className="font-brand whitespace-nowrap text-[25px] font-semibold tracking-tight">SPB Squash Statistic</div>
         </div>
 
-        <nav className="ml-8 flex min-w-0 items-center gap-1">
+        <nav className="ml-auto flex min-w-0 items-center gap-1">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item, pathname);
             const Icon = item.icon;
@@ -43,7 +41,7 @@ export function Sidebar({ seasons }: { seasons?: string[] }) {
           })}
         </nav>
 
-        <div className="ml-auto">
+        <div className="ml-6">
           <SeasonSwitcher variant="header" seasons={seasons} />
         </div>
       </header>

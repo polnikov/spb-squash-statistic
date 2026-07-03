@@ -21,10 +21,8 @@ export default async function AppLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-brand-bg px-2 py-2.5 md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br from-brand-accent-2 to-brand-accent">
-              <span className="text-[11px] font-bold tracking-tight text-white">BBR</span>
-            </div>
-            <span className="truncate text-sm font-semibold tracking-tight">ББР Сквош</span>
+            <img src="/logo.png" alt="ББР Сквош" width={32} height={32} className="size-8 shrink-0 rounded-[9px] object-contain" />
+            <span className="font-brand truncate text-[1.5rem] font-semibold tracking-tight">SPB Squash Statistic</span>
           </div>
           <Suspense fallback={null}>
             <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />

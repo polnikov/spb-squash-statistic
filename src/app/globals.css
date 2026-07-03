@@ -1,6 +1,22 @@
 @import url("https://rsms.me/inter/inter.css");
 @import "tailwindcss";
 
+/* Brand wordmark font (eToro Variable 0.8 — variable: wght 200–900, wdth 0–100).
+ * Default named instance is Bold Compressed (wdth 0), so set width explicitly. */
+@font-face {
+  font-family: "eToro Variable";
+  src: url("/fonts/ETORO-VF-V0.8.TTF") format("truetype");
+  font-weight: 200 900;
+  font-stretch: 50% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-brand {
+  font-family: "eToro Variable", var(--font-sans);
+  font-variation-settings: "wght" 600, "wdth" 60;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
