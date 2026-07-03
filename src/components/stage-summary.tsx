@@ -278,7 +278,7 @@ export function StageSummary({ league }: { league: League }) {
       <div className="overflow-hidden rounded-2xl bg-card shadow-e2">
         {rows.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <div className="text-sm font-semibold text-on-surface">Данных по этапу пока нет</div>
+            <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
           </div>
         ) : (
           <>

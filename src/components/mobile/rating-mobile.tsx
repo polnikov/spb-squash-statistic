@@ -75,7 +75,7 @@ export function RatingMobile({
 
       {list.length === 0 ? (
         <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface shadow-e2">
-          Данных по этапу пока нет
+          Данных пока нет
         </div>
       ) : (
         <>

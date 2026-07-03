@@ -226,7 +226,7 @@ export function IronManView({ league }: { league: League }) {
 
       {rows.length === 0 ? (
         <div className="rounded-2xl bg-card px-5 py-8 text-center shadow-e2">
-          <div className="text-sm font-semibold text-on-surface">Данных по этапу пока нет</div>
+          <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
         <>
