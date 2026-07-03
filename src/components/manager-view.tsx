@@ -282,11 +282,11 @@ function PlayersManager({ league }: { league: League }) {
 
       {creating ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+          className="animate-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
           onClick={() => setCreating(false)}
         >
           <div
-            className="w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
+            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between gap-4">
@@ -315,18 +315,16 @@ function PlayersManager({ league }: { league: League }) {
               />
               <label className="flex flex-col gap-2">
                 <span className="text-xs font-medium text-on-surface-variant">Связать с существующим игроком</span>
-                <select
+                <FilterDropdown
                   value={newLinkPlayerId}
-                  onChange={(event) => setNewLinkPlayerId(event.target.value)}
-                  className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors focus:border-primary"
-                >
-                  <option value="">Не связывать, создать нового</option>
-                  {linkOptions.map((player) => (
-                    <option key={player.playerId} value={player.playerId}>
-                      {player.name} · {player.rankedinId ?? "без ID"}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setNewLinkPlayerId}
+                  allLabel="Не связывать, создать нового"
+                  options={linkOptions.map((player) => ({
+                    value: String(player.playerId),
+                    label: `${player.name} · ${player.rankedinId ?? "без ID"}`,
+                  }))}
+                  sizeClass="h-11 rounded-[12px] px-3.5 text-[13px]"
+                />
                 <span className="text-[10.5px] leading-snug text-on-surface-variant">
                   Если выбран игрок, новый RankedIn ID станет текущим, прежний ID сохранится как alias.
                 </span>
@@ -375,11 +373,11 @@ function PlayersManager({ league }: { league: League }) {
 
       {editingPlayer && editingDraft ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+          className="animate-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
           onClick={() => setEditingRid(null)}
         >
           <div
-            className="w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
+            className="animate-modal-panel w-full max-w-[440px] rounded-2xl bg-card p-6 shadow-e3"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-center justify-between gap-4">
@@ -728,6 +726,85 @@ function LinkPicker({
   );
 }
 
+/** App-styled filter dropdown with a Transitions.dev accordion-expand panel
+ * (grid-template-rows 0fr -> 1fr). Overlays via absolute positioning. */
+function FilterDropdown({
+  value,
+  options,
+  allLabel,
+  onChange,
+  className,
+  sizeClass,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  allLabel: string;
+  onChange: (value: string) => void;
+  className?: string;
+  sizeClass?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    function onDown(e: PointerEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  const sel = options.find((o) => o.value === value);
+  function pick(v: string) {
+    onChange(v);
+    setOpen(false);
+  }
+  const item = (v: string, label: string) => (
+    <button
+      key={v || "__all"}
+      type="button"
+      onClick={() => pick(v)}
+      className={cn(
+        "block w-full rounded-[8px] px-2.5 py-1.5 text-left text-[12px] transition-colors duration-150 ease-m3-standard hover:bg-surface-container-highest",
+        v === value ? "font-semibold text-primary" : "text-on-surface",
+      )}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div ref={ref} className={cn("relative", className)}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 border border-outline-variant bg-surface-container-low text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary",
+          sizeClass ?? "h-8 rounded-[10px] px-2.5 text-[12px]",
+        )}
+      >
+        <span className={cn("truncate", !sel && "text-on-surface-variant")}>{sel ? sel.label : allLabel}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-300 ease-m3-emphasized-decel", open && "rotate-180")} />
+      </button>
+
+      {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
+      <div
+        className={cn(
+          "absolute right-0 top-[calc(100%+6px)] z-30 grid w-full min-w-[150px] transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel",
+          open ? "grid-rows-[1fr]" : "pointer-events-none grid-rows-[0fr]",
+        )}
+      >
+        <div className="min-h-0 overflow-hidden rounded-[10px] shadow-e2">
+          <div className="max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-outline-variant bg-surface-container-low p-1.5">
+            {item("", allLabel)}
+            {options.map((o) => item(o.value, o.label))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UploadManager() {
   const router = useRouter();
   const [step, setStep] = React.useState<UploadStep>("input");
@@ -897,25 +974,25 @@ function UploadManager() {
                 </div>
               );
             };
-            const selCls =
-              "h-8 rounded-[10px] border border-outline-variant bg-surface-container-low px-2 text-[12px] text-on-surface outline-none focus:border-primary";
             return (
               <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5 shadow-e2">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold">Загруженные этапы</div>
                   <div className="ml-auto flex items-center gap-2">
-                    <select value={impSeason} onChange={(e) => setImpSeason(e.target.value)} className={selCls}>
-                      <option value="">Все сезоны</option>
-                      {impSeasons.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                    <select value={impDiv} onChange={(e) => setImpDiv(e.target.value)} className={selCls}>
-                      <option value="">Все дивизионы</option>
-                      {impDivs.map((d) => (
-                        <option key={d} value={String(d)}>Див {d}</option>
-                      ))}
-                    </select>
+                    <FilterDropdown
+                      value={impSeason}
+                      onChange={setImpSeason}
+                      allLabel="Все сезоны"
+                      options={impSeasons.map((s) => ({ value: s, label: s }))}
+                      className="w-[120px]"
+                    />
+                    <FilterDropdown
+                      value={impDiv}
+                      onChange={setImpDiv}
+                      allLabel="Все дивизионы"
+                      options={impDivs.map((d) => ({ value: String(d), label: `Див ${d}` }))}
+                      className="w-[140px]"
+                    />
                   </div>
                 </div>
                 {filtered.length === 0 ? (

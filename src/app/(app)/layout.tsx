@@ -14,12 +14,12 @@ export default async function AppLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const seasons = await listSeasonsWithData();
   return (
-    <div className="flex min-h-dvh bg-brand-bg">
+    <div className="app-bg flex min-h-dvh">
       <Suspense fallback={null}>
         <Sidebar seasons={seasons} />
       </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-brand-bg px-2 py-2.5 md:hidden">
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-[rgba(22,22,22,0.86)] px-2 py-2.5 backdrop-blur-[14px] md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
             <img src="/logo.png" alt="ББР Сквош" width={32} height={32} className="size-8 shrink-0 rounded-[9px] object-contain" />
             <span className="font-brand truncate text-[1.5rem] font-semibold tracking-tight">SPB Squash Statistic</span>

@@ -869,7 +869,7 @@ export function H2hDetailView({
           aria-label={`${player.name} vs ${opponent.opponentName}`}
           tabIndex={-1}
           className={cn(
-            "absolute right-0 top-0 flex h-[100dvh] w-[min(960px,92vw)] flex-col rounded-l-2xl bg-brand-bg shadow-e3 outline-none transition-transform duration-300 ease-m3-emphasized-decel",
+            "app-bg absolute right-0 top-0 flex h-[100dvh] w-[min(960px,92vw)] flex-col rounded-l-2xl shadow-e3 outline-none transition-transform duration-300 ease-m3-emphasized-decel",
             shown ? "translate-x-0" : "translate-x-full",
           )}
         >
@@ -896,7 +896,7 @@ export function H2hDetailView({
       </div>
 
       {/* Mobile: full-screen page — Panel reveal (transitions.dev): slides in from the right. */}
-      <div className={cn("fixed inset-0 z-[80] flex flex-col bg-brand-bg transition-transform duration-500 ease-m3-emphasized-decel md:hidden", shown ? "translate-x-0" : "translate-x-full")}>
+      <div className={cn("app-bg fixed inset-0 z-[80] flex flex-col transition-transform duration-500 ease-m3-emphasized-decel md:hidden", shown ? "translate-x-0" : "translate-x-full")}>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
           <Hero player={player} opponent={opponent} stats={stats} mobile />
           <Segmented items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} className="shrink-0" equal />

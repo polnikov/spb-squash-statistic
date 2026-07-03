@@ -710,7 +710,7 @@ function Filters({
   const divisionW = divisionItems.length === 1 ? "w-auto" : "flex-1 min-w-0";
 
   return (
-    <div className="sticky top-[53px] z-20 -mx-2 bg-brand-bg/92 px-2 py-2 backdrop-blur-lg md:static md:mx-0 md:bg-transparent md:p-0 md:backdrop-blur-0">
+    <div className="sticky top-[53px] z-20 -mx-2 bg-[#5b5b5b] px-2 py-2 md:static md:mx-0 md:bg-transparent md:p-0">
       <div className="flex flex-nowrap items-center gap-2 md:flex-wrap">
         <SegmentedControl
           items={seasonItems}
