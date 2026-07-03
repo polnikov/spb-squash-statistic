@@ -3,7 +3,7 @@ import { MaterialExpressiveTheme } from "@/components/providers/material-express
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ББР Сквош — статистика",
+  title: "SPB Squash Statistic",
   description: "Статистика сквош-лиги: рейтинги, дивизионы, этапы, Iron Man.",
 };
 
