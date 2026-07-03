@@ -932,7 +932,7 @@ function UploadManager() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1220px] border-collapse">
+              <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
                     <th className="px-5 py-3 font-medium">Место</th>
@@ -943,7 +943,7 @@ function UploadManager() {
                     <th className="px-3 py-3 font-medium">Геймы</th>
                     <th className="px-3 py-3 font-medium">Мячи</th>
                     <th className="px-3 py-3 font-medium">Время на корте</th>
-                    <th className="px-5 py-3 font-medium">Статус / связка</th>
+                    <th className="w-px whitespace-nowrap px-5 py-3 font-medium">Статус / связка</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -980,8 +980,8 @@ function UploadManager() {
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{previewValue(row.wonGames)}-{previewValue(row.lostGames)}</td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{previewValue(row.wonBalls)}-{previewValue(row.lostBalls)}</td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{row.courtMinutes === null || row.courtMinutes === undefined ? "x" : fmtCourt(row.courtMinutes)}</td>
-                        <td className="px-5 py-3 text-center align-top">
-                          <div className="flex min-w-[240px] items-start justify-center gap-3">
+                        <td className="w-px whitespace-nowrap px-5 py-3 text-right align-top">
+                          <div className="flex flex-col items-end gap-2">
                             <PreviewStatus row={row} />
                             {!excluded && row.status === "new" ? (
                               <LinkPicker
