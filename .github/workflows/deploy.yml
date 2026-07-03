@@ -47,13 +47,15 @@ jobs:
       - name: Health check
         working-directory: /opt/docker/bbr
         run: |
-          for i in 1 2 3 4 5 6 7 8 9 10; do
+          # Allow up to ~100s: entrypoint may spend up to 30s on migrate before
+          # Next starts (see entrypoint.sh timeout), plus app boot time.
+          for i in $(seq 1 20); do
             if docker compose exec -T app wget -qO- http://127.0.0.1:3000/api/health; then
               echo "App is healthy"
               exit 0
             fi
-            echo "Waiting for app... ($i/10)"
-            sleep 3
+            echo "Waiting for app... ($i/20)"
+            sleep 5
           done
           echo "App did not become healthy in time"
           docker compose logs --tail=80 app
