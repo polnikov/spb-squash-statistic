@@ -1183,60 +1183,6 @@ const H2H_SORT_OPTIONS: { key: H2hSort; label: string }[] = [
   { key: "trend", label: "Положительный тренд" },
 ];
 
-function SortDropdown({ value, onChange }: { value: H2hSort; onChange: (v: H2hSort) => void }) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    if (!open) return;
-    function onDown(e: PointerEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("pointerdown", onDown);
-    return () => document.removeEventListener("pointerdown", onDown);
-  }, [open]);
-  const cur = H2H_SORT_OPTIONS.find((o) => o.key === value);
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-11 items-center gap-2 rounded-[16px] border border-outline-variant bg-surface-container-low px-3.5 text-[12.5px] font-medium text-on-surface"
-      >
-        {cur?.label}
-        <ChevronDown className={cn("size-3.5 text-on-surface-variant transition-transform duration-200", open && "rotate-180")} />
-      </button>
-      {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
-      <div
-        className={cn(
-          "absolute right-0 top-full z-30 mt-2 grid w-[210px] transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel",
-          open ? "grid-rows-[1fr]" : "pointer-events-none grid-rows-[0fr]",
-        )}
-      >
-        <div className="min-h-0 overflow-hidden rounded-xl shadow-e3">
-          <div className="rounded-xl border border-outline-variant bg-surface-container-high p-1">
-            {H2H_SORT_OPTIONS.map((o) => (
-              <button
-                key={o.key}
-                type="button"
-                onClick={() => {
-                  onChange(o.key);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "block w-full rounded-[10px] px-3 py-2 text-left text-[12.5px] transition-colors hover:bg-surface-container-highest",
-                  o.key === value ? "font-semibold text-primary" : "text-on-surface",
-                )}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ringColor(o: PlayerOpponentStats) {
   if (o.h2hMatchesWon > o.h2hMatchesLost) return "#04A45A";
   if (o.h2hMatchesWon < o.h2hMatchesLost) return "#FF4747";
@@ -1424,7 +1370,7 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
                 className="w-fit"
               />
             )}
-            <SortDropdown value={sort} onChange={setSort} />
+            <SegmentedControl items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} />
           </div>
 
           {list.length === 0 ? (
@@ -1643,8 +1589,20 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     const mRest = rows.slice(5);
     return (
       <div className={cardClass("p-4")}>
-        <div className="flex justify-end">
-          <SegmentedControl items={MATCH_FILTER_ITEMS} value={filter} onChange={setFilter} />
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {MATCH_FILTER_ITEMS.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => setFilter(o.key)}
+              className={cn(
+                "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
+                filter === o.key ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
         {rows.length === 0 ? (
           <div className="py-8 text-center text-sm text-on-surface-variant">Нет матчей в выбранном контексте</div>
