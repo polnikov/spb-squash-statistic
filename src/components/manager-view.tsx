@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Check,
   CheckCircle2,
+  ChevronDown,
   Edit3,
   Info,
   Plus,
@@ -645,6 +646,88 @@ function PreviewStatus({ row }: { row: StageImportPreview["players"][number] }) 
   return <span className="rounded-full bg-[#16a34a]/15 px-2.5 py-1 text-[11px] font-semibold text-[#86efac]">совпадает</span>;
 }
 
+/** Accordion-style player link picker (app-styled), shown to the right of the
+ * status chip. Replaces the native <select> so the reveal animates and the
+ * options match the app surface/typography. */
+function LinkPicker({
+  value,
+  possibleOptions,
+  otherOptions,
+  onSelect,
+}: {
+  value: string;
+  possibleOptions: PlayerLinkOption[];
+  otherOptions: PlayerLinkOption[];
+  onSelect: (playerId: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const all = [...possibleOptions, ...otherOptions];
+  const selected = all.find((p) => String(p.playerId) === value);
+  const label = selected ? selected.name : "Новый отдельный игрок";
+
+  function pick(playerId: string) {
+    onSelect(playerId);
+    setOpen(false);
+  }
+
+  const Option = ({ player }: { player: PlayerLinkOption }) => (
+    <button
+      type="button"
+      onClick={() => pick(String(player.playerId))}
+      className={cn(
+        "flex w-full items-center justify-between gap-2 rounded-[8px] px-2.5 py-1.5 text-left transition-colors duration-150 ease-m3-standard hover:bg-surface-container-highest",
+        String(player.playerId) === value && "bg-primary/12",
+      )}
+    >
+      <span className="truncate text-[11.5px] text-on-surface">{player.name}</span>
+      <span className="shrink-0 font-mono text-[11px] tabular text-on-surface-variant">{player.rankedinId ?? "без ID"}</span>
+    </button>
+  );
+
+  return (
+    <div className="w-[220px] text-left">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-[10px] border border-outline-variant bg-surface-container-low px-2.5 text-[11.5px] text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary"
+      >
+        <span className={cn("truncate", !selected && "text-on-surface-variant")}>{label}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-300 ease-m3-emphasized-decel", open && "rotate-180")} />
+      </button>
+
+      {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
+      <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+        <div className="overflow-hidden">
+          <div className="mt-1 max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-outline-variant bg-surface-container-low p-1.5 shadow-e2">
+            <button
+              type="button"
+              onClick={() => pick("")}
+              className={cn(
+                "flex w-full items-center rounded-[8px] px-2.5 py-1.5 text-left text-[11.5px] transition-colors duration-150 ease-m3-standard hover:bg-surface-container-highest",
+                !value ? "bg-primary/12 text-primary" : "text-on-surface",
+              )}
+            >
+              Новый отдельный игрок
+            </button>
+            {possibleOptions.length > 0 ? (
+              <>
+                <div className="px-2.5 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">Совпадение по имени</div>
+                {possibleOptions.map((player) => (
+                  <Option key={player.playerId} player={player} />
+                ))}
+              </>
+            ) : null}
+            <div className="px-2.5 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">Все игроки</div>
+            {otherOptions.map((player) => (
+              <Option key={player.playerId} player={player} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UploadManager() {
   const router = useRouter();
   const [step, setStep] = React.useState<UploadStep>("input");
@@ -897,33 +980,16 @@ function UploadManager() {
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{previewValue(row.wonGames)}-{previewValue(row.lostGames)}</td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{previewValue(row.wonBalls)}-{previewValue(row.lostBalls)}</td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{row.courtMinutes === null || row.courtMinutes === undefined ? "x" : fmtCourt(row.courtMinutes)}</td>
-                        <td className="px-5 py-3 text-center">
-                          <div className="flex min-w-[240px] flex-col items-center gap-2">
+                        <td className="px-5 py-3 text-center align-top">
+                          <div className="flex min-w-[240px] items-start justify-center gap-3">
                             <PreviewStatus row={row} />
                             {!excluded && row.status === "new" ? (
-                              <select
+                              <LinkPicker
                                 value={selectedLink}
-                                onChange={(event) => setPlayerLink(row.rankedinId, event.target.value)}
-                                className="h-9 w-full rounded-[10px] border border-outline-variant bg-surface-container-low px-2.5 text-[11.5px] text-on-surface outline-none focus:border-primary"
-                              >
-                                <option value="">Новый отдельный игрок</option>
-                                {possibleOptions.length > 0 ? (
-                                  <optgroup label="Совпадение по имени">
-                                    {possibleOptions.map((player) => (
-                                      <option key={player.playerId} value={player.playerId}>
-                                        {player.name} · {player.rankedinId ?? "без ID"}
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                ) : null}
-                                <optgroup label="Все игроки">
-                                  {otherOptions.map((player) => (
-                                    <option key={player.playerId} value={player.playerId}>
-                                      {player.name} · {player.rankedinId ?? "без ID"}
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              </select>
+                                possibleOptions={possibleOptions}
+                                otherOptions={otherOptions}
+                                onSelect={(playerId) => setPlayerLink(row.rankedinId, playerId)}
+                              />
                             ) : null}
                           </div>
                         </td>
