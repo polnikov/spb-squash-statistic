@@ -12,8 +12,15 @@
 set -e
 
 echo '[entrypoint] applying drizzle migrations...'
-timeout 180 npm run db:migrate
-echo '[entrypoint] migrations up to date.'
+if timeout 180 npm run db:migrate; then
+  echo '[entrypoint] migrations up to date.'
+else
+  code=$?
+  echo "[entrypoint] ERROR: drizzle migrations failed with exit code ${code}"
+  echo '[entrypoint] container will pause briefly so deploy logs can capture the error.'
+  sleep 60
+  exit "$code"
+fi
 
 echo '[entrypoint] starting Next.js...'
 exec npm run start
