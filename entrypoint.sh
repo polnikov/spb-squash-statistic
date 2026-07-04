@@ -12,7 +12,7 @@
 set -e
 
 echo '[entrypoint] applying drizzle migrations...'
-if timeout 180 npm run db:migrate; then
+if timeout 210 node src/scripts/migrate.mjs; then
   echo '[entrypoint] migrations up to date.'
 else
   code=$?
