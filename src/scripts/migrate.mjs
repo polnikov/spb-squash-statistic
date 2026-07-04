@@ -196,6 +196,9 @@ function shouldSkipStatementError(error, statement) {
   const isDrop = /\bDROP\b/.test(normalized);
   if (isDrop && ["42704", "42P01", "42703"].includes(code)) return true;
 
+  const isAddConstraint = /\bADD\s+CONSTRAINT\b/.test(normalized);
+  if (isAddConstraint && code === "42703") return true;
+
   return false;
 }
 
