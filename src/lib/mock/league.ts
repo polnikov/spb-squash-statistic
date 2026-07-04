@@ -10,6 +10,7 @@
 
 import { TOURNAMENTS, SEASON, SEASONS } from "@/lib/data/tournaments";
 import { defaultPointsFor } from "@/lib/points";
+import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export type MockPlayer = {
   idx: number;
@@ -706,6 +707,7 @@ export type PlayerOverview = {
   points: number;
   matches: number;
   winPct: number;
+  skillIndex: number | null;
 };
 
 export function getPlayersOverview(league: League): PlayerOverview[] {
@@ -718,6 +720,13 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
   return league.players
     .map((p) => {
       const r = byIdx.get(p.idx);
+      const skillIndex = r
+        ? calculateSkillIndex({
+            matchWinRatePct: r.winPct,
+            gameWinRatePct: r.games ? (r.gamesWon / r.games) * 100 : null,
+            rallyWinRatePct: r.balls ? (r.ballsWon / r.balls) * 100 : null,
+          })
+        : null;
       return {
         idx: p.idx,
         rid: p.rid,
@@ -734,6 +743,7 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
         points: r?.points ?? 0,
         matches: r?.matches ?? 0,
         winPct: r?.winPct ?? 0,
+        skillIndex,
       };
     })
     .sort((a, b) => b.points - a.points);

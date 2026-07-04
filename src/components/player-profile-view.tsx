@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { EChartsOption } from "echarts";
-import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
   MatchListItem,
   PlayerOpponentStats,
@@ -32,6 +32,7 @@ import { H2hDetailView } from "@/components/h2h-detail-view";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
+import { SKILL_INDEX_SCALE, calculateSkillIndex, getSkillIndexLabelRu, getSkillIndexStatus } from "@/lib/stats/compute";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
   option: EChartsOption;
@@ -534,6 +535,74 @@ function ActivityBadge({ active }: { active: boolean }) {
   );
 }
 
+function SkillIndexBadge({ stats }: { stats: PlayerProfileStats }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const skillIndex = stats.skillIndex ?? calculateSkillIndex({
+    matchWinRatePct: stats.matchWinRatePct,
+    gameWinRatePct: stats.gameWinRatePct,
+    rallyWinRatePct: stats.rallyWinRatePct,
+  });
+  const status = stats.skillIndexStatus ?? getSkillIndexStatus(skillIndex);
+  const label = getSkillIndexLabelRu(status);
+
+  React.useEffect(() => {
+    if (!open) return;
+    function onDown(e: PointerEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  if (skillIndex === null || !label) return null;
+
+  return (
+    <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-50")}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Описание skillIndex"
+        className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
+      >
+        <Snail className="size-3 shrink-0" />
+        <span className="max-w-[96px] truncate">{label}</span>
+        <span className="font-mono tabular">{skillIndex.toFixed(1)}</span>
+      </button>
+      <div
+        className={cn(
+          "absolute right-0 top-[calc(100%+8px)] w-[min(340px,calc(100vw-32px))] rounded-xl border border-outline-variant bg-surface-container-high p-3 text-left text-on-surface backdrop-blur-md transition-all duration-200 ease-m3-emphasized-decel",
+          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
+        )}
+      >
+        <div className="text-[13px] font-semibold">Индекс игрового уровня</div>
+        <div className="mt-1 text-[12px] leading-snug text-on-surface-variant">
+          Рассчитывается по качеству игры: Match WR 30%, Game WR 35%, Rally WR 35%.
+        </div>
+        <div className="mt-3 flex flex-col gap-1.5">
+          {SKILL_INDEX_SCALE.map((row) => (
+            <div
+              key={row.status}
+              className={cn(
+                "rounded-[10px] border px-2.5 py-2",
+                row.status === status
+                  ? "border-[#dff7a5]/65 bg-[#dff7a5]/12 text-on-surface"
+                  : "border-outline-variant bg-surface-container-low text-on-surface-variant",
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[12.5px] font-semibold">{row.labelRu}</span>
+                <span className="shrink-0 font-mono text-[12px] tabular">{row.min}-{row.max}</span>
+              </div>
+              <div className="mt-1 text-[11.5px] leading-snug">{row.descriptionRu}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MetaItem({ label, value }: { label: string; value: number }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -627,12 +696,13 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
       {/* hero — stretches to the right column's height */}
       <div
         className={cn(
-          "relative aspect-square min-h-0 overflow-hidden rounded-xl bg-card md:aspect-auto md:min-h-[176px] md:h-full",
+          "relative aspect-square min-h-0 rounded-xl bg-card md:aspect-auto md:min-h-[176px] md:h-full",
           avatar && "bg-cover bg-center",
         )}
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
         <ActivityBadge active={model.active} />
+        <SkillIndexBadge stats={stats} />
         {avatar ? (
           <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
         ) : null}

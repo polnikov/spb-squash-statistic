@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Search, Snail, X } from "lucide-react";
 import type { PlayerOverview } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
@@ -33,6 +33,16 @@ function playerHref(rid: string) {
   return `/players/${encodeURIComponent(rid)}`;
 }
 
+function SkillIndexMiniBadge({ value }: { value: number | null }) {
+  if (value === null) return null;
+  return (
+    <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
+      <Snail className="size-3 shrink-0" />
+      <span className="font-mono tabular">{value.toFixed(1)}</span>
+    </span>
+  );
+}
+
 function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   const avatar = usePlayerAvatar(player.rid);
   const name = splitPlayerName(player.name);
@@ -44,6 +54,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
         className="relative flex min-h-[178px] overflow-hidden rounded-lg bg-card bg-cover bg-center text-center"
         style={avatarBackgroundStyle(avatar)}
       >
+        <SkillIndexMiniBadge value={player.skillIndex} />
         <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-2 px-3.5 pb-4 text-left">
           <div className="min-w-0 text-[13.5px] font-semibold leading-tight text-white">
@@ -61,8 +72,9 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="flex flex-col items-center gap-[11px] rounded-lg bg-card px-3.5 pb-4 pt-5 text-center"
+      className="relative flex flex-col items-center gap-[11px] rounded-lg bg-card px-3.5 pb-4 pt-5 text-center"
     >
+      <SkillIndexMiniBadge value={player.skillIndex} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[60px] text-xl" />
       <div className="w-full text-balance break-words text-[13.5px] font-semibold leading-tight">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -83,6 +95,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
         className="group relative flex min-h-[168px] overflow-hidden rounded-lg bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         style={avatarBackgroundStyle(avatar)}
       >
+        <SkillIndexMiniBadge value={player.skillIndex} />
         <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-3 px-4 pb-4">
           <div className="min-w-0 text-sm font-semibold leading-tight text-white">
@@ -100,8 +113,9 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="group flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
     >
+      <SkillIndexMiniBadge value={player.skillIndex} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
       <div className="w-full truncate text-sm font-semibold">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">

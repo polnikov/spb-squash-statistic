@@ -37,6 +37,7 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
         points: Math.max(existing.points, player.points),
         matches: existing.matches + player.matches,
         winPct: Math.max(existing.winPct, player.winPct),
+        skillIndex: Math.max(existing.skillIndex ?? 0, player.skillIndex ?? 0) || null,
       });
     }
   }
