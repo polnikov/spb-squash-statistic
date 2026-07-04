@@ -199,6 +199,9 @@ function shouldSkipStatementError(error, statement) {
   const isAddConstraint = /\bADD\s+CONSTRAINT\b/.test(normalized);
   if (isAddConstraint && code === "42703") return true;
 
+  const isCreateIndex = /\bCREATE\s+(UNIQUE\s+)?INDEX\b/.test(normalized);
+  if (isCreateIndex && code === "42703") return true;
+
   return false;
 }
 
