@@ -12,7 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const seasons = await listSeasonsWithData();
+  const seasons = await listSeasonsWithData().catch((error) => {
+    console.error("Failed to load season list", error);
+    return [];
+  });
   return (
     <div className="app-bg flex min-h-dvh">
       <Suspense fallback={null}>
