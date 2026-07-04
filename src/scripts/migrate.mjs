@@ -1,7 +1,7 @@
 import process from "node:process";
+import crypto from "node:crypto";
+import fs from "node:fs";
 import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -23,8 +23,6 @@ const diagnosticClient = postgres(databaseUrl, {
   idle_timeout: 20,
 });
 
-const db = drizzle(mainClient, { logger: false });
-
 const watchdog = setInterval(() => {
   console.error("[migrate] still running; printing database diagnostics");
   void printDiagnostics();
@@ -34,11 +32,7 @@ try {
   await mainClient`set lock_timeout = '10s'`;
   await mainClient`set statement_timeout = '170s'`;
 
-  await migrate(db, {
-    migrationsFolder: "./drizzle",
-    migrationsSchema: "drizzle",
-    migrationsTable: "__drizzle_migrations",
-  });
+  await runMigrations();
 
   console.log("[migrate] migrations up to date");
 } catch (error) {
@@ -132,4 +126,81 @@ async function printDiagnostics() {
   } catch (error) {
     console.error("[migrate:diagnostics] ERROR:", formatError(error));
   }
+}
+
+async function runMigrations() {
+  await mainClient`create schema if not exists "drizzle"`;
+  await mainClient`
+    create table if not exists "drizzle"."__drizzle_migrations" (
+      id serial primary key,
+      hash text not null,
+      created_at numeric
+    )
+  `;
+
+  const appliedRows = await mainClient`
+    select created_at
+    from "drizzle"."__drizzle_migrations"
+  `;
+  const applied = new Set(appliedRows.map((row) => String(row.created_at)));
+
+  for (const migration of readMigrationFiles("./drizzle")) {
+    if (applied.has(String(migration.folderMillis))) continue;
+
+    console.log(`[migrate] applying ${migration.tag}`);
+    for (const statement of migration.sql) {
+      const sql = statement.trim();
+      if (!sql) continue;
+
+      try {
+        await mainClient.unsafe(sql);
+      } catch (error) {
+        if (shouldSkipStatementError(error, sql)) {
+          console.log(`[migrate] skip ${migration.tag}: ${formatSkippedStatement(error, sql)}`);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    await mainClient`
+      insert into "drizzle"."__drizzle_migrations" ("hash", "created_at")
+      values (${migration.hash}, ${migration.folderMillis})
+    `;
+    applied.add(String(migration.folderMillis));
+    console.log(`[migrate] applied ${migration.tag}`);
+  }
+}
+
+function readMigrationFiles(migrationsFolder) {
+  const journalPath = `${migrationsFolder}/meta/_journal.json`;
+  const journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+
+  return journal.entries.map((entry) => {
+    const path = `${migrationsFolder}/${entry.tag}.sql`;
+    const query = fs.readFileSync(path, "utf8");
+    return {
+      tag: entry.tag,
+      folderMillis: entry.when,
+      hash: crypto.createHash("sha256").update(query).digest("hex"),
+      sql: query.split("--> statement-breakpoint"),
+    };
+  });
+}
+
+function shouldSkipStatementError(error, statement) {
+  const code = error?.code;
+  if (["42710", "42P07", "42701"].includes(code)) return true;
+
+  const normalized = statement.toUpperCase();
+  const isDrop = /\bDROP\b/.test(normalized);
+  if (isDrop && ["42704", "42P01", "42703"].includes(code)) return true;
+
+  return false;
+}
+
+function formatSkippedStatement(error, statement) {
+  const code = error?.code ?? "unknown";
+  const head = statement.replace(/\s+/g, " ").slice(0, 120);
+  return `${code} ${head}`;
 }
