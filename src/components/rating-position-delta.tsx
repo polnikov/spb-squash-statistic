@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NumberPop } from "@/components/ui/number-pop";
 
 /**
  * Rating-position change badge.
@@ -37,7 +38,7 @@ export function RatingPositionDelta({
       )}
     >
       <Arrow className="size-3" strokeWidth={2.5} />
-      {Math.abs(delta)}
+      <NumberPop>{Math.abs(delta)}</NumberPop>
     </span>
   );
 }

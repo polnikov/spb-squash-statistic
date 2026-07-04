@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
+import { NumberPop } from "@/components/ui/number-pop";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
@@ -32,7 +33,9 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "place",
       header: () => <span>#</span>,
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.place}</span>
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          <NumberPop>{row.original.place}</NumberPop>
+        </span>
       ),
     },
     {
@@ -59,35 +62,49 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
     {
       accessorKey: "points",
       header: "Очки",
-      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.points}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          <NumberPop>{row.original.points}</NumberPop>
+        </span>
+      ),
     },
     {
       accessorKey: "stages",
       header: "Этапов",
       cell: ({ row }) => (
         <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
-          {row.original.stages}/{totalStages}
+          <NumberPop>{`${row.original.stages}/${totalStages}`}</NumberPop>
         </span>
       ),
     },
     {
       accessorKey: "matches",
       header: "Матчи",
-      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.matches}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          <NumberPop>{row.original.matches}</NumberPop>
+        </span>
+      ),
     },
     {
       accessorKey: "wins",
       header: "Победы",
-      cell: ({ row }) => <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{row.original.wins}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          <NumberPop>{row.original.wins}</NumberPop>
+        </span>
+      ),
     },
     {
       accessorKey: "lastStagePoints",
       header: "Последний этап",
       cell: ({ row }) =>
         row.original.lastStagePoints > 0 ? (
-          <span className="font-mono text-[12.5px] tabular text-brand-accent-ink">+{row.original.lastStagePoints}</span>
+          <span className="font-mono text-[12.5px] tabular text-brand-accent-ink">
+            <NumberPop>{`+${row.original.lastStagePoints}`}</NumberPop>
+          </span>
         ) : (
-          <span className="font-mono tabular text-on-surface-variant">x</span>
+          <span className="font-mono tabular text-on-surface-variant"><NumberPop>x</NumberPop></span>
         ),
     },
     {
@@ -97,9 +114,11 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       cell: ({ row }) => {
         const gap = leaderPoints - row.original.points;
         return gap > 0 ? (
-          <span className="font-mono text-[12.5px] tabular text-on-surface-variant">−{gap}</span>
+          <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+            <NumberPop>{`−${gap}`}</NumberPop>
+          </span>
         ) : (
-          <span className="font-mono tabular text-on-surface-variant">x</span>
+          <span className="font-mono tabular text-on-surface-variant"><NumberPop>x</NumberPop></span>
         );
       },
     },
