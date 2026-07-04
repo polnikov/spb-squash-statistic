@@ -141,6 +141,7 @@ export const stageDivisions = pgTable(
       .references(() => stages.id, { onDelete: "cascade" }),
     division: smallint("division").notNull(),
     rankedinTournamentId: text("rankedin_tournament_id"),
+    rankedinClassId: text("rankedin_class_id"),
     parseStatus: parseStatus("parse_status").notNull().default("pending"),
     parsedAt: timestamp("parsed_at", { withTimezone: true }),
     error: text("error"),

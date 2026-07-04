@@ -14,9 +14,10 @@ import {
   type ImportedStage,
   type StageImportInput,
   type StageImportPreview,
+  type StageImportSubTournamentSelection,
 } from "@/lib/parsing/rankedin";
 
-export type { ImportedStage, StageImportInput, StageImportPreview } from "@/lib/parsing/rankedin";
+export type { ImportedStage, StageImportInput, StageImportPreview, StageImportSubTournamentSelection } from "@/lib/parsing/rankedin";
 
 export type LoginState = { error?: string };
 
@@ -243,11 +244,18 @@ export async function listPointsTablesAction(): Promise<PointsTableGroup[]> {
 
 export async function previewStageImportAction(
   input: StageImportInput,
-): Promise<{ ok: true; preview: StageImportPreview } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; kind: "preview"; preview: StageImportPreview }
+  | { ok: true; kind: "subtournaments"; subtournaments: StageImportSubTournamentSelection }
+  | { ok: false; error: string }
+> {
   requireAdmin();
   try {
-    const preview = await previewRankedinStageImport(input);
-    return { ok: true, preview };
+    const result = await previewRankedinStageImport(input);
+    if (result.kind === "subtournaments") {
+      return { ok: true, kind: "subtournaments", subtournaments: result.subtournaments };
+    }
+    return { ok: true, kind: "preview", preview: result.preview };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Ошибка парсинга турнира" };
   }

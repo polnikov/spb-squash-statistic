@@ -20,6 +20,7 @@ type AnyRecord = Record<string, unknown>;
 
 export type StageImportInput = {
   tournament: string;
+  classId?: string;
   season?: string;
   division?: number;
   stage?: number;
@@ -93,6 +94,7 @@ export type StageImportPreview = {
   tournamentUrl: string;
   resultsPageUrl: string;
   matchesPageUrl: string;
+  selectedSubTournament: RankedInSubTournamentOption | null;
   season: string;
   division: number;
   stage: number;
@@ -105,6 +107,24 @@ export type StageImportPreview = {
   alreadyImported: boolean;
 };
 
+export type RankedInSubTournamentOption = {
+  id: string;
+  name: string;
+};
+
+export type StageImportSubTournamentSelection = {
+  tournamentId: string;
+  tournamentName: string;
+  tournamentUrl: string;
+  resultsPageUrl: string;
+  matchesPageUrl: string;
+  options: RankedInSubTournamentOption[];
+};
+
+export type StageImportPreviewResult =
+  | { kind: "preview"; preview: StageImportPreview }
+  | { kind: "subtournaments"; subtournaments: StageImportSubTournamentSelection };
+
 type InternalPlayerStats = ParsedStagePlayer & {
   wins: number;
   losses: number;
@@ -116,11 +136,23 @@ type InternalPlayerStats = ParsedStagePlayer & {
   tournamentClass: string;
 };
 
-export async function previewRankedinStageImport(input: StageImportInput): Promise<StageImportPreview> {
+type ParsedStageData = Omit<StageImportPreview, "players" | "conflicts" | "alreadyImported"> & {
+  players: ParsedStagePlayer[];
+};
+
+type ParseRankedinTournamentResult =
+  | { kind: "preview"; parsed: ParsedStageData }
+  | { kind: "subtournaments"; subtournaments: StageImportSubTournamentSelection };
+
+export async function previewRankedinStageImport(input: StageImportInput): Promise<StageImportPreviewResult> {
   const parsed = await parseRankedinTournament(input);
-  const statuses = await classifyPlayers(parsed.players);
-  const excludedIds = getRetiredOnlyPlaceZeroPlayerIds(parsed.players, parsed.matches);
-  const playersPreview = parsed.players.map((p) => ({
+  if (parsed.kind === "subtournaments") {
+    return parsed;
+  }
+
+  const statuses = await classifyPlayers(parsed.parsed.players);
+  const excludedIds = getRetiredOnlyPlaceZeroPlayerIds(parsed.parsed.players, parsed.parsed.matches);
+  const playersPreview = parsed.parsed.players.map((p) => ({
     ...p,
     ...(statuses.get(p.rankedinId) ?? { status: "new" as const }),
     ...(excludedIds.has(p.rankedinId)
@@ -131,10 +163,13 @@ export async function previewRankedinStageImport(input: StageImportInput): Promi
       : {}),
   }));
   return {
-    ...parsed,
-    players: playersPreview,
-    conflicts: playersPreview.filter((p) => !p.excludedFromImport && p.status === "conflict").length,
-    alreadyImported: await isStageImported(parsed.season, parsed.division, parsed.stage),
+    kind: "preview",
+    preview: {
+      ...parsed.parsed,
+      players: playersPreview,
+      conflicts: playersPreview.filter((p) => !p.excludedFromImport && p.status === "conflict").length,
+      alreadyImported: await isStageImported(parsed.parsed.season, parsed.parsed.division, parsed.parsed.stage),
+    },
   };
 }
 
@@ -254,7 +289,11 @@ export async function importRankedinStage(input: StageImportInput): Promise<{
   ok: false;
   error: string;
 }> {
-  const preview = await previewRankedinStageImport(input);
+  const previewResult = await previewRankedinStageImport(input);
+  if (previewResult.kind === "subtournaments") {
+    return { ok: false, error: "Выберите подтурнир перед загрузкой этапа" };
+  }
+  const preview = previewResult.preview;
   if (preview.conflicts > 0) {
     return { ok: false, error: `Есть конфликты ID: ${preview.conflicts}` };
   }
@@ -353,6 +392,7 @@ export async function importRankedinStage(input: StageImportInput): Promise<{
         .update(stageDivisions)
         .set({
           rankedinTournamentId: preview.tournamentId,
+          rankedinClassId: preview.selectedSubTournament?.id ?? null,
           parseStatus: "done",
           parsedAt: new Date(),
           error: null,
@@ -363,6 +403,7 @@ export async function importRankedinStage(input: StageImportInput): Promise<{
         stageId,
         division: preview.division,
         rankedinTournamentId: preview.tournamentId,
+        rankedinClassId: preview.selectedSubTournament?.id ?? null,
         parseStatus: "done",
         parsedAt: new Date(),
         error: null,
@@ -484,6 +525,7 @@ export async function parseStageDivision(stageDivisionId: number): Promise<void>
   try {
     const res = await importRankedinStage({
       tournament: sd.rankedinTournamentId,
+      classId: sd.rankedinClassId ?? undefined,
       season: sd.stage.season.label,
       division: sd.division,
       stage: sd.stage.number,
@@ -499,7 +541,7 @@ export async function parseStageDivision(stageDivisionId: number): Promise<void>
   }
 }
 
-async function parseRankedinTournament(input: StageImportInput): Promise<Omit<StageImportPreview, "players" | "conflicts" | "alreadyImported"> & { players: ParsedStagePlayer[] }> {
+async function parseRankedinTournament(input: StageImportInput): Promise<ParseRankedinTournamentResult> {
   const tournamentId = extractTournamentId(input.tournament);
   if (!tournamentId) throw new Error("Укажите ID турнира или ссылку RankedIn");
 
@@ -512,22 +554,39 @@ async function parseRankedinTournament(input: StageImportInput): Promise<Omit<St
   const resultsPageUrl = `${tournamentUrl}/results`;
   const matchesPageUrl = `${tournamentUrl}/matches`;
   const matchesApiUrl = `${API_BASE_URL}/tournament/GetMatchesSectionAsync?Id=${encodeURIComponent(tournamentId)}&LanguageCode=en&IsReadonly=true`;
+  const selectedSubTournament = resolveSubTournamentSelection(tournamentInfo, tournamentName, input.classId);
+  if (selectedSubTournament.kind === "subtournaments") {
+    return {
+      kind: "subtournaments",
+      subtournaments: {
+        tournamentId,
+        tournamentName,
+        tournamentUrl,
+        resultsPageUrl,
+        matchesPageUrl,
+        options: selectedSubTournament.options,
+      },
+    };
+  }
 
   const matchesData = await fetchJson(matchesApiUrl);
   if (!Array.isArray(matchesData.Matches)) {
     throw new Error("GetMatchesSectionAsync не вернул массив Matches");
   }
+  const selectedMatchesData = selectedSubTournament.selected
+    ? filterMatchesByClass(matchesData, selectedSubTournament.selected)
+    : matchesData;
 
-  const { resultsData } = await fetchResultsData(tournamentId, tournamentInfo);
+  const { resultsData } = await fetchResultsData(tournamentId, tournamentInfo, selectedSubTournament.selected?.id);
   if (resultsData.length === 0) {
     throw new Error("GetResultsAsync не вернул результаты по classId/rankingId");
   }
 
-  const warnings = collectMatchValidationWarnings(matchesData).map((w) => w.message);
-  const playerStats = processMatches(matchesData, tournamentName);
+  const warnings = collectMatchValidationWarnings(selectedMatchesData).map((w) => w.message);
+  const playerStats = processMatches(selectedMatchesData, tournamentName);
   addPlayerStandings(playerStats, resultsData);
   const playersRows = buildPlayerRows(playerStats);
-  const matchRows = extractMatchRows(matchesData, tournamentName);
+  const matchRows = extractMatchRows(selectedMatchesData, tournamentName);
   const inferred = inferTournamentMeta(tournamentName, matchRows);
 
   const season = input.season?.trim() || inferred.season;
@@ -540,18 +599,22 @@ async function parseRankedinTournament(input: StageImportInput): Promise<Omit<St
   if (!stage) throw new Error("Не удалось определить этап. Укажите этап вручную");
 
   return {
-    tournamentId,
-    tournamentName,
-    tournamentUrl,
-    resultsPageUrl,
-    matchesPageUrl,
-    season,
-    division,
-    stage,
-    date,
-    players: playersRows,
-    matches: matchRows,
-    warnings,
+    kind: "preview",
+    parsed: {
+      tournamentId,
+      tournamentName,
+      tournamentUrl,
+      resultsPageUrl,
+      matchesPageUrl,
+      selectedSubTournament: selectedSubTournament.selected,
+      season,
+      division,
+      stage,
+      date,
+      players: playersRows,
+      matches: matchRows,
+      warnings,
+    },
   };
 }
 
@@ -613,12 +676,56 @@ function getRetiredOnlyPlaceZeroPlayerIds(playersRows: ParsedStagePlayer[], matc
   return excluded;
 }
 
-async function fetchResultsData(tournamentId: string, tournamentInfo: AnyRecord) {
-  let classIds = getIds(tournamentInfo.Classes);
+function resolveSubTournamentSelection(
+  tournamentInfo: AnyRecord,
+  tournamentName: string,
+  requestedClassId?: string,
+):
+  | { kind: "selected"; selected: RankedInSubTournamentOption | null }
+  | { kind: "subtournaments"; options: RankedInSubTournamentOption[] } {
+  const options = getSubTournamentOptions(tournamentInfo);
+  if (options.length <= 1) return { kind: "selected", selected: null };
+  if (detectFinalSplitFromTournamentName(tournamentName)) return { kind: "selected", selected: null };
+
+  const classId = requestedClassId?.trim();
+  if (classId) {
+    const selected = options.find((item) => item.id === classId);
+    if (!selected) {
+      throw new Error(`Подтурнир ${classId} не найден. Доступны: ${options.map((item) => item.id).join(", ")}`);
+    }
+    return { kind: "selected", selected };
+  }
+
+  return { kind: "subtournaments", options };
+}
+
+function getSubTournamentOptions(tournamentInfo: AnyRecord): RankedInSubTournamentOption[] {
+  return asArray(tournamentInfo.Classes)
+    .map((item) => ({
+      id: String(item.Id ?? "").trim(),
+      name: String(item.Name ?? "").trim(),
+    }))
+    .filter((item) => item.id || item.name);
+}
+
+function filterMatchesByClass(matchesData: AnyRecord, selectedClass: RankedInSubTournamentOption): AnyRecord {
+  const selectedName = normalizeName(selectedClass.name);
+  const filteredMatches = asArray(matchesData.Matches).filter((match) => normalizeName(String(match.TournamentClassName ?? "")) === selectedName);
+  if (filteredMatches.length === 0) {
+    throw new Error(`Для подтурнира ${selectedClass.id} (${selectedClass.name}) не найдены матчи`);
+  }
+  return {
+    ...matchesData,
+    Matches: filteredMatches,
+  };
+}
+
+async function fetchResultsData(tournamentId: string, tournamentInfo: AnyRecord, selectedClassId?: string) {
+  let classIds = selectedClassId ? [selectedClassId] : getIds(tournamentInfo.Classes);
   const rankingIds = getRankingIds(tournamentInfo.Rankings);
   const resultGroups: { classId: string | number | null; className: string; count: number; data: AnyRecord[] }[] = [];
   const classNamesById = new Map(
-    asArray(tournamentInfo.Classes).map((item) => [item.Id as string | number, String(item.Name ?? "")]),
+    asArray(tournamentInfo.Classes).map((item) => [String(item.Id ?? ""), String(item.Name ?? "")]),
   );
 
   if (classIds.length === 0) classIds = [null];
@@ -636,7 +743,7 @@ async function fetchResultsData(tournamentId: string, tournamentInfo: AnyRecord)
         classResults = data.map((item) => ({
           ...item,
           __classId: classId,
-          __className: classNamesById.get(classId as string | number) || "",
+          __className: classNamesById.get(String(classId ?? "")) || "",
           __rankingId: rankingId,
           __rankedinStanding: item.Standing,
         }));
@@ -647,7 +754,7 @@ async function fetchResultsData(tournamentId: string, tournamentInfo: AnyRecord)
     if (classResults.length > 0) {
       resultGroups.push({
         classId,
-        className: classNamesById.get(classId as string | number) || "",
+        className: classNamesById.get(String(classId ?? "")) || "",
         count: classResults.length,
         data: classResults,
       });

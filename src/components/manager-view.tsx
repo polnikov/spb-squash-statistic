@@ -33,6 +33,7 @@ import {
   type PlayerLinkOption,
   type PointsTableGroup,
   type StageImportPreview,
+  type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
 import { fmtCourt, fmtDate, fmtDateFull, fmtNum } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -817,6 +818,8 @@ function UploadManager() {
   const [parsing, setParsing] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
   const [preview, setPreview] = React.useState<StageImportPreview | null>(null);
+  const [subtournaments, setSubtournaments] = React.useState<StageImportSubTournamentSelection | null>(null);
+  const [selectedClassId, setSelectedClassId] = React.useState<string | undefined>(undefined);
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState<{ players: number; matches: number; season: string; division: number; stage: number; date: string } | null>(null);
   const [imported, setImported] = React.useState<ImportedStage[]>([]);
@@ -864,16 +867,25 @@ function UploadManager() {
     [date, division, season, stage, tournament],
   );
 
-  async function runParse() {
+  async function runParse(classId?: string) {
     setParsing(true);
     setError(null);
-    const res = await previewStageImportAction(importInput);
+    const res = await previewStageImportAction({ ...importInput, classId });
     setParsing(false);
     if (!res.ok) {
+      setSubtournaments(null);
       setError(res.error);
       return;
     }
+    if (res.kind === "subtournaments") {
+      setSubtournaments(res.subtournaments);
+      setSelectedClassId(undefined);
+      setPreview(null);
+      return;
+    }
     setPreview(res.preview);
+    setSubtournaments(null);
+    setSelectedClassId(res.preview.selectedSubTournament?.id);
     setPlayerLinks({});
     setSeason(res.preview.season);
     setDivision(String(res.preview.division));
@@ -888,6 +900,7 @@ function UploadManager() {
     setError(null);
     const res = await importStageAction({
       tournament,
+      classId: selectedClassId ?? preview.selectedSubTournament?.id,
       season: preview.season,
       division: preview.division,
       stage: preview.stage,
@@ -911,6 +924,40 @@ function UploadManager() {
     <div className="flex w-full max-w-[1320px] flex-col gap-5">
       <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Загрузка этапа</h1>
       <UploadStepper step={step} />
+
+      {subtournaments ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
+          <div className="w-full max-w-[560px] rounded-[20px] border border-outline-variant bg-card p-5 shadow-e3">
+            <div className="flex items-start justify-between gap-4 border-b border-outline-variant pb-4">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Выберите подтурнир</h2>
+                <p className="mt-1 text-xs text-on-surface-variant">{subtournaments.tournamentName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSubtournaments(null)}
+                className="rounded-[10px] px-3 py-1.5 text-[12px] font-semibold text-on-surface-variant hover:bg-surface-container-high"
+              >
+                Отмена
+              </button>
+            </div>
+            <div className="mt-4 grid gap-2">
+              {subtournaments.options.map((option) => (
+                <button
+                  key={option.id || option.name}
+                  type="button"
+                  onClick={() => runParse(option.id)}
+                  disabled={parsing}
+                  className="flex min-h-12 w-full items-center justify-between gap-3 rounded-[12px] border border-outline-variant bg-surface-container-low px-4 py-3 text-left transition-colors duration-200 ease-m3-standard hover:border-primary/70 hover:bg-surface-container-high disabled:opacity-60"
+                >
+                  <span className="text-[13px] font-semibold text-on-surface">{option.name || `Подтурнир ${option.id}`}</span>
+                  <span className="shrink-0 rounded-full bg-surface-container-high px-2.5 py-1 font-mono text-[11px] tabular text-on-surface-variant">{option.id}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {step === "input" ? (
         <div className="grid grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-6">
@@ -936,7 +983,7 @@ function UploadManager() {
             ) : null}
             <div className="flex justify-end">
               <button
-                onClick={runParse}
+                onClick={() => runParse()}
                 disabled={parsing || !tournament.trim()}
                 className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-60"
               >
@@ -1056,7 +1103,7 @@ function UploadManager() {
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
                 <div className="mt-1 text-xs text-on-surface-variant">
-                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {preview.players.length} игроков · {preview.matches.length} матчей
+                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {preview.players.length} игроков · {preview.matches.length} матчей
                 </div>
               </div>
             </div>
@@ -1159,6 +1206,8 @@ function UploadManager() {
               setStep("input");
               setTournament("");
               setPreview(null);
+              setSubtournaments(null);
+              setSelectedClassId(undefined);
               setDone(null);
               setError(null);
             }}
