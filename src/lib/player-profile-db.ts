@@ -109,6 +109,8 @@ function mapAggregate(r: PlayerStatsAggregateRow): PlayerProfileStats {
     avgSecondsPerRally: num(r.avgSecondsPerRally),
     matchLoadScore: num(r.matchLoadScore),
     formIndex: num(r.formIndex),
+    skillIndex: num(r.skillIndex),
+    skillIndexStatus: r.skillIndexStatus,
     matchConversionPp: num(r.matchConversionPp),
     gameConversionPp: num(r.gameConversionPp),
     resultConversionPp: num(r.resultConversionPp),

@@ -85,6 +85,13 @@
       "when": 1782672000000,
       "tag": "0011_player_rankedin_aliases",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783123200000,
+      "tag": "0012_skill_index",
+      "breakpoints": true
     }
   ]
 }

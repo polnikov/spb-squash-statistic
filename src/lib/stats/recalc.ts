@@ -174,6 +174,8 @@ function aggregateRow(
     matchLoadScore: num3(c.matchLoadScore),
 
     formIndex: num3(c.formIndex),
+    skillIndex: num3(c.skillIndex),
+    skillIndexStatus: c.skillIndexStatus,
     matchConversionPp: num3(c.matchConversionPp),
     gameConversionPp: num3(c.gameConversionPp),
     resultConversionPp: num3(c.resultConversionPp),
@@ -366,6 +368,7 @@ function buildSeriesPoints(
       { key: "gameWinRatePct", value: c.gameWinRatePct },
       { key: "rallyWinRatePct", value: c.rallyWinRatePct },
       { key: "formIndex", value: c.formIndex },
+      { key: "skillIndex", value: c.skillIndex },
       { key: "gameBalancePerMatch", value: c.gameBalancePerMatch },
       { key: "rallyBalancePerMatch", value: c.rallyBalancePerMatch },
       { key: "cumulativeGameBalance", value: c.cumulativeGameBalance },

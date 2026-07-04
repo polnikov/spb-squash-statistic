@@ -324,6 +324,8 @@ export type ComputedAggregate = {
 
   // composite indexes
   formIndex: number | null;
+  skillIndex: number | null;
+  skillIndexStatus: SkillIndexStatus | null;
   matchConversionPp: number | null;
   gameConversionPp: number | null;
   resultConversionPp: number | null;
@@ -387,6 +389,73 @@ export type ComputedAggregate = {
 function formIndexOf(matchWR: number | null, gameWR: number | null, rallyWR: number | null): number | null {
   if (matchWR === null) return null;
   return matchWR * 0.45 + (gameWR ?? 0) * 0.35 + (rallyWR ?? 0) * 0.2;
+}
+
+export type SkillIndexStatus = "beginner" | "developing" | "competitive" | "strong" | "elite";
+
+export const SKILL_INDEX_SCALE: {
+  min: number;
+  max: number;
+  status: SkillIndexStatus;
+  labelRu: string;
+  descriptionRu: string;
+}[] = [
+  {
+    min: 0,
+    max: 39.9,
+    status: "beginner",
+    labelRu: "Начальный",
+    descriptionRu: "Игрок пока заметно уступает по ключевым игровым показателям.",
+  },
+  {
+    min: 40,
+    max: 49.9,
+    status: "developing",
+    labelRu: "Развивается",
+    descriptionRu: "Игрок конкурентен отдельными отрезками, но пока нестабилен.",
+  },
+  {
+    min: 50,
+    max: 57.9,
+    status: "competitive",
+    labelRu: "Конкурентный",
+    descriptionRu: "Игрок держит равный уровень и регулярно борется за победы.",
+  },
+  {
+    min: 58,
+    max: 65.9,
+    status: "strong",
+    labelRu: "Сильный",
+    descriptionRu: "Игрок имеет устойчивое преимущество по качеству игры.",
+  },
+  {
+    min: 66,
+    max: 100,
+    status: "elite",
+    labelRu: "Элитный",
+    descriptionRu: "Игрок заметно превосходит соперников по игровому уровню.",
+  },
+];
+
+export function calculateSkillIndex(params: {
+  matchWinRatePct?: number | null;
+  gameWinRatePct?: number | null;
+  rallyWinRatePct?: number | null;
+}): number | null {
+  const { matchWinRatePct, gameWinRatePct, rallyWinRatePct } = params;
+  if (matchWinRatePct == null || gameWinRatePct == null || rallyWinRatePct == null) return null;
+  const value = matchWinRatePct * 0.3 + gameWinRatePct * 0.35 + rallyWinRatePct * 0.35;
+  return Math.round(value * 10) / 10;
+}
+
+export function getSkillIndexStatus(skillIndex?: number | null): SkillIndexStatus | null {
+  if (skillIndex == null) return null;
+  return SKILL_INDEX_SCALE.find((row) => skillIndex >= row.min && skillIndex <= row.max)?.status ?? null;
+}
+
+export function getSkillIndexLabelRu(status?: SkillIndexStatus | null): string | null {
+  if (!status) return null;
+  return SKILL_INDEX_SCALE.find((row) => row.status === status)?.labelRu ?? null;
 }
 
 type WindowStats = {
@@ -490,6 +559,8 @@ export function computeAggregate(perspectives: MatchPerspective[]): ComputedAggr
     avgSecondsPerRally: null,
     matchLoadScore: null,
     formIndex: null,
+    skillIndex: null,
+    skillIndexStatus: null,
     matchConversionPp: null,
     gameConversionPp: null,
     resultConversionPp: null,
@@ -645,6 +716,12 @@ export function computeAggregate(perspectives: MatchPerspective[]): ComputedAggr
     const gwr = a.gameWinRatePct ?? 0;
     const rwr = a.rallyWinRatePct ?? 0;
     a.formIndex = mwr * 0.45 + gwr * 0.35 + rwr * 0.2;
+    a.skillIndex = calculateSkillIndex({
+      matchWinRatePct: a.matchWinRatePct,
+      gameWinRatePct: a.gameWinRatePct,
+      rallyWinRatePct: a.rallyWinRatePct,
+    });
+    a.skillIndexStatus = getSkillIndexStatus(a.skillIndex);
     a.matchConversionPp = mwr - gwr;
     a.gameConversionPp = gwr - rwr;
     a.resultConversionPp = mwr - rwr;

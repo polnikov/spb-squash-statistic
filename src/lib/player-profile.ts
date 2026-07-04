@@ -6,6 +6,11 @@ import {
   type MockResult,
   type RealMatch,
 } from "@/lib/mock/league";
+import {
+  calculateSkillIndex,
+  getSkillIndexStatus,
+  type SkillIndexStatus,
+} from "@/lib/stats/compute";
 
 export type PlayerProfileStatsScope = "career" | "season" | "season_division";
 export type SampleSizeLevel = "very_low" | "low" | "medium" | "high";
@@ -89,6 +94,8 @@ export type PlayerProfileStats = {
   avgSecondsPerRally: number | null;
   matchLoadScore: number | null;
   formIndex: number | null;
+  skillIndex: number | null;
+  skillIndexStatus: SkillIndexStatus | null;
   matchConversionPp: number | null;
   gameConversionPp: number | null;
   resultConversionPp: number | null;
@@ -414,6 +421,8 @@ export function emptyStats(): PlayerProfileStats {
     avgSecondsPerRally: null,
     matchLoadScore: null,
     formIndex: null,
+    skillIndex: null,
+    skillIndexStatus: null,
     matchConversionPp: null,
     gameConversionPp: null,
     resultConversionPp: null,
@@ -613,6 +622,12 @@ function aggregateStats(
   const gameWr = stats.gameWinRatePct;
   const rallyWr = stats.rallyWinRatePct;
   stats.formIndex = numberOrNull((matchWr ?? 0) * 0.45 + (gameWr ?? 0) * 0.35 + (rallyWr ?? 0) * 0.2);
+  stats.skillIndex = calculateSkillIndex({
+    matchWinRatePct: matchWr,
+    gameWinRatePct: gameWr,
+    rallyWinRatePct: rallyWr,
+  });
+  stats.skillIndexStatus = getSkillIndexStatus(stats.skillIndex);
   stats.matchConversionPp = matchWr !== null && gameWr !== null ? matchWr - gameWr : null;
   stats.gameConversionPp = gameWr !== null && rallyWr !== null ? gameWr - rallyWr : null;
   stats.resultConversionPp = matchWr !== null && rallyWr !== null ? matchWr - rallyWr : null;

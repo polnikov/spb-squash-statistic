@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateSkillIndex,
   classifyMatchup,
   computeAggregate,
   gameFlags,
+  getSkillIndexLabelRu,
+  getSkillIndexStatus,
   matchComebackFlags,
   pct,
   perspective,
@@ -150,10 +153,58 @@ describe("computeAggregate", () => {
   it("computes composite indexes", () => {
     // formIndex = mwr*0.45 + gwr*0.35 + rwr*0.20
     const expected = 50 * 0.45 + (4 / 7) * 100 * 0.35 + (65 / 127) * 100 * 0.2;
+    const expectedSkill = 50 * 0.3 + (4 / 7) * 100 * 0.35 + (65 / 127) * 100 * 0.35;
     expect(a.formIndex).toBeCloseTo(expected, 4);
+    expect(a.skillIndex).toBe(Math.round(expectedSkill * 10) / 10);
+    expect(a.skillIndexStatus).toBe("competitive");
     expect(a.matchConversionPp).toBeCloseTo(50 - (4 / 7) * 100, 4);
     expect(a.gameConversionPp).toBeCloseTo((4 / 7) * 100 - (65 / 127) * 100, 4);
     expect(a.resultConversionPp).toBeCloseTo(50 - (65 / 127) * 100, 4);
+  });
+});
+
+describe("skillIndex", () => {
+  it("calculates weighted skill index and rounds to one decimal", () => {
+    expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: 55, rallyWinRatePct: 52 })).toBe(55.5);
+  });
+
+  it("returns null when any winrate metric is missing", () => {
+    expect(calculateSkillIndex({ matchWinRatePct: null, gameWinRatePct: 55, rallyWinRatePct: 52 })).toBeNull();
+    expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: undefined, rallyWinRatePct: 52 })).toBeNull();
+    expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: 55, rallyWinRatePct: null })).toBeNull();
+  });
+
+  it("maps all ranges and boundary values to statuses", () => {
+    const cases: [number, ReturnType<typeof getSkillIndexStatus>][] = [
+      [0, "beginner"],
+      [39.9, "beginner"],
+      [40, "developing"],
+      [49.9, "developing"],
+      [50, "competitive"],
+      [57.9, "competitive"],
+      [58, "strong"],
+      [65.9, "strong"],
+      [66, "elite"],
+      [100, "elite"],
+    ];
+    for (const [value, status] of cases) expect(getSkillIndexStatus(value)).toBe(status);
+    expect(getSkillIndexStatus(null)).toBeNull();
+  });
+
+  it("returns Russian labels by status", () => {
+    expect(getSkillIndexLabelRu("beginner")).toBe("Начальный");
+    expect(getSkillIndexLabelRu("developing")).toBe("Развивается");
+    expect(getSkillIndexLabelRu("competitive")).toBe("Конкурентный");
+    expect(getSkillIndexLabelRu("strong")).toBe("Сильный");
+    expect(getSkillIndexLabelRu("elite")).toBe("Элитный");
+    expect(getSkillIndexLabelRu(null)).toBeNull();
+  });
+
+  it("does not affect formIndex", () => {
+    const aggregate = computeAggregate([perspective(m1, true), perspective(m2, true)]);
+    const expectedForm = 50 * 0.45 + (4 / 7) * 100 * 0.35 + (65 / 127) * 100 * 0.2;
+    expect(aggregate.formIndex).toBeCloseTo(expectedForm, 4);
+    expect(aggregate.skillIndex).not.toBeCloseTo(expectedForm, 4);
   });
 });
 

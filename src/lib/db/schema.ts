@@ -50,6 +50,14 @@ export const sampleSizeLevelEnum = pgEnum("sample_size_level", [
   "medium",
   "high",
 ]);
+/** Analytical playing-level tier derived from skillIndex. */
+export const skillIndexStatusEnum = pgEnum("skill_index_status", [
+  "beginner",
+  "developing",
+  "competitive",
+  "strong",
+  "elite",
+]);
 /** Head-to-head comfort tier. */
 export const matchupStatusEnum = pgEnum("matchup_status", [
   "very_comfortable",
@@ -65,6 +73,7 @@ export const metricKeyEnum = pgEnum("metric_key", [
   "gameWinRatePct",
   "rallyWinRatePct",
   "formIndex",
+  "skillIndex",
   "gameBalancePerMatch",
   "rallyBalancePerMatch",
   "cumulativeGameBalance",
@@ -359,6 +368,8 @@ export const playerStatsAggregate = pgTable(
 
     // composite indexes
     formIndex: numeric("form_index", { precision: 6, scale: 3 }),
+    skillIndex: numeric("skill_index", { precision: 6, scale: 3 }),
+    skillIndexStatus: skillIndexStatusEnum("skill_index_status"),
     matchConversionPp: numeric("match_conversion_pp", { precision: 6, scale: 3 }),
     gameConversionPp: numeric("game_conversion_pp", { precision: 6, scale: 3 }),
     resultConversionPp: numeric("result_conversion_pp", { precision: 6, scale: 3 }),

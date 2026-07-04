@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { matchGames, matches, playerStatsAggregate } from "@/lib/db/schema";
 import { loadLeague } from "@/lib/db/league";
+import { calculateSkillIndex, getSkillIndexStatus } from "@/lib/stats/compute";
 import {
   getPlayerCareerStats,
   getPlayerIdByRid,
@@ -107,6 +108,13 @@ d("recalc (DB, transactional rollback)", () => {
     expect(career!.matchesPlayed).toBe(career!.matchesWon + career!.matchesLost);
     expect(career!.matchesPlayed).toBeGreaterThan(0);
     expect(career!.gamesPlayed).toBe(career!.gamesWon + career!.gamesLost);
+    const expectedSkill = calculateSkillIndex({
+      matchWinRatePct: career!.matchWinRatePct === null ? null : Number(career!.matchWinRatePct),
+      gameWinRatePct: career!.gameWinRatePct === null ? null : Number(career!.gameWinRatePct),
+      rallyWinRatePct: career!.rallyWinRatePct === null ? null : Number(career!.rallyWinRatePct),
+    });
+    expect(career!.skillIndex === null ? null : Number(career!.skillIndex)).toBe(expectedSkill);
+    expect(career!.skillIndexStatus).toBe(getSkillIndexStatus(expectedSkill));
   });
 
   it("recalcStageDivision regenerates match_games", async () => {

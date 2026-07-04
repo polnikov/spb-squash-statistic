@@ -29,6 +29,7 @@ export type PlayerStats = Omit<
   | "matchWinRatePct"
   | "gameWinRatePct"
   | "rallyWinRatePct"
+  | "skillIndex"
   | "gameBalancePerMatch"
   | "rallyBalancePerMatch"
   | "cleanWinRatePct"
@@ -37,6 +38,7 @@ export type PlayerStats = Omit<
   matchWinRatePct: number | null;
   gameWinRatePct: number | null;
   rallyWinRatePct: number | null;
+  skillIndex: number | null;
   gameBalancePerMatch: number | null;
   rallyBalancePerMatch: number | null;
   cleanWinRatePct: number | null;
@@ -49,6 +51,7 @@ export function mapStatsRow(row: PlayerStatsAggregateRow): PlayerStats {
     matchWinRatePct: num(row.matchWinRatePct),
     gameWinRatePct: num(row.gameWinRatePct),
     rallyWinRatePct: num(row.rallyWinRatePct),
+    skillIndex: num(row.skillIndex),
     gameBalancePerMatch: num(row.gameBalancePerMatch),
     rallyBalancePerMatch: num(row.rallyBalancePerMatch),
     cleanWinRatePct: num(row.cleanWinRatePct),
