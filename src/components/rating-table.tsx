@@ -10,13 +10,17 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import type { DivisionScope, RatingRow } from "@/lib/mock/league";
+import type { RatingRow } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
+import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { useFlipList } from "@/components/ui/use-flip-list";
 
-const SCOPES: { key: DivisionScope; label: string }[] = [
+type RatingDivision = 1 | 2 | 3;
+
+const SCOPES: { key: RatingDivision; label: string }[] = [
   { key: 1, label: "Дивизион 1" },
   { key: 2, label: "Дивизион 2" },
   { key: 3, label: "Дивизион 3" },
@@ -102,38 +106,34 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
   ];
 }
 
-/** Season progress: 9 numbered circles; stages played (per division) are filled. */
-function StageProgress({ played }: { played: number }) {
-  return (
-    <div className="ml-auto flex shrink-0 items-center gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
-      {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
-        <span
-          key={n}
-          className={cn(
-            "grid size-9 shrink-0 place-items-center rounded-full font-mono text-[12px] font-semibold tabular",
-            n <= played ? "bg-[#20c7d991] text-on-primary" : "bg-brand-surface-2 text-muted-foreground",
-          )}
-        >
-          {n}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function RatingTable({
   rowsByScope,
+  rowsByDivisionStage,
   stagesByDivision,
   totalStages,
+  ratingMaxStage,
 }: {
-  rowsByScope: Record<DivisionScope, RatingRow[]>;
-  stagesByDivision: Record<1 | 2 | 3, number>;
+  rowsByScope: Record<RatingDivision, RatingRow[]>;
+  rowsByDivisionStage: Record<RatingDivision, Record<number, RatingRow[]>>;
+  stagesByDivision: Record<RatingDivision, number>;
   totalStages: number;
+  ratingMaxStage: number;
 }) {
-  const [scope, setScope] = React.useState<DivisionScope>(1);
+  const [scope, setScope] = React.useState<RatingDivision>(1);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const initialStage = React.useCallback(
+    (division: RatingDivision) => Math.max(1, Math.min(stagesByDivision[division], ratingMaxStage)),
+    [ratingMaxStage, stagesByDivision],
+  );
+  const [selectedStageByDivision, setSelectedStageByDivision] = React.useState<Record<RatingDivision, number>>(() => ({
+    1: initialStage(1),
+    2: initialStage(2),
+    3: initialStage(3),
+  }));
+  const selectedStage = selectedStageByDivision[scope];
 
-  const data = rowsByScope[scope];
+  const data = rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope];
+  const hasScopeData = rowsByScope[scope].length > 0;
   const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
   const columns = React.useMemo(() => makeColumns(leaderPoints, totalStages), [leaderPoints, totalStages]);
   const table = useReactTable({
@@ -142,11 +142,24 @@ export function RatingTable({
     enableSorting: false,
     state: { sorting },
     onSortingChange: setSorting,
+    getRowId: (row) => row.rid,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
   const { setRef, ind } = useTabSlider(String(scope));
+  const flip = useFlipList();
+  const orderKey = data.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
+
+  React.useLayoutEffect(() => {
+    flip.play();
+  }, [flip, orderKey]);
+
+  function selectStage(stage: number) {
+    if (stage === selectedStage) return;
+    flip.snapshot();
+    setSelectedStageByDivision((prev) => ({ ...prev, [scope]: stage }));
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -157,7 +170,10 @@ export function RatingTable({
             <button
               key={String(s.key)}
               ref={setRef(String(s.key))}
-              onClick={() => setScope(s.key)}
+              onClick={() => {
+                flip.snapshot();
+                setScope(s.key);
+              }}
               className={cn(
                 "relative z-10 h-9 rounded-[12px] px-5 text-xs font-semibold transition-colors duration-200 ease-m3-standard",
                 scope === s.key ? "text-foreground" : "text-muted-foreground hover:text-foreground",
@@ -168,12 +184,19 @@ export function RatingTable({
           ))}
         </div>
 
-        {data.length > 0 ? (
-          <StageProgress played={stagesByDivision[scope as 1 | 2 | 3]} />
+        {hasScopeData ? (
+          <RatingStageSelector
+            totalStages={totalStages}
+            playedStage={stagesByDivision[scope]}
+            selectedStage={selectedStage}
+            ratingMaxStage={ratingMaxStage}
+            onSelect={selectStage}
+            className="ml-auto shrink-0 border-border bg-brand-surface"
+          />
         ) : null}
       </div>
 
-      {data.length === 0 ? (
+      {!hasScopeData || data.length === 0 ? (
         <div className="rounded-2xl bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
@@ -208,6 +231,7 @@ export function RatingTable({
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
+                ref={flip.setNode(row.original.rid)}
                 className="border-t border-border transition-colors hover:bg-brand-surface-2/40"
               >
                 {row.getVisibleCells().map((cell) => (

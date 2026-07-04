@@ -1,9 +1,25 @@
 import { Star } from "lucide-react";
-import { getRatingRows, normalizeSeason, type DivisionScope, type RatingRow } from "@/lib/mock/league";
+import { RATING_MAX_STAGE, getRatingRows, getRatingRowsThroughStage, normalizeSeason, type RatingRow } from "@/lib/mock/league";
 import { loadLeague } from "@/lib/db/league";
 import { RatingTable } from "@/components/rating-table";
 import { RatingMobile } from "@/components/mobile/rating-mobile";
 import { PageHeader } from "@/components/page-header";
+
+type RatingRowsByDivisionStage = Record<1 | 2 | 3, Record<number, RatingRow[]>>;
+
+function latestStageForDivision(results: { div: number; stage: number }[], division: 1 | 2 | 3) {
+  return results
+    .filter((r) => r.div === division)
+    .reduce((latest, r) => Math.max(latest, r.stage), 0);
+}
+
+function buildRowsByStage(league: Awaited<ReturnType<typeof loadLeague>>): RatingRowsByDivisionStage {
+  return {
+    1: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 1, i + 1)])),
+    2: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 2, i + 1)])),
+    3: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 3, i + 1)])),
+  } as RatingRowsByDivisionStage;
+}
 
 export default async function RatingPage({ searchParams }: { searchParams?: { season?: string } }) {
   const season = normalizeSeason(searchParams?.season);
@@ -13,28 +29,37 @@ export default async function RatingPage({ searchParams }: { searchParams?: { se
     2: getRatingRows(league, 2),
     3: getRatingRows(league, 3),
   } satisfies Record<1 | 2 | 3, RatingRow[]>;
-  const rowsByScope = {
-    all: getRatingRows(league, "all"),
-    ...listByDivision,
-  } satisfies Record<DivisionScope, RatingRow[]>;
+  const rowsByDivisionStage = buildRowsByStage(league);
 
   const stagesByDivision = {
-    1: new Set(league.results.filter((r) => r.div === 1).map((r) => r.stage)).size,
-    2: new Set(league.results.filter((r) => r.div === 2).map((r) => r.stage)).size,
-    3: new Set(league.results.filter((r) => r.div === 3).map((r) => r.stage)).size,
+    1: latestStageForDivision(league.results, 1),
+    2: latestStageForDivision(league.results, 2),
+    3: latestStageForDivision(league.results, 3),
   } satisfies Record<1 | 2 | 3, number>;
 
   return (
     <>
       {/* mobile */}
       <div className="md:hidden">
-        <RatingMobile listByDivision={listByDivision} stagesByDivision={stagesByDivision} totalStages={league.stages.length} />
+        <RatingMobile
+          listByDivision={listByDivision}
+          rowsByDivisionStage={rowsByDivisionStage}
+          stagesByDivision={stagesByDivision}
+          totalStages={league.stages.length}
+          ratingMaxStage={RATING_MAX_STAGE}
+        />
       </div>
 
       {/* desktop */}
       <div className="hidden flex-col gap-8 md:flex">
         <PageHeader title="Рейтинг сезона" icon={Star} />
-        <RatingTable rowsByScope={rowsByScope} stagesByDivision={stagesByDivision} totalStages={league.stages.length} />
+        <RatingTable
+          rowsByScope={listByDivision}
+          rowsByDivisionStage={rowsByDivisionStage}
+          stagesByDivision={stagesByDivision}
+          totalStages={league.stages.length}
+          ratingMaxStage={RATING_MAX_STAGE}
+        />
       </div>
     </>
   );

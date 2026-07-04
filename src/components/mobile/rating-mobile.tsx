@@ -6,7 +6,9 @@ import { Star } from "lucide-react";
 import type { RatingRow } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
+import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { useFlipList } from "@/components/ui/use-flip-list";
 
 export type DivTopCard = {
   division: number;
@@ -30,17 +32,44 @@ function Badge({ children }: { children: React.ReactNode }) {
 
 export function RatingMobile({
   listByDivision,
+  rowsByDivisionStage,
   stagesByDivision,
   totalStages,
+  ratingMaxStage,
 }: {
   listByDivision: Record<1 | 2 | 3, RatingRow[]>;
+  rowsByDivisionStage: Record<1 | 2 | 3, Record<number, RatingRow[]>>;
   stagesByDivision: Record<1 | 2 | 3, number>;
   totalStages: number;
+  ratingMaxStage: number;
 }) {
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
-  const list = listByDivision[div];
+  const initialStage = React.useCallback(
+    (division: 1 | 2 | 3) => Math.max(1, Math.min(stagesByDivision[division], ratingMaxStage)),
+    [ratingMaxStage, stagesByDivision],
+  );
+  const [selectedStageByDivision, setSelectedStageByDivision] = React.useState<Record<1 | 2 | 3, number>>(() => ({
+    1: initialStage(1),
+    2: initialStage(2),
+    3: initialStage(3),
+  }));
+  const selectedStage = selectedStageByDivision[div];
+  const list = rowsByDivisionStage[div]?.[selectedStage] ?? listByDivision[div];
+  const hasDivisionData = listByDivision[div].length > 0;
+  const flip = useFlipList();
+  const orderKey = list.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
 
   const { setRef, ind } = useTabSlider(String(div));
+
+  React.useLayoutEffect(() => {
+    flip.play();
+  }, [flip, orderKey]);
+
+  function selectStage(stage: number) {
+    if (stage === selectedStage) return;
+    flip.snapshot();
+    setSelectedStageByDivision((prev) => ({ ...prev, [div]: stage }));
+  }
 
   return (
     <div className="flex flex-col">
@@ -67,32 +96,33 @@ export function RatingMobile({
         ))}
       </div>
 
-      {list.length === 0 ? (
+      {!hasDivisionData ? (
         <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
           Данных пока нет
         </div>
       ) : (
         <>
           {/* stage progress: 9 circles, played stages accent-filled; full width */}
-          <div className="mb-4 flex items-center gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
-            {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
-              <span
-                key={n}
-                className={cn(
-                  "grid aspect-square flex-1 place-items-center rounded-full font-mono text-[12px] font-semibold tabular",
-                  n <= stagesByDivision[div] ? "bg-[#20c7d991] text-on-primary" : "bg-surface-container-high text-on-surface-variant",
-                )}
-              >
-                {n}
-              </span>
-            ))}
-          </div>
+          <RatingStageSelector
+            totalStages={totalStages}
+            playedStage={stagesByDivision[div]}
+            selectedStage={selectedStage}
+            ratingMaxStage={ratingMaxStage}
+            onSelect={selectStage}
+            className="mb-4"
+            itemClassName="aspect-square flex-1"
+          />
 
           {/* player cards */}
           <div className="flex flex-col gap-2">
-            {list.map((r) => (
+            {list.length === 0 ? (
+              <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
+                Данных пока нет
+              </div>
+            ) : list.map((r) => (
               <Link
                 key={r.rid}
+                ref={flip.setNode(r.rid)}
                 href={`/players/${encodeURIComponent(r.rid)}`}
                 className="flex flex-col gap-1.5 rounded-lg bg-surface-container px-4 py-3"
               >

@@ -121,7 +121,7 @@ function parseScore(score: string): { gamesA: number; gamesB: number; detail: { 
 }
 
 const leagueCache = new Map<string, League>();
-const RATING_MAX_STAGE = 8;
+export const RATING_MAX_STAGE = 8;
 const RATING_BEST_STAGE_COUNT = 7;
 
 export function buildLeague(_season: string = CURRENT_SEASON): League {
@@ -334,10 +334,12 @@ function playerStagesParticipated(
   league: League,
   playerIdx: number,
   division: number | undefined,
+  maxStage: number,
 ): number {
   const set = new Set<number>();
   for (const r of league.results) {
     if (r.playerIdx !== playerIdx) continue;
+    if (r.stage > maxStage) continue;
     if (division != null && r.div !== division) continue;
     set.add(r.stage);
   }
@@ -414,7 +416,7 @@ function getRatingRowsAtStage(
         ballsWon: a.wonB,
         court: a.court,
         points: a.points,
-        stages: playerStagesParticipated(league, p.idx, division),
+        stages: playerStagesParticipated(league, p.idx, division, maxStage),
         best: a.best,
         fiveGameMatches: a.fiveGameMatches,
       };
@@ -441,10 +443,19 @@ export function getRatingRows(league: League, scope: DivisionScope): RatingRow[]
       .filter((r) => r.stage <= RATING_MAX_STAGE && (scope === "all" ? true : r.div === scope))
       .reduce((latest, r) => Math.max(latest, r.stage), 0) || RATING_MAX_STAGE;
 
-  const rows = getRatingRowsAtStage(league, scope, latestStage);
-  if (scope === "all" || latestStage <= 1) return rows;
+  return getRatingRowsThroughStage(league, scope, latestStage);
+}
 
-  const previousPlaces = getDivisionStandingPlacesAtStage(league, scope, latestStage - 1);
+export function getRatingRowsThroughStage(
+  league: League,
+  scope: DivisionScope,
+  maxStage: number,
+): RatingRow[] {
+  const stage = Math.min(Math.max(1, Math.trunc(maxStage)), RATING_MAX_STAGE);
+  const rows = getRatingRowsAtStage(league, scope, stage);
+  if (scope === "all" || stage <= 1) return rows;
+
+  const previousPlaces = getDivisionStandingPlacesAtStage(league, scope, stage - 1);
 
   return rows.map((r) => {
     const previousPlace = previousPlaces.get(r.playerIdx);
