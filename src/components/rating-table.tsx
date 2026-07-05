@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
   type SortingState,
@@ -138,6 +139,7 @@ export function RatingTable({
   totalStages: number;
   ratingMaxStage: number;
 }) {
+  const router = useRouter();
   const [scope, setScope] = React.useState<RatingDivision>(1);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const initialStage = React.useCallback(
@@ -151,8 +153,8 @@ export function RatingTable({
   }));
   const selectedStage = selectedStageByDivision[scope];
 
-  const data = rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope];
-  const hasScopeData = rowsByScope[scope].length > 0;
+  const data = rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope] ?? [];
+  const hasScopeData = (rowsByScope[scope]?.length ?? 0) > 0;
   const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
   const columns = React.useMemo(() => makeColumns(leaderPoints, totalStages), [leaderPoints, totalStages]);
   const table = useReactTable({
@@ -251,7 +253,8 @@ export function RatingTable({
               <tr
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
-                className="border-t border-border transition-colors hover:bg-brand-surface-2/40"
+                onClick={() => router.push(`/players/${encodeURIComponent(row.original.rid)}`)}
+                className="cursor-pointer border-t border-border transition-colors hover:bg-brand-surface-2/40"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

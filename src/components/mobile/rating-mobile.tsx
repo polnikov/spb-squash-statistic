@@ -55,8 +55,8 @@ export function RatingMobile({
     3: initialStage(3),
   }));
   const selectedStage = selectedStageByDivision[div];
-  const list = rowsByDivisionStage[div]?.[selectedStage] ?? listByDivision[div];
-  const hasDivisionData = listByDivision[div].length > 0;
+  const list = rowsByDivisionStage[div]?.[selectedStage] ?? listByDivision[div] ?? [];
+  const hasDivisionData = (listByDivision[div]?.length ?? 0) > 0;
   const flip = useFlipList();
   const orderKey = list.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
 
