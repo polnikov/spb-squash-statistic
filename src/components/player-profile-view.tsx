@@ -1620,13 +1620,10 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     return (
       <div key={m.id} className="rounded-lg bg-surface-container-low p-3">
         <div className="flex items-start justify-between gap-3">
-          {/* left: score + name, then time / retired badge */}
+          {/* left: score + time / retired badge, then opponent name */}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <MatchScore match={m} />
-              <span className="min-w-0 line-clamp-2 text-[13px] font-semibold md:line-clamp-1">{m.opponentName}</span>
-            </div>
-            <div className="mt-1.5">
               {m.retired ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2 py-0.5 text-[10.5px] font-semibold text-on-error-container">
                   <Cross className="size-3" />
@@ -1635,6 +1632,9 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               ) : (
                 <Chip>{formatDuration(m.durationSec)}</Chip>
               )}
+            </div>
+            <div className="mt-1.5">
+              <span className="min-w-0 line-clamp-2 text-[13px] font-semibold md:line-clamp-1">{m.opponentName}</span>
             </div>
           </div>
           {/* score details: top-right */}
