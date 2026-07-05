@@ -910,8 +910,8 @@ function UploadManager() {
         .filter((link) => Number.isInteger(link.playerId) && link.playerId > 0),
     });
     setImporting(false);
-    if (!res.ok) {
-      setError(res.error);
+    if (!res?.ok) {
+      setError(res?.error ?? "Не удалось загрузить. Повторите.");
       return;
     }
     setDone({ ...res, date: preview.date });
@@ -994,9 +994,10 @@ function UploadManager() {
 
           {/* right: imported stages */}
           {(() => {
-            const impSeasons = [...new Set(imported.map((s) => s.season))].sort().reverse();
-            const impDivs = [...new Set(imported.map((s) => s.division))].sort((a, b) => a - b);
-            const filtered = imported.filter(
+            const importedRows = imported ?? [];
+            const impSeasons = [...new Set(importedRows.map((s) => s.season))].sort().reverse();
+            const impDivs = [...new Set(importedRows.map((s) => s.division))].sort((a, b) => a - b);
+            const filtered = importedRows.filter(
               (s) => (impSeason === "" || s.season === impSeason) && (impDiv === "" || String(s.division) === impDiv),
             );
             const impFirst = filtered.slice(0, 9);

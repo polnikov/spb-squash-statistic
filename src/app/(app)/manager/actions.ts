@@ -159,8 +159,11 @@ export type PointsTableGroup = {
 };
 
 // Points affect ratings everywhere; revalidate the public read surfaces.
+// NOT "/manager": revalidating the action's own route makes Next resolve the
+// server action to `undefined` on the first call (the RSC payload replaces the
+// result — the "click twice" bug). The manager UI refreshes via router.refresh().
 function revalidateRatings() {
-  for (const p of ["/", "/divisions", "/ironman", "/players", "/stages", "/manager"]) revalidatePath(p);
+  for (const p of ["/", "/divisions", "/ironman", "/players", "/stages"]) revalidatePath(p);
 }
 
 /**
