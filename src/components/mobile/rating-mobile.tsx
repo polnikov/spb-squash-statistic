@@ -141,7 +141,7 @@ export function RatingMobile({
                 </div>
                 <div className="flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pt-1 text-[11.5px] text-on-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <span className="inline-flex shrink-0 items-center gap-1">
-                    Этапов<Badge><NumberPop>{`${r.stages}/${totalStages}`}</NumberPop></Badge>
+                    Этапы<Badge><NumberPop>{`${r.stages}/${totalStages}`}</NumberPop></Badge>
                   </span>
                   <span className="shrink-0">·</span>
                   <span className="inline-flex shrink-0 items-center gap-1">

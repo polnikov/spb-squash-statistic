@@ -1148,7 +1148,7 @@ function ReliabilityCard({ stats }: { stats: PlayerProfileStats }) {
         <Chip tone={stats.sampleSizeLevel === "high" ? "primary" : "neutral"}>{formatSampleSizeLevel(stats.sampleSizeLevel)}</Chip>
       </div>
       <p className="mt-3 text-[12px] text-on-surface-variant">
-        Выборка: {matchesLabel(stats.matchesPlayed)}. Метрики не скрываются, но интерпретация зависит от объёма данных.
+        Выборка: {matchesLabel(stats.matchesPlayed)}. Интерпретация зависит от объёма данных.
       </p>
     </div>
   );
