@@ -4,6 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { matchesLabel } from "@/lib/format";
 import type { EChartsOption } from "echarts";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
@@ -1147,7 +1148,7 @@ function ReliabilityCard({ stats }: { stats: PlayerProfileStats }) {
         <Chip tone={stats.sampleSizeLevel === "high" ? "primary" : "neutral"}>{formatSampleSizeLevel(stats.sampleSizeLevel)}</Chip>
       </div>
       <p className="mt-3 text-[12px] text-on-surface-variant">
-        Выборка: {stats.matchesPlayed} матчей. Метрики не скрываются, но интерпретация зависит от объёма данных.
+        Выборка: {matchesLabel(stats.matchesPlayed)}. Метрики не скрываются, но интерпретация зависит от объёма данных.
       </p>
     </div>
   );

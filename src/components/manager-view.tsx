@@ -35,7 +35,7 @@ import {
   type StageImportPreview,
   type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
-import { fmtCourt, fmtDate, fmtDateFull, fmtNum } from "@/lib/format";
+import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
@@ -1009,7 +1009,7 @@ function UploadManager() {
                   <div className="text-[13px]">
                     <span className="font-semibold">{s.season} · Див {s.division} · Этап {s.stage}</span>
                     <span className="ml-2 font-mono text-[11.5px] tabular text-on-surface-variant">
-                      {s.players} игроков · {s.matches} матчей{s.date ? ` · ${fmtDateFull(s.date)}` : ""}
+                      {playersLabel(s.players)} · {matchesLabel(s.matches)}{s.date ? ` · ${fmtDateFull(s.date)}` : ""}
                     </span>
                   </div>
                   <button
@@ -1104,7 +1104,7 @@ function UploadManager() {
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
                 <div className="mt-1 text-xs text-on-surface-variant">
-                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {preview.players.length} игроков · {preview.matches.length} матчей
+                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {playersLabel(preview.players.length)} · {matchesLabel(preview.matches.length)}
                 </div>
               </div>
             </div>

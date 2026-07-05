@@ -56,3 +56,11 @@ export function playersLabel(n: number): string {
   return `${n} ${pluralRu(n, ["игрок", "игрока", "игроков"])}`;
 }
 
+export function matchesLabel(n: number): string {
+  return `${n} ${pluralRu(n, ["матч", "матча", "матчей"])}`;
+}
+
+export function stagesLabel(n: number): string {
+  return `${n} ${pluralRu(n, ["этап", "этапа", "этапов"])}`;
+}
+
