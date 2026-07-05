@@ -52,11 +52,13 @@ export const sampleSizeLevelEnum = pgEnum("sample_size_level", [
 ]);
 /** Analytical playing-level tier derived from skillIndex. */
 export const skillIndexStatusEnum = pgEnum("skill_index_status", [
-  "beginner",
+  "below_level",
   "developing",
   "competitive",
+  "good",
   "strong",
-  "elite",
+  "very_strong",
+  "dominant",
 ]);
 /** Head-to-head comfort tier. */
 export const matchupStatusEnum = pgEnum("matchup_status", [

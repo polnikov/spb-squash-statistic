@@ -391,49 +391,80 @@ function formIndexOf(matchWR: number | null, gameWR: number | null, rallyWR: num
   return matchWR * 0.45 + (gameWR ?? 0) * 0.35 + (rallyWR ?? 0) * 0.2;
 }
 
-export type SkillIndexStatus = "beginner" | "developing" | "competitive" | "strong" | "elite";
+export type SkillIndexStatus =
+  | "below_level"
+  | "developing"
+  | "competitive"
+  | "good"
+  | "strong"
+  | "very_strong"
+  | "dominant";
 
-export const SKILL_INDEX_SCALE: {
+export type SkillIndexScaleItem = {
   min: number;
   max: number;
   status: SkillIndexStatus;
   labelRu: string;
+  shortLabelRu: string;
   descriptionRu: string;
-}[] = [
+};
+
+export const SKILL_INDEX_SCALE: SkillIndexScaleItem[] = [
   {
     min: 0,
-    max: 39.9,
-    status: "beginner",
-    labelRu: "Начальный",
-    descriptionRu: "Игрок пока заметно уступает по ключевым игровым показателям.",
+    max: 44.9,
+    status: "below_level",
+    labelRu: "Ниже уровня",
+    shortLabelRu: "Ниже уровня",
+    descriptionRu: "Игрок заметно уступает по ключевым игровым показателям.",
   },
   {
-    min: 40,
+    min: 45,
     max: 49.9,
     status: "developing",
     labelRu: "Развивается",
-    descriptionRu: "Игрок конкурентен отдельными отрезками, но пока нестабилен.",
+    shortLabelRu: "Развивается",
+    descriptionRu: "Игрок уже конкурентен отдельными отрезками, но чаще уступает по качеству игры.",
   },
   {
     min: 50,
-    max: 57.9,
+    max: 54.9,
     status: "competitive",
     labelRu: "Конкурентный",
+    shortLabelRu: "Конкурентный",
     descriptionRu: "Игрок держит равный уровень и регулярно борется за победы.",
   },
   {
-    min: 58,
-    max: 65.9,
-    status: "strong",
-    labelRu: "Сильный",
-    descriptionRu: "Игрок имеет устойчивое преимущество по качеству игры.",
+    min: 55,
+    max: 59.9,
+    status: "good",
+    labelRu: "Хороший",
+    shortLabelRu: "Хороший",
+    descriptionRu: "Игрок имеет заметное игровое преимущество.",
   },
   {
-    min: 66,
+    min: 60,
+    max: 66.9,
+    status: "strong",
+    labelRu: "Сильный",
+    shortLabelRu: "Сильный",
+    descriptionRu: "Игрок стабильно превосходит большинство соперников в выбранной статистической выборке.",
+  },
+  {
+    min: 67,
+    max: 71.9,
+    status: "very_strong",
+    labelRu: "Очень сильный",
+    shortLabelRu: "Очень сильный",
+    descriptionRu: "Игрок показывает очень высокий игровой уровень по матчам, геймам и розыгрышам.",
+  },
+  {
+    min: 72,
     max: 100,
-    status: "elite",
-    labelRu: "Элитный",
-    descriptionRu: "Игрок заметно превосходит соперников по игровому уровню.",
+    status: "dominant",
+    labelRu: "Доминирующий",
+    shortLabelRu: "Доминирующий",
+    descriptionRu: "Игрок явно доминирует по качеству игры.",
   },
 ];
 
@@ -450,12 +481,22 @@ export function calculateSkillIndex(params: {
 
 export function getSkillIndexStatus(skillIndex?: number | null): SkillIndexStatus | null {
   if (skillIndex == null) return null;
-  return SKILL_INDEX_SCALE.find((row) => skillIndex >= row.min && skillIndex <= row.max)?.status ?? null;
+  return getSkillIndexScaleItem(skillIndex)?.status ?? null;
+}
+
+export function getSkillIndexScaleItem(skillIndex?: number | null): SkillIndexScaleItem | null {
+  if (skillIndex == null) return null;
+  return SKILL_INDEX_SCALE.find((row) => skillIndex >= row.min && skillIndex <= row.max) ?? null;
 }
 
 export function getSkillIndexLabelRu(status?: SkillIndexStatus | null): string | null {
   if (!status) return null;
   return SKILL_INDEX_SCALE.find((row) => row.status === status)?.labelRu ?? null;
+}
+
+export function getSkillIndexShortLabelRu(status?: SkillIndexStatus | null): string | null {
+  if (!status) return null;
+  return SKILL_INDEX_SCALE.find((row) => row.status === status)?.shortLabelRu ?? null;
 }
 
 type WindowStats = {

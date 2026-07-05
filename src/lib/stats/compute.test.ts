@@ -5,6 +5,8 @@ import {
   computeAggregate,
   gameFlags,
   getSkillIndexLabelRu,
+  getSkillIndexScaleItem,
+  getSkillIndexShortLabelRu,
   getSkillIndexStatus,
   matchComebackFlags,
   pct,
@@ -166,38 +168,65 @@ describe("computeAggregate", () => {
 describe("skillIndex", () => {
   it("calculates weighted skill index and rounds to one decimal", () => {
     expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: 55, rallyWinRatePct: 52 })).toBe(55.5);
+    expect(calculateSkillIndex({ matchWinRatePct: 65, gameWinRatePct: 58, rallyWinRatePct: 53 })).toBe(58.4);
+    expect(calculateSkillIndex({ matchWinRatePct: 80, gameWinRatePct: 70, rallyWinRatePct: 62 })).toBe(70.2);
+    expect(calculateSkillIndex({ matchWinRatePct: 88, gameWinRatePct: 74, rallyWinRatePct: 66 })).toBe(75.4);
   });
 
-  it("returns null when any winrate metric is missing", () => {
+  it("returns null when match winrate is missing", () => {
     expect(calculateSkillIndex({ matchWinRatePct: null, gameWinRatePct: 55, rallyWinRatePct: 52 })).toBeNull();
+  });
+
+  it("returns null when game winrate is missing", () => {
     expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: undefined, rallyWinRatePct: 52 })).toBeNull();
+  });
+
+  it("returns null when rally winrate is missing", () => {
     expect(calculateSkillIndex({ matchWinRatePct: 60, gameWinRatePct: 55, rallyWinRatePct: null })).toBeNull();
   });
 
   it("maps all ranges and boundary values to statuses", () => {
     const cases: [number, ReturnType<typeof getSkillIndexStatus>][] = [
-      [0, "beginner"],
-      [39.9, "beginner"],
-      [40, "developing"],
+      [0, "below_level"],
+      [44.9, "below_level"],
+      [45, "developing"],
       [49.9, "developing"],
       [50, "competitive"],
-      [57.9, "competitive"],
-      [58, "strong"],
-      [65.9, "strong"],
-      [66, "elite"],
-      [100, "elite"],
+      [54.9, "competitive"],
+      [55, "good"],
+      [59.9, "good"],
+      [60, "strong"],
+      [66.9, "strong"],
+      [67, "very_strong"],
+      [71.9, "very_strong"],
+      [72, "dominant"],
+      [100, "dominant"],
     ];
     for (const [value, status] of cases) expect(getSkillIndexStatus(value)).toBe(status);
     expect(getSkillIndexStatus(null)).toBeNull();
+    expect(getSkillIndexStatus(65)).toBe("strong");
   });
 
   it("returns Russian labels by status", () => {
-    expect(getSkillIndexLabelRu("beginner")).toBe("Начальный");
+    expect(getSkillIndexLabelRu("below_level")).toBe("Ниже уровня");
     expect(getSkillIndexLabelRu("developing")).toBe("Развивается");
     expect(getSkillIndexLabelRu("competitive")).toBe("Конкурентный");
+    expect(getSkillIndexLabelRu("good")).toBe("Хороший");
     expect(getSkillIndexLabelRu("strong")).toBe("Сильный");
-    expect(getSkillIndexLabelRu("elite")).toBe("Элитный");
+    expect(getSkillIndexLabelRu("very_strong")).toBe("Очень сильный");
+    expect(getSkillIndexLabelRu("dominant")).toBe("Доминирующий");
     expect(getSkillIndexLabelRu(null)).toBeNull();
+  });
+
+  it("returns scale items and short Russian labels", () => {
+    expect(getSkillIndexScaleItem(58.4)).toMatchObject({
+      status: "good",
+      labelRu: "Хороший",
+      shortLabelRu: "Хороший",
+    });
+    expect(getSkillIndexShortLabelRu("very_strong")).toBe("Очень сильный");
+    expect(getSkillIndexScaleItem(null)).toBeNull();
+    expect(getSkillIndexShortLabelRu(null)).toBeNull();
   });
 
   it("does not affect formIndex", () => {
