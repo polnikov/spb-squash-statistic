@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react";
 import {
   getIronManLongMatches,
   getIronManRows,
   getIronManSummary,
   type DivisionScope,
+  type IronRow,
   type IronLongMatch,
   type League,
 } from "@/lib/mock/league";
@@ -181,30 +182,54 @@ function PartTabs({ half, setHalf }: { half: 1 | 2; setHalf: (h: 1 | 2) => void 
   );
 }
 
-const TABLE_HEADERS = [
-  "#",
-  "Игрок",
-  "Время на корте",
-  "Этапы",
-  "Матчи",
-  "Среднее время матча",
-  "Геймы",
-  "Пятигеймовые матчи",
-  "Самый длинный матч",
+type IronSortKey = "court" | "stages" | "matches" | "perMatch" | "games" | "fiveGameMatches" | "longestMatchMin";
+type IronSort = { key: IronSortKey; direction: "asc" | "desc" };
+
+const TABLE_COLUMNS: { label: string; sortKey?: IronSortKey; className?: string }[] = [
+  { label: "#", className: "w-px whitespace-nowrap" },
+  { label: "Игрок" },
+  { label: "Время на корте", sortKey: "court" },
+  { label: "Этапы", sortKey: "stages" },
+  { label: "Матчи", sortKey: "matches" },
+  { label: "Среднее время матча", sortKey: "perMatch" },
+  { label: "Геймы", sortKey: "games" },
+  { label: "Пятигеймовые матчи", sortKey: "fiveGameMatches" },
+  { label: "Самый длинный матч", sortKey: "longestMatchMin" },
 ];
+
+function ironSortValue(row: IronRow, key: IronSortKey) {
+  if (key === "games") return row.gamesWon + row.gamesLost;
+  return row[key];
+}
+
+function SortIcon({ active, direction }: { active: boolean; direction: IronSort["direction"] }) {
+  if (!active) return <ArrowUpDown className="size-3 opacity-55" />;
+  return direction === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />;
+}
 
 export function IronManView({ league }: { league: League }) {
   const [scope, setScope] = React.useState<DivisionScope>("all");
   const [half, setHalf] = React.useState<1 | 2>(1);
   const [open, setOpen] = React.useState<Record<number, boolean>>({});
   const [expanded, setExpanded] = React.useState(false);
+  const [sort, setSort] = React.useState<IronSort>({ key: "court", direction: "desc" });
 
   const rows = React.useMemo(() => getIronManRows(league, half, scope), [league, half, scope]);
   const summary = React.useMemo(() => getIronManSummary(league, half, scope), [league, half, scope]);
   const longMatches = React.useMemo(() => getIronManLongMatches(league, half, scope), [league, half, scope]);
+  const sortedRows = React.useMemo(() => {
+    const dir = sort.direction === "asc" ? 1 : -1;
+    return [...rows]
+      .sort((a, b) => {
+        const byMetric = (ironSortValue(a, sort.key) - ironSortValue(b, sort.key)) * dir;
+        if (byMetric !== 0) return byMetric;
+        return a.name.localeCompare(b.name, "ru");
+      })
+      .map((row, index) => ({ ...row, pos: index + 1 }));
+  }, [rows, sort]);
   const max = Math.max(1, ...rows.map((r) => r.court));
-  const visibleRows = expanded ? rows : rows.slice(0, ROW_LIMIT);
-  const moreCount = Math.max(0, rows.length - visibleRows.length);
+  const visibleRows = expanded ? sortedRows : sortedRows.slice(0, ROW_LIMIT);
+  const moreCount = Math.max(0, sortedRows.length - visibleRows.length);
 
   React.useEffect(() => {
     setOpen({});
@@ -218,6 +243,13 @@ export function IronManView({ league }: { league: League }) {
       else next[id] = true;
       return next;
     });
+
+  const toggleSort = (key: IronSortKey) => {
+    setSort((current) => ({
+      key,
+      direction: current.key === key && current.direction === "desc" ? "asc" : "desc",
+    }));
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -295,12 +327,23 @@ export function IronManView({ league }: { league: League }) {
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="bg-surface-container-high/60 text-center text-xs text-on-surface-variant">
-                    {TABLE_HEADERS.map((h) => (
+                    {TABLE_COLUMNS.map((column) => (
                       <th
-                        key={h}
-                        className={cn("px-4 py-3 text-center font-medium", h === "#" && "w-px whitespace-nowrap")}
+                        key={column.label}
+                        className={cn("px-4 py-3 text-center font-medium", column.className)}
                       >
-                        {h}
+                        {column.sortKey ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleSort(column.sortKey!)}
+                            className="inline-flex items-center justify-center gap-1 transition-colors hover:text-on-surface"
+                          >
+                            {column.label}
+                            <SortIcon active={sort.key === column.sortKey} direction={sort.direction} />
+                          </button>
+                        ) : (
+                          column.label
+                        )}
                       </th>
                     ))}
                   </tr>

@@ -288,7 +288,7 @@ export function StageSummary({ league }: { league: League }) {
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <table className="w-max min-w-full table-auto border-collapse">
                 <thead>
-                  <tr className="bg-brand-surface-2 text-center text-[11px] text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
+                  <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
                     <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 font-medium md:static md:z-auto md:bg-transparent">#</th>
                     <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:bg-transparent">Игрок</th>
                     <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Матчи</th>
@@ -305,28 +305,28 @@ export function StageSummary({ league }: { league: League }) {
                   {visibleRows.map((r) => {
                     const name = splitPlayerName(r.name);
                     return (
-                    <tr key={`${r.div}-${r.playerIdx}`} className="border-t border-outline-variant">
-                      <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center md:static md:z-auto md:bg-transparent">
-                        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.place}</span>
+                    <tr key={`${r.div}-${r.playerIdx}`} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:hover:bg-surface-container-high/40">
+                      <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center transition-colors group-hover:bg-brand-surface-2/40 md:static md:z-auto md:bg-transparent md:group-hover:bg-transparent">
+                        <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                       </td>
-                      <td className="sticky left-8 z-10 w-px whitespace-nowrap bg-card py-2.5 pl-2 pr-3 md:static md:z-auto md:bg-transparent">
+                      <td className="sticky left-8 z-10 w-px whitespace-nowrap bg-card py-2.5 pl-2 pr-3 transition-colors group-hover:bg-brand-surface-2/40 md:static md:z-auto md:bg-transparent md:group-hover:bg-transparent">
                         <Link href={playerHref(r.playerIdx)} className="flex items-center">
-                          <span className="min-w-0 text-[13px] font-medium leading-[1.12] md:hidden">
+                          <span className="min-w-0 text-sm font-medium leading-[1.12] md:hidden">
                             <span className="block whitespace-nowrap">{name.first}</span>
                             {name.rest ? <span className="block whitespace-nowrap text-on-surface-variant">{name.rest}</span> : null}
                           </span>
                           <span className="hidden items-center gap-2.5 md:flex">
                             <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-8 text-xs" />
-                            <span className="whitespace-nowrap text-[13px] font-medium text-on-surface">{r.name}</span>
+                            <span className="whitespace-nowrap text-sm font-medium text-on-surface">{r.name}</span>
                           </span>
                         </Link>
                       </td>
-                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.wins}-{r.losses}</span></td>
-                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.gamesWon}-{r.gamesLost}</span></td>
-                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.ballsWon}-{r.ballsLost}</span></td>
-                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
-                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
-                      <td className="w-px whitespace-nowrap py-[11px] pl-2.5 pr-5 text-center"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{stageFormIndex(r).toFixed(1)}</span></td>
+                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{r.wins}-{r.losses}</span></td>
+                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{r.gamesWon}-{r.gamesLost}</span></td>
+                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{r.ballsWon}-{r.ballsLost}</span></td>
+                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
+                      <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
+                      <td className="w-px whitespace-nowrap py-[11px] pl-2.5 pr-5 text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{stageFormIndex(r).toFixed(1)}</span></td>
                     </tr>
                     );
                   })}

@@ -34,7 +34,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "place",
       header: () => <span>#</span>,
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+        <span className="font-mono text-sm tabular text-on-surface-variant">
           <NumberPop>{row.original.place}</NumberPop>
         </span>
       ),
@@ -56,7 +56,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
           <PlayerAvatar rid={row.original.rid} initials={row.original.initials} color={row.original.color} className="size-8 text-xs" />
-          <span className="text-[13px] font-medium text-on-surface">{row.original.name}</span>
+          <span className="text-sm font-medium text-on-surface">{row.original.name}</span>
         </div>
       ),
     },
@@ -64,7 +64,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "points",
       header: "Очки",
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+        <span className="font-mono text-sm tabular text-on-surface-variant">
           <NumberPop>{row.original.points}</NumberPop>
         </span>
       ),
@@ -73,7 +73,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "stages",
       header: "Этапов",
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+        <span className="font-mono text-sm tabular text-on-surface-variant">
           <NumberPop>{`${row.original.stages}/${totalStages}`}</NumberPop>
         </span>
       ),
@@ -82,7 +82,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "matches",
       header: "Матчи",
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+        <span className="font-mono text-sm tabular text-on-surface-variant">
           <NumberPop>{row.original.matches}</NumberPop>
         </span>
       ),
@@ -91,7 +91,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "wins",
       header: "Победы",
       cell: ({ row }) => (
-        <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+        <span className="font-mono text-sm tabular text-on-surface-variant">
           <NumberPop>{row.original.wins}</NumberPop>
         </span>
       ),
@@ -101,7 +101,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       header: "Последний этап",
       cell: ({ row }) =>
         row.original.lastStagePoints > 0 ? (
-          <span className="font-mono text-[12.5px] tabular text-brand-accent-ink">
+          <span className="font-mono text-sm tabular text-brand-accent-ink">
             <NumberPop>{`+${row.original.lastStagePoints}`}</NumberPop>
           </span>
         ) : (
@@ -115,7 +115,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       cell: ({ row }) => {
         const gap = leaderPoints - row.original.points;
         return gap > 0 ? (
-          <span className="font-mono text-[12.5px] tabular text-on-surface-variant">
+          <span className="font-mono text-sm tabular text-on-surface-variant">
             <NumberPop>{`−${gap}`}</NumberPop>
           </span>
         ) : (
@@ -223,10 +223,10 @@ export function RatingTable({
         </div>
       ) : (
       <div className="overflow-hidden rounded-lg bg-card">
-        <table className="w-full text-[12.5px]">
+        <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
+              <tr key={hg.id} className="bg-brand-surface-2/60 text-center text-xs text-muted-foreground">
                 {hg.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   return (

@@ -308,7 +308,7 @@ export function DivisionsTable({
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>
-            <tr className="bg-brand-surface-2 text-center text-[11px] text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
+            <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
               <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
                 <button onClick={() => setSortKey("place")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">#{sortMark("place")}</button>
                 <span className="md:hidden">#</span>
@@ -358,38 +358,38 @@ export function DivisionsTable({
               return (
               <tr key={r.playerIdx} className="border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40">
                 <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
-                  <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.place}</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                 </td>
                 <td className="sticky left-8 z-10 w-px whitespace-nowrap bg-card py-2.5 pl-2 pr-3 md:static md:z-auto md:w-auto md:bg-transparent md:px-4">
                   <Link href={playerHref(r.rid)} className="flex items-center">
-                    <span className="min-w-0 text-[13px] font-medium leading-[1.12] md:hidden">
+                    <span className="min-w-0 text-sm font-medium leading-[1.12] md:hidden">
                       <span className="block whitespace-nowrap">{name.first}</span>
                       {name.rest ? <span className="block whitespace-nowrap text-on-surface-variant">{name.rest}</span> : null}
                     </span>
                     <span className="hidden min-w-0 items-center gap-2.5 md:flex">
                       <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-8 text-xs" />
-                      <span className="truncate text-[13px] font-medium text-on-surface">{r.name}</span>
+                      <span className="truncate text-sm font-medium text-on-surface">{r.name}</span>
                     </span>
                   </Link>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
-                  <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{r.stages}/9</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.stages}/9</span>
                 </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
-                  <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtNum(r.matches)} | {fmtNum(r.wins)}-{fmtNum(r.matches - r.wins)}</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.matches)} | {fmtNum(r.wins)}-{fmtNum(r.matches - r.wins)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{matchWr}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{matchWr}</span></td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
-                  <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtNum(r.gamesWon)}-{fmtNum(gamesLost)}</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.gamesWon)}-{fmtNum(gamesLost)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{gameWr}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{gameWr}</span></td>
                 <td className="w-px whitespace-nowrap py-[9px] pl-2.5 pr-5 text-center md:w-auto md:px-4">
-                  <span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtNum(r.ballsWon)}-{fmtNum(ballsLost)}</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.ballsWon)}-{fmtNum(ballsLost)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{rallyWr}</span></td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-[12.5px] tabular text-on-surface-variant">{formIndex(r).toFixed(1)}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{rallyWr}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
+                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{formIndex(r).toFixed(1)}</span></td>
               </tr>
               );
             }) : (

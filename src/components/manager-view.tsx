@@ -591,7 +591,7 @@ function UploadStepper({ step }: { step: UploadStep }) {
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "flex size-[26px] items-center justify-center rounded-full font-mono text-xs font-semibold tabular",
+                "flex size-[26px] items-center justify-center rounded-full border border-outline-variant font-mono text-xs font-semibold tabular",
                 index <= current ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
               )}
             >
@@ -962,7 +962,7 @@ function UploadManager() {
       {step === "input" ? (
         <div className="grid grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-6">
           {/* left: form */}
-          <div className="flex h-fit flex-col gap-5 rounded-2xl bg-card p-6">
+          <div className="flex h-fit flex-col gap-5 rounded-2xl border border-outline-variant bg-card p-6">
             <Field label="ID или ссылка турнира" value={tournament} onChange={setTournament} placeholder="84213 или https://www.rankedin.com/..." />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Сезон" value={season} onChange={setSeason} placeholder="25/26" />
@@ -970,7 +970,7 @@ function UploadManager() {
               <Field label="Этап" value={stage} onChange={setStage} placeholder="7" />
               <Field label="Дата" value={date} onChange={setDate} type="date" />
             </div>
-            <div className="flex items-start gap-3 rounded-[14px] bg-surface-container-high px-4 py-3">
+            <div className="flex items-start gap-3 rounded-[14px] border border-outline-variant bg-surface-container-high px-4 py-3">
               <Info className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
               <span className="text-xs text-on-surface-variant">
                 Скрипт получает результаты по турниру и список матчей турнира из RankedIn.
@@ -1005,7 +1005,7 @@ function UploadManager() {
             const renderImp = (s: ImportedStage) => {
               const key = `${s.season}-${s.division}-${s.stage}`;
               return (
-                <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-container-low px-3.5 py-2.5">
+                <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-2.5">
                   <div className="text-[13px]">
                     <span className="font-semibold">{s.season} · Див {s.division} · Этап {s.stage}</span>
                     <span className="ml-2 font-mono text-[11.5px] tabular text-on-surface-variant">
@@ -1023,7 +1023,7 @@ function UploadManager() {
               );
             };
             return (
-              <div className="flex h-fit flex-col gap-2 rounded-2xl bg-card p-5">
+              <div className="flex h-fit flex-col gap-2 rounded-2xl border border-outline-variant bg-card p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold">Загруженные этапы</div>
                   <div className="ml-auto flex items-center gap-2">
@@ -1099,7 +1099,7 @@ function UploadManager() {
               {error}
             </div>
           ) : null}
-          <div className="overflow-hidden rounded-2xl bg-card">
+          <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
             <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
@@ -1194,7 +1194,7 @@ function UploadManager() {
       ) : null}
 
       {step === "done" ? (
-        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-card px-6 py-12 text-center">
+        <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-outline-variant bg-card px-6 py-12 text-center">
           <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-[#04A45A]">
             <CheckCircle2 className="size-8" />
           </div>
@@ -1306,7 +1306,7 @@ function PointsManager() {
 
       <div className="grid grid-cols-[minmax(0,480px)_minmax(0,1fr)] gap-6">
         {/* editor */}
-        <div className="flex flex-col gap-4 rounded-2xl bg-card p-5">
+        <div className="flex w-full flex-col gap-4 self-start rounded-2xl border border-outline-variant bg-card p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">{replaceFrom ? "Изменение таблицы" : "Новая таблица"}</span>
             {replaceFrom ? (
@@ -1334,32 +1334,39 @@ function PointsManager() {
 
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium text-on-surface-variant">Место → очки</span>
-            {rows.map((row, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  inputMode="numeric"
-                  value={row.place}
-                  onChange={(event) => setRow(index, { place: event.target.value })}
-                  placeholder="место"
-                  className="h-10 w-20 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
-                />
-                <span className="text-on-surface-variant">→</span>
-                <input
-                  inputMode="decimal"
-                  value={row.points}
-                  onChange={(event) => setRow(index, { points: event.target.value })}
-                  placeholder="20,5"
-                  className="h-10 w-24 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
-                />
-                <button
-                  onClick={() => removeRow(index)}
-                  className="ml-1 text-xs font-semibold text-on-surface-variant hover:text-on-surface"
-                  aria-label="Удалить строку"
-                >
-                  ✕
-                </button>
+            <div
+              className="overflow-hidden transition-[max-height] duration-300 ease-m3-emphasized-decel"
+              style={{ maxHeight: `${rows.length * 48}px` }}
+            >
+              <div className="flex flex-col gap-2">
+                {rows.map((row, index) => (
+                  <div key={index} className="flex items-center gap-2 transition-all duration-300 ease-m3-emphasized-decel">
+                    <input
+                      inputMode="numeric"
+                      value={row.place}
+                      onChange={(event) => setRow(index, { place: event.target.value })}
+                      placeholder="место"
+                      className="h-10 w-20 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
+                    />
+                    <span className="text-on-surface-variant">→</span>
+                    <input
+                      inputMode="decimal"
+                      value={row.points}
+                      onChange={(event) => setRow(index, { points: event.target.value })}
+                      placeholder="20,5"
+                      className="h-10 w-24 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={() => removeRow(index)}
+                      className="ml-1 text-xs font-semibold text-on-surface-variant hover:text-on-surface"
+                      aria-label="Удалить строку"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
             <button onClick={addRow} className="inline-flex items-center gap-1.5 self-start text-[12.5px] font-semibold text-primary hover:underline">
               <Plus className="size-3.5" />
               Добавить строку
@@ -1389,14 +1396,14 @@ function PointsManager() {
         {/* existing tables */}
         <div className="flex flex-col gap-3">
           {existing.length === 0 ? (
-            <div className="rounded-2xl bg-card p-6 text-center text-sm text-on-surface-variant">
+            <div className="rounded-2xl border border-outline-variant bg-card p-6 text-center text-sm text-on-surface-variant">
               Нет сохранённых таблиц очков
             </div>
           ) : (
             existing.map((group) => {
               const key = `${group.division}-${group.effectiveFrom}`;
               return (
-                <div key={key} className="overflow-hidden rounded-2xl bg-card">
+                <div key={key} className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
                   <div className="flex items-center justify-between border-b border-outline-variant px-5 py-3.5">
                     <div>
                       <div className="text-[13.5px] font-semibold">Дивизион {group.division}</div>
@@ -1405,7 +1412,7 @@ function PointsManager() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => loadForEdit(group)}
-                        className="rounded-[10px] bg-surface-container-high px-3 py-1.5 text-[11.5px] font-semibold text-on-surface-variant hover:text-on-surface"
+                        className="rounded-[10px] border border-outline-variant bg-surface-container-high px-3 py-1.5 text-[11.5px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface"
                       >
                         Изменить
                       </button>
