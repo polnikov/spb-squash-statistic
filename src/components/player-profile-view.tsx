@@ -781,7 +781,7 @@ function Filters({
   const divisionW = divisionItems.length === 1 ? "w-auto" : "flex-1 min-w-0";
 
   return (
-    <div className="sticky top-[53px] z-20 -mx-2 bg-[#5b5b5b] px-2 py-2 md:static md:mx-0 md:bg-transparent md:p-0">
+    <div className="sticky top-[53px] z-20 -mx-2 px-2 py-2 md:static md:mx-0 md:p-0">
       <div className="flex flex-nowrap items-center gap-1 md:flex-wrap md:gap-2">
         <SegmentedControl
           items={seasonItems}
@@ -793,7 +793,7 @@ function Filters({
           items={divisionItems}
           value={divisionValue}
           onChange={(divisionId) => onChange({ ...value, divisionId })}
-          className={cn(divisionW, "md:w-auto md:flex-none", divisionDisabled && "pointer-events-none opacity-50")}
+          className={cn(divisionW, "md:w-auto md:flex-none", divisionDisabled && "pointer-events-none")}
         />
       </div>
     </div>
