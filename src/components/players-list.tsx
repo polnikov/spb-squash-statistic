@@ -51,7 +51,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
     return (
       <Link
         href={playerHref(player.rid)}
-        className="relative flex min-h-[178px] overflow-hidden rounded-lg bg-card bg-cover bg-center text-center"
+        className="relative flex min-h-[178px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center text-center"
         style={avatarBackgroundStyle(avatar)}
       >
         <SkillIndexMiniBadge value={player.skillIndex} />
@@ -72,7 +72,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="relative flex flex-col items-center gap-[11px] rounded-lg bg-card px-3.5 pb-4 pt-5 text-center"
+      className="relative flex flex-col items-center gap-[11px] rounded-lg border border-outline-variant bg-card px-3.5 pb-4 pt-5 text-center"
     >
       <SkillIndexMiniBadge value={player.skillIndex} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[60px] text-xl" />
@@ -92,7 +92,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
     return (
       <Link
         href={playerHref(player.rid)}
-        className="group relative flex min-h-[168px] overflow-hidden rounded-lg bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+        className="group relative flex min-h-[168px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         style={avatarBackgroundStyle(avatar)}
       >
         <SkillIndexMiniBadge value={player.skillIndex} />
@@ -113,7 +113,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
     >
       <SkillIndexMiniBadge value={player.skillIndex} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
@@ -318,7 +318,7 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg bg-card p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-outline-variant bg-card p-8 text-center text-sm text-muted-foreground">
           Игроки не найдены
         </div>
       ) : null}

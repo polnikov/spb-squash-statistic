@@ -38,7 +38,7 @@ function shortPlayerName(name: string) {
 
 function MetricTile({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
+    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex items-end gap-1.5 md:mt-2">
         <span className="font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl"><NumberPop>{value}</NumberPop></span>
@@ -85,7 +85,7 @@ function LongMatchCard({ m, league }: { m: IronLongMatch; league: League }) {
   const aRid = league.players[m.aIdx]?.rid ?? String(m.aIdx);
   const bRid = league.players[m.bIdx]?.rid ?? String(m.bIdx);
   return (
-    <div className="rounded-lg bg-card p-4">
+    <div className="rounded-lg border border-outline-variant bg-card p-4">
       <div className="grid gap-2">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
           <span
@@ -253,7 +253,7 @@ export function IronManView({ league }: { league: League }) {
             {rows.map((r) => {
               const isOpen = !!open[r.playerIdx];
               return (
-                <div key={r.playerIdx} className="flex flex-col rounded-lg bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={r.playerIdx} className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <Link href={playerHref(r.rid)} className="flex items-center gap-3">
                     <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">{r.pos}</span>
                     <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-9 text-[13px]" />

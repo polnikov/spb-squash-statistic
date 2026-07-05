@@ -118,7 +118,7 @@ type H2hMode = "career" | "current";
 type H2hSort = "meetings" | "comfortable" | "uncomfortable" | "equal" | "load" | "closing" | "trend";
 
 function cardClass(className?: string) {
-  return cn("rounded-lg bg-card", className);
+  return cn("rounded-lg border border-outline-variant bg-card", className);
 }
 
 function labelClass() {
@@ -408,7 +408,7 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
   const option = React.useMemo(() => chartOption(type, data), [type, data]);
   if (!option) {
     return (
-      <div className="grid place-items-center rounded-lg bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
+      <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
         Недостаточно данных для графика
       </div>
     );
@@ -420,7 +420,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+        "inline-flex items-center rounded-full border border-outline-variant px-2 py-0.5 text-[10.5px] font-semibold",
         tone === "primary" && "bg-primary-container text-primary",
         tone === "error" && "bg-error-container text-on-error-container",
         tone === "neutral" && "bg-surface-container-high text-on-surface-variant",
@@ -697,7 +697,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
       {/* hero — stretches to the right column's height */}
       <div
         className={cn(
-          "relative aspect-square min-h-0 rounded-xl bg-card md:aspect-auto md:min-h-[176px] md:h-full",
+          "relative aspect-square min-h-0 rounded-xl border border-outline-variant bg-card md:aspect-auto md:min-h-[176px] md:h-full",
           avatar && "bg-cover bg-center",
         )}
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
@@ -1289,7 +1289,7 @@ function MobileOpponentCard({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (ri
     <button
       type="button"
       onClick={() => onOpen(o.opponentRid)}
-      className="flex w-full flex-col rounded-lg bg-surface-container-low p-3 text-left transition-colors hover:bg-surface-container"
+      className="flex w-full flex-col rounded-lg border border-outline-variant bg-surface-container-low p-3 text-left transition-colors hover:bg-surface-container"
     >
       <div className="flex items-center gap-3">
         <WinRing pct={o.h2hMatchWinRatePct} color={ringColor(o)} small />
@@ -1619,7 +1619,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
   const renderCard = (m: MatchListItem) => {
     const status = statusByRid.get(m.opponentRid);
     return (
-      <div key={m.id} className="rounded-lg bg-surface-container-low p-3">
+      <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
         <div className="flex items-start justify-between gap-3">
           {/* left: score + time / retired badge, then opponent name */}
           <div className="min-w-0">
@@ -1767,7 +1767,7 @@ function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-semibold";
   return (
     <div className="min-w-0">
-      <div className="min-w-0 overflow-hidden rounded-lg bg-card px-4 py-3">
+      <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] text-on-surface-variant">

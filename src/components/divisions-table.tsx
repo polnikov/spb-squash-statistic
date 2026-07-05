@@ -76,7 +76,7 @@ function bestBy(rows: RatingRow[], value: (row: RatingRow) => number) {
 
 function MetricTile({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
   return (
-    <div className="rounded-lg bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
+    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex items-end gap-1.5 md:mt-2">
         <span className="font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl">
@@ -104,7 +104,7 @@ function HighlightTile({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-lg bg-surface-container-low px-3 py-2.5 md:px-4 md:py-3", className)}>
+    <div className={cn("rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 md:px-4 md:py-3", className)}>
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex min-w-0 items-baseline justify-between gap-3 md:mt-2">
         <span className="min-w-0 truncate text-[13px] font-semibold text-on-surface">
@@ -253,7 +253,7 @@ export function DivisionsTable({
       <div className="hidden md:block">
         <button
           onClick={() => setHlOpen((v) => !v)}
-          className="inline-flex w-fit cursor-pointer select-none items-center gap-2 rounded-lg bg-card px-4 py-3 text-[13px] font-semibold text-on-surface transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+          className="inline-flex w-fit cursor-pointer select-none items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 text-[13px] font-semibold text-on-surface transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         >
           Highlights
           <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-200", hlOpen && "rotate-180")} />
@@ -261,7 +261,7 @@ export function DivisionsTable({
         {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
         <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", hlOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
           <div className="min-h-0 overflow-hidden rounded-lg">
-            <div className="mt-2 grid grid-cols-3 gap-3 rounded-lg bg-card p-3">
+            <div className="mt-2 grid grid-cols-3 gap-3 rounded-lg border border-outline-variant bg-card p-3">
               {highlightTiles.map((tile) => (
                 <HighlightTile key={tile.label} label={tile.label} player={tile.player} value={tile.value} />
               ))}
@@ -276,7 +276,7 @@ export function DivisionsTable({
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
             className={cn(
-              "h-8 rounded-full px-4 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
+              "h-8 rounded-full border border-outline-variant px-4 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
               sort.key === pill.key
                 ? "bg-brand-accent text-black"
                 : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",
@@ -293,7 +293,7 @@ export function DivisionsTable({
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
             className={cn(
-              "h-8 min-w-0 flex-1 basis-0 truncate rounded-full px-2 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
+              "h-8 min-w-0 flex-1 basis-0 truncate rounded-full border border-outline-variant px-2 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
               sort.key === pill.key
                 ? "bg-brand-accent text-black"
                 : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",

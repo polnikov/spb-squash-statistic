@@ -52,7 +52,7 @@ function MetricTile({ label, value, sub, compact }: { label: string; value: stri
   if (compact) {
     // mobile: value first, metric description below it
     return (
-      <div className="rounded-lg bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+      <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
         <div className="font-mono text-[17px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
         <div className="mt-1 text-[10px] leading-tight text-on-surface-variant">{label}</div>
         {sub ? <div className="mt-0.5 text-[10px] text-on-surface-variant">{sub}</div> : null}
@@ -60,7 +60,7 @@ function MetricTile({ label, value, sub, compact }: { label: string; value: stri
     );
   }
   return (
-    <div className="rounded-lg bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+    <div className="rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
       <div className="text-[11px] text-on-surface-variant">{label}</div>
       <div className="mt-1.5 font-mono text-[22px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
       {sub ? <div className="mt-1 text-[10.5px] text-on-surface-variant">{sub}</div> : null}
@@ -377,7 +377,7 @@ export function StageSummary({ league }: { league: League }) {
               const aRetired = Boolean(m.retired && !aWon);
               const bRetired = Boolean(m.retired && aWon);
               return (
-                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="flex flex-col self-start rounded-lg bg-card p-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="flex flex-col self-start rounded-lg border border-outline-variant bg-card p-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <div className="grid gap-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex min-w-0 items-center gap-1.5">
@@ -444,7 +444,7 @@ export function StageSummary({ league }: { league: League }) {
               const aRetired = Boolean(m.retired && !aWon);
               const bRetired = Boolean(m.retired && aWon);
               return (
-                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="rounded-lg bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <div className="grid gap-2">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
                       <span

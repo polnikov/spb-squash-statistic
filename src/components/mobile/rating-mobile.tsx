@@ -98,7 +98,7 @@ export function RatingMobile({
       </div>
 
       {!hasDivisionData ? (
-        <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
+        <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
           Данных пока нет
         </div>
       ) : (
@@ -117,7 +117,7 @@ export function RatingMobile({
           {/* player cards */}
           <div className="flex flex-col gap-2">
             {list.length === 0 ? (
-              <div className="rounded-lg bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
+              <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
                 Данных пока нет
               </div>
             ) : list.map((r) => (
@@ -125,7 +125,7 @@ export function RatingMobile({
                 key={r.rid}
                 ref={flip.setNode(r.rid)}
                 href={`/players/${encodeURIComponent(r.rid)}`}
-                className="flex flex-col gap-1.5 rounded-lg bg-surface-container px-4 py-3"
+                className="flex flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-4 py-3"
               >
                 <div className="flex items-center gap-2.5 border-b border-outline-variant pb-2">
                   <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-on-surface-variant">

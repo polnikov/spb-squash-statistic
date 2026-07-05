@@ -45,7 +45,7 @@ const C = {
 };
 
 function cardClass(className?: string) {
-  return cn("rounded-lg bg-card", className);
+  return cn("rounded-lg border border-outline-variant bg-card", className);
 }
 
 function statusTone(status: MatchupStatus): "primary" | "error" | "neutral" {
@@ -58,7 +58,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+        "inline-flex items-center rounded-full border border-outline-variant px-2 py-0.5 text-[10.5px] font-semibold",
         tone === "primary" && "bg-[#04A45A]/18 text-[#04A45A]",
         tone === "error" && "bg-[#FF4747]/18 text-[#FF6B63]",
         tone === "neutral" && "bg-surface-container-high text-on-surface-variant",
@@ -306,7 +306,7 @@ function ChartView({ tab, meetings, stats, height }: { tab: ChartKey; meetings: 
   return option ? (
     <EChart option={option} style={{ height, width: "100%" }} notMerge lazyUpdate />
   ) : (
-    <div className="grid place-items-center rounded-lg bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
+    <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
       Недостаточно данных для графика
     </div>
   );
@@ -345,7 +345,7 @@ function MobileCharts({ meetings, stats }: { meetings: Meeting[]; stats: PlayerP
 
 function MeetingTimeline({ meetings }: { meetings: Meeting[] }) {
   if (!meetings.length) {
-    return <div className="grid place-items-center rounded-lg bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant">Недостаточно данных для графика</div>;
+    return <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant">Недостаточно данных для графика</div>;
   }
   const ordered = [...meetings].reverse();
   return (
@@ -503,9 +503,9 @@ function KpiGrid({ stats }: { stats: PlayerProfileStats }) {
 function CharacterCard({ stats, compact = false }: { stats: PlayerProfileStats; compact?: boolean }) {
   const avgScore = stats.avgMatchGamesWon !== null && stats.avgMatchGamesLost !== null ? `${stats.avgMatchGamesWon.toFixed(1)} - ${stats.avgMatchGamesLost.toFixed(1)}` : "x";
   return (
-    <div className={cardClass(cn("h-full", compact ? "p-3" : "p-4"))}>
+    <div className={cardClass(cn("flex h-full flex-col", compact ? "p-3" : "p-4"))}>
       <CardTitle>Характер противостояния</CardTitle>
-      <div className={compact ? "mt-1.5" : "mt-2"}>
+      <div className={cn("flex flex-1 flex-col justify-evenly", compact ? "mt-1.5" : "mt-2")}>
         <MetricRow dense={compact} label="Средний счёт по геймам" value={avgScore} />
         <MetricRow dense={compact} label="Баланс геймов за матч" value={formatSignedNumber(stats.gameBalancePerMatch, 1)} sign={stats.gameBalancePerMatch} />
         <MetricRow dense={compact} label="Баланс розыгрышей за матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 1)} sign={stats.rallyBalancePerMatch} />
@@ -517,9 +517,9 @@ function CharacterCard({ stats, compact = false }: { stats: PlayerProfileStats; 
 
 function DecisiveCard({ stats }: { stats: PlayerProfileStats }) {
   return (
-    <div className={cardClass("p-4")}>
+    <div className={cardClass("flex h-full flex-col p-4")}>
       <CardTitle>Решающие моменты</CardTitle>
-      <div className="mt-1">
+      <div className="mt-2 flex flex-1 flex-col justify-evenly">
         <ProgressMetric label="Пятый гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
         <ProgressMetric label="Плотные геймы" record={formatRecord(stats.closeGamesWon, stats.closeGamesLost)} percent={stats.closeGameWinRatePct} />
         <ProgressMetric label="Овертайм-геймы" record={formatRecord(stats.overtimeGamesWon, stats.overtimeGamesLost)} percent={stats.overtimeGameWinRatePct} />
@@ -650,7 +650,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
   }, [filter]);
 
   const renderCard = (m: MatchListItem) => (
-    <div key={m.id} className="rounded-lg bg-surface-container-low p-3">
+    <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 whitespace-nowrap">
