@@ -16,7 +16,7 @@ function DivBadges({ items }: { items: { div: number; place: number | null }[] }
   return (
     <>
       {items.map((it) => (
-        <span key={it.div} className="rounded-full bg-brand-surface-2 px-1.5 py-0.5 text-[10.5px] font-semibold text-brand-ink-2">
+        <span key={it.div} className="rounded-full border border-outline-variant bg-brand-surface-2 px-1.5 py-0.5 text-[10.5px] font-semibold text-brand-ink-2">
           Д{it.div}{it.place ? ` · #${it.place}` : ""}
         </span>
       ))}

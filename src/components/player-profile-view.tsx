@@ -822,11 +822,13 @@ function InfoPopover({
   stats,
   inline = false,
   placement = "down",
+  mobileSafe = false,
 }: {
   items: InfoItem[];
   stats: PlayerProfileStats;
   inline?: boolean;
   placement?: "down" | "up";
+  mobileSafe?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -864,9 +866,16 @@ function InfoPopover({
       </button>
       <div
         className={cn(
-          "absolute z-0 w-[min(390px,calc(100vw-32px))] rounded-xl border border-outline-variant bg-surface-container-high p-4 shadow-e3 transition-all duration-300 ease-m3-emphasized-decel",
-          placement === "up" ? "bottom-11" : "top-11",
-          inline ? "left-0 origin-top-left" : "right-0 origin-top-right",
+          "rounded-xl border border-outline-variant bg-surface-container-high p-4 shadow-e3 transition-all duration-300 ease-m3-emphasized-decel",
+          mobileSafe
+            ? "fixed inset-x-2 bottom-[calc(76px+env(safe-area-inset-bottom))] z-[70] max-h-[calc(100dvh-120px)] w-auto origin-bottom-right overflow-y-auto overscroll-contain md:absolute md:inset-x-auto md:z-0 md:max-h-none md:w-[min(390px,calc(100vw-32px))] md:overflow-visible"
+            : "absolute z-0 w-[min(390px,calc(100vw-32px))]",
+          mobileSafe ? (placement === "up" ? "md:bottom-11 md:top-auto" : "md:top-11 md:bottom-auto") : placement === "up" ? "bottom-11" : "top-11",
+          mobileSafe
+            ? inline
+              ? "md:left-0 md:origin-top-left"
+              : "md:right-0 md:origin-top-right"
+            : inline ? "left-0 origin-top-left" : "right-0 origin-top-right",
           open ? "scale-100 opacity-100" : "pointer-events-none scale-90 opacity-0",
         )}
       >
@@ -1935,7 +1944,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
         {mobileTab === "charts" ? (
           <div className="flex flex-col gap-4">
             <div className={cardClass("relative p-4")}>
-              <InfoPopover items={CHARTS_INFO} stats={active.scopedStats} />
+              <InfoPopover items={CHARTS_INFO} stats={active.scopedStats} mobileSafe />
               <div className="mb-3 flex flex-col gap-2">
                 <h2 className="text-base font-semibold tracking-tight">Графики</h2>
                 <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} />
