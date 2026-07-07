@@ -112,6 +112,27 @@ function Field({
   );
 }
 
+function LoadingProgressBar() {
+  return (
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+      <div className="h-full w-1/3 origin-left rounded-full bg-[#20c7d9] motion-safe:animate-[manager-progress_1.15s_ease-in-out_infinite]" />
+      <style jsx>{`
+        @keyframes manager-progress {
+          0% {
+            transform: translateX(-120%) scaleX(0.45);
+          }
+          45% {
+            transform: translateX(95%) scaleX(1);
+          }
+          100% {
+            transform: translateX(340%) scaleX(0.45);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function DesktopOnlyNotice() {
   return (
     <div className="flex min-h-[60dvh] items-center justify-center md:hidden">
@@ -274,7 +295,7 @@ function PlayersManager({ league }: { league: League }) {
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Администрирование</h1>
         <button
           onClick={openCreate}
-          className="inline-flex h-10 items-center gap-2 rounded-[12px] bg-primary px-4 text-[13px] font-semibold text-on-primary"
+          className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-4 text-[13px] font-semibold text-on-primary"
         >
           <Plus className="size-4" />
           Новый игрок
@@ -347,7 +368,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={saveNewPlayer}
                   disabled={createSaving || !newRid.trim() || (!newName.trim() && !newLinkPlayerId)}
-                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+                  className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
                 >
                   {createSaving ? "Сохранение…" : newLinkPlayerId ? "Связать ID" : "Создать"}
                 </button>
@@ -468,7 +489,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={savePlayer}
                   disabled={saving}
-                  className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+                  className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
                 >
                   {saving ? "Сохранение…" : "Сохранить"}
                 </button>
@@ -981,14 +1002,19 @@ function UploadManager() {
                 {error}
               </div>
             ) : null}
-            <div className="flex justify-end">
+            <div className="flex flex-col items-end gap-2">
               <button
                 onClick={() => runParse()}
                 disabled={parsing || !tournament.trim()}
-                className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-60"
+                className="inline-flex h-11 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-60"
               >
                 {parsing ? "Загрузка…" : "Подгрузить данные"}
               </button>
+              {parsing ? (
+                <div className="w-full max-w-[240px]">
+                  <LoadingProgressBar />
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -1184,7 +1210,7 @@ function UploadManager() {
             <button
               onClick={commitImport}
               disabled={importing || preview.conflicts > 0 || preview.alreadyImported}
-              className="inline-flex h-11 items-center gap-2 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-55"
+              className="inline-flex h-11 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-55"
             >
               <Check className="size-4" />
               {importing ? "Загрузка…" : "Загрузить результаты"}
@@ -1212,7 +1238,7 @@ function UploadManager() {
               setDone(null);
               setError(null);
             }}
-            className="mt-2 h-11 rounded-[12px] bg-primary px-5 text-[13.5px] font-semibold text-on-primary"
+            className="mt-2 h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary"
           >
             Загрузить еще этап
           </button>
@@ -1387,7 +1413,7 @@ function PointsManager() {
           <button
             onClick={save}
             disabled={saving}
-            className="h-11 rounded-[12px] bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+            className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
           >
             {saving ? "Сохранение…" : replaceFrom ? "Сохранить изменения" : "Сохранить таблицу"}
           </button>
