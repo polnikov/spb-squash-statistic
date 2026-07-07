@@ -53,7 +53,7 @@ export function RatingStageSelector({
                 if (selectable) onSelect(n);
               }}
               className={cn(
-                "grid size-full place-items-center rounded-full font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
+                "grid size-full place-items-center rounded-[12px] font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
                 active
                   ? "bg-primary text-on-primary ring-2 ring-primary/30"
                   : selectable

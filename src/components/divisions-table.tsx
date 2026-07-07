@@ -223,7 +223,7 @@ export function DivisionsTable({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl bg-card px-5 py-8 text-center">
+        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
@@ -275,14 +275,16 @@ export function DivisionsTable({
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className={cn(
-              "h-8 rounded-full border border-outline-variant px-4 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
-              sort.key === pill.key
-                ? "bg-brand-accent text-black"
-                : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",
-            )}
+            className="h-9 rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
-            {pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}
+            <span
+              className={cn(
+                "flex h-full items-center rounded-full px-3 transition-colors duration-200 ease-m3-standard",
+                sort.key === pill.key ? "bg-[#20c7d991] text-on-primary" : "text-muted-foreground",
+              )}
+            >
+              {pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}
+            </span>
           </button>
         ))}
       </div>
@@ -292,14 +294,16 @@ export function DivisionsTable({
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className={cn(
-              "h-8 min-w-0 flex-1 basis-0 truncate rounded-full border border-outline-variant px-2 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard",
-              sort.key === pill.key
-                ? "bg-brand-accent text-black"
-                : "bg-brand-surface-2 text-muted-foreground hover:text-on-surface",
-            )}
+            className="h-9 min-w-0 flex-1 basis-0 rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
-            {pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}
+            <span
+              className={cn(
+                "flex h-full min-w-0 items-center justify-center rounded-full px-1.5 transition-colors duration-200 ease-m3-standard",
+                sort.key === pill.key ? "bg-[#20c7d991] text-on-primary" : "text-muted-foreground",
+              )}
+            >
+              <span className="truncate">{pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}</span>
+            </span>
           </button>
         ))}
       </div>
