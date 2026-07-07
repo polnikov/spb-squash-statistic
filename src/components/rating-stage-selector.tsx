@@ -55,7 +55,7 @@ export function RatingStageSelector({
               className={cn(
                 "grid size-full place-items-center rounded-[12px] font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
                 active
-                  ? "bg-[#20c7d991] text-on-primary ring-2 ring-[#20c7d9]/30"
+                  ? "bg-[#20c7d9] text-on-primary ring-2 ring-[#20c7d9]/35"
                   : selectable
                     ? "bg-[#20c7d991] text-on-primary hover:bg-[#20c7d9]"
                     : passed
