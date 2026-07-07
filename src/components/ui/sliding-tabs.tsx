@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * Usage:
  *   const { setRef, ind } = useTabSlider(String(active));
  *   <div className="relative ...tab container... p-1">
- *     <TabSliderPill ind={ind} />            // or className="bg-brand-surface-2"
+ *     <TabSliderPill ind={ind} />
  *     {items.map(i => (
  *       <button ref={setRef(String(i.key))} className="relative z-10 ..." />
  *     ))}
@@ -57,7 +57,7 @@ export function TabSliderPill({
     <span
       aria-hidden
       className={cn(
-        "pointer-events-none absolute bottom-1 top-1 left-0 rounded-[12px] bg-surface-container-highest shadow transition-[transform,width] duration-300 ease-m3-emphasized-decel",
+        "pointer-events-none absolute bottom-1 top-1 left-0 rounded-[12px] bg-[#20c7d991] transition-[transform,width] duration-300 ease-m3-emphasized-decel",
         className,
       )}
       style={{ transform: `translateX(${ind.left}px)`, width: ind.width }}

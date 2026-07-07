@@ -1402,12 +1402,16 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
               key={o.key}
               type="button"
               onClick={() => setSort(o.key)}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
-                sort === o.key ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
-              )}
+              className="h-9 shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
-              {o.label}
+              <span
+                className={cn(
+                  "flex h-full items-center rounded-full px-2.5 transition-colors",
+                  sort === o.key ? "bg-[#20c7d991] text-on-primary" : "text-on-surface-variant",
+                )}
+              >
+                {o.label}
+              </span>
             </button>
           ))}
         </div>
@@ -1675,12 +1679,16 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               key={o.key}
               type="button"
               onClick={() => setFilter(o.key)}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
-                filter === o.key ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
-              )}
+              className="h-9 shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
-              {o.label}
+              <span
+                className={cn(
+                  "flex h-full items-center rounded-full px-2.5 transition-colors",
+                  filter === o.key ? "bg-[#20c7d991] text-on-primary" : "text-on-surface-variant",
+                )}
+              >
+                {o.label}
+              </span>
             </button>
           ))}
         </div>

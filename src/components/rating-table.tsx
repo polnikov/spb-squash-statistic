@@ -186,7 +186,7 @@ export function RatingTable({
     <div className="flex flex-col gap-4">
       <div className="flex items-end gap-4">
         <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
-          <TabSliderPill ind={ind} className="bg-brand-surface-2" />
+          <TabSliderPill ind={ind} />
           {SCOPES.map((s) => (
             <button
               key={String(s.key)}

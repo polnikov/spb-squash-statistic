@@ -205,7 +205,7 @@ export function DivisionsTable({
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="relative flex gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex md:self-start">
-        <TabSliderPill ind={ind} className="bg-brand-surface-2" />
+        <TabSliderPill ind={ind} />
         {DIVS.map((d) => (
           <button
             key={d}
