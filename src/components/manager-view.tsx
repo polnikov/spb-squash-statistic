@@ -58,6 +58,9 @@ const MANAGER_TABS: { key: ManagerTab; label: string; icon: React.ComponentType<
 const DIVISIONS = [1, 2, 3] as const;
 const PLAYER_PAGE_SIZE = 15;
 
+/** Shared primary-button look; call sites add size/layout utilities via cn(). */
+const PRIMARY_BTN = "rounded-[12px] border border-primary/55 bg-primary font-semibold text-on-primary";
+
 
 function ManagerTabs({ tab, setTab }: { tab: ManagerTab; setTab: (tab: ManagerTab) => void }) {
   const { setRef, ind } = useTabSlider(tab);
@@ -112,23 +115,11 @@ function Field({
   );
 }
 
+/** Indeterminate progress sweep; keyframes live in globals.css with the rest. */
 function LoadingProgressBar() {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
-      <div className="h-full w-1/3 origin-left rounded-full bg-[#20c7d9] motion-safe:animate-[manager-progress_1.15s_ease-in-out_infinite]" />
-      <style jsx>{`
-        @keyframes manager-progress {
-          0% {
-            transform: translateX(-120%) scaleX(0.45);
-          }
-          45% {
-            transform: translateX(95%) scaleX(1);
-          }
-          100% {
-            transform: translateX(340%) scaleX(0.45);
-          }
-        }
-      `}</style>
+      <div className="h-full w-1/3 origin-left rounded-full bg-primary motion-safe:animate-[manager-progress_1.15s_ease-in-out_infinite]" />
     </div>
   );
 }
@@ -295,7 +286,7 @@ function PlayersManager({ league }: { league: League }) {
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Администрирование</h1>
         <button
           onClick={openCreate}
-          className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-4 text-[13px] font-semibold text-on-primary"
+          className={cn(PRIMARY_BTN, "inline-flex h-10 items-center gap-2 px-4 text-[13px]")}
         >
           <Plus className="size-4" />
           Новый игрок
@@ -368,7 +359,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={saveNewPlayer}
                   disabled={createSaving || !newRid.trim() || (!newName.trim() && !newLinkPlayerId)}
-                  className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+                  className={cn(PRIMARY_BTN, "h-11 px-5 text-[13px] disabled:opacity-60")}
                 >
                   {createSaving ? "Сохранение…" : newLinkPlayerId ? "Связать ID" : "Создать"}
                 </button>
@@ -489,7 +480,7 @@ function PlayersManager({ league }: { league: League }) {
                 <button
                   onClick={savePlayer}
                   disabled={saving}
-                  className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+                  className={cn(PRIMARY_BTN, "h-11 px-5 text-[13px] disabled:opacity-60")}
                 >
                   {saving ? "Сохранение…" : "Сохранить"}
                 </button>
@@ -1006,7 +997,7 @@ function UploadManager() {
               <button
                 onClick={() => runParse()}
                 disabled={parsing || !tournament.trim()}
-                className="inline-flex h-11 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-60"
+                className={cn(PRIMARY_BTN, "inline-flex h-11 items-center gap-2 px-5 text-[13.5px] disabled:opacity-60")}
               >
                 {parsing ? "Загрузка…" : "Подгрузить данные"}
               </button>
@@ -1210,7 +1201,7 @@ function UploadManager() {
             <button
               onClick={commitImport}
               disabled={importing || preview.conflicts > 0 || preview.alreadyImported}
-              className="inline-flex h-11 items-center gap-2 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary disabled:opacity-55"
+              className={cn(PRIMARY_BTN, "inline-flex h-11 items-center gap-2 px-5 text-[13.5px] disabled:opacity-55")}
             >
               <Check className="size-4" />
               {importing ? "Загрузка…" : "Загрузить результаты"}
@@ -1238,7 +1229,7 @@ function UploadManager() {
               setDone(null);
               setError(null);
             }}
-            className="mt-2 h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13.5px] font-semibold text-on-primary"
+            className={cn(PRIMARY_BTN, "mt-2 h-11 px-5 text-[13.5px]")}
           >
             Загрузить еще этап
           </button>
@@ -1413,7 +1404,7 @@ function PointsManager() {
           <button
             onClick={save}
             disabled={saving}
-            className="h-11 rounded-[12px] border border-[#20c7d9]/55 bg-primary px-5 text-[13px] font-semibold text-on-primary disabled:opacity-60"
+            className={cn(PRIMARY_BTN, "h-11 px-5 text-[13px] disabled:opacity-60")}
           >
             {saving ? "Сохранение…" : replaceFrom ? "Сохранить изменения" : "Сохранить таблицу"}
           </button>

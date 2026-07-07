@@ -4,6 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { matchesLabel } from "@/lib/format";
 import type { EChartsOption } from "echarts";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
@@ -475,12 +476,14 @@ function SegmentedControl<T extends string>({
   onChange,
   className,
   equal = false,
+  mobileEqual = false,
 }: {
   items: { key: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   className?: string;
   equal?: boolean;
+  mobileEqual?: boolean;
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
@@ -493,8 +496,12 @@ function SegmentedControl<T extends string>({
           type="button"
           onClick={() => onChange(item.key)}
           className={cn(
-            "relative z-10 h-9 rounded-[12px] text-xs font-semibold transition-colors duration-200 ease-m3-standard",
-            equal ? "min-w-0 flex-1 px-2" : "shrink-0 px-3.5",
+            "relative z-10 h-9 whitespace-nowrap rounded-[12px] text-xs font-semibold transition-colors duration-200 ease-m3-standard",
+            equal
+              ? "min-w-0 flex-1 px-2"
+              : mobileEqual
+                ? "min-w-0 flex-1 px-2 md:flex-none md:shrink-0 md:px-3.5"
+                : "shrink-0 px-3.5",
             value === item.key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
           )}
         >
@@ -519,6 +526,33 @@ function ScopedKpiGrid({ stats, className }: { stats: PlayerProfileStats; classN
     <div className={cn("grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3", className)}>
       {scopedKpis(stats).map((item) => <KpiCard key={item.label} {...item} />)}
     </div>
+  );
+}
+
+function ScopedKpiAccordion({
+  show,
+  stats,
+  className,
+}: {
+  show: boolean;
+  stats: PlayerProfileStats;
+  className?: string;
+}) {
+  return (
+    <AnimatePresence initial={false}>
+      {show ? (
+        <motion.div
+          layout
+          initial={{ height: 0, opacity: 0, y: -4 }}
+          animate={{ height: "auto", opacity: 1, y: 0 }}
+          exit={{ height: 0, opacity: 0, y: -4 }}
+          transition={{ duration: 0.42, ease: [0.2, 0, 0, 1] }}
+          className={cn("overflow-hidden", className)}
+        >
+          <ScopedKpiGrid stats={stats} />
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
@@ -775,19 +809,28 @@ function Filters({
     return seasonDivisions.length === 1 ? String(seasonDivisions[0].id) : "all";
   };
 
-  // Mobile widths: a single-tab control hugs its content; a multi-tab control
-  // flexes to fill the rest. Desktop always sizes to content.
-  const seasonW = seasonItems.length === 1 ? "w-auto" : "flex-1 min-w-0";
-  const divisionW = divisionItems.length === 1 ? "w-auto" : "flex-1 min-w-0";
+  // Mobile widths: single-tab control hugs content; multi-tab control gets
+  // available row width without pushing neighbor outside viewport.
+  const mobileCols =
+    seasonItems.length === 1 && divisionItems.length === 1
+      ? "grid-cols-[auto_auto]"
+      : seasonItems.length === 1
+        ? "grid-cols-[auto_minmax(0,1fr)]"
+        : divisionItems.length === 1
+          ? "grid-cols-[minmax(0,1fr)_auto]"
+          : "grid-cols-[minmax(0,1fr)_minmax(0,1fr)]";
+  const seasonW = seasonItems.length === 1 ? "w-auto" : "w-full min-w-0 max-w-full";
+  const divisionW = divisionItems.length === 1 ? "w-auto" : "w-full min-w-0 max-w-full";
 
   return (
     <div className="sticky top-[53px] z-20 -mx-2 px-2 py-2 md:static md:mx-0 md:p-0">
-      <div className="flex flex-nowrap items-center gap-1 md:flex-wrap md:gap-2">
+      <div className={cn("grid w-full items-center gap-1 md:flex md:flex-wrap md:gap-2", mobileCols)}>
         <SegmentedControl
           items={seasonItems}
           value={seasonValue}
           onChange={(seasonId) => onChange({ seasonId, divisionId: divisionForSeason(seasonId) })}
           className={cn(seasonW, "md:w-auto md:flex-none")}
+          mobileEqual={seasonItems.length > 1}
         />
         <SegmentedControl
           items={divisionItems}
@@ -1181,16 +1224,19 @@ function ScoreDistributionCard({ stats, compact = false }: { stats: PlayerProfil
     ["0:3", stats.losses0_3],
   ] as const;
   if (compact) {
+    const total = rows.reduce((sum, [, value]) => sum + value, 0);
     return (
       <div className={cardClass("relative p-4")}>
         <InfoPopover items={SCORE_DISTRIBUTION_INFO} stats={stats} />
         <h2 className="text-base font-semibold tracking-tight">Распределение счёта</h2>
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="mt-2">
           {rows.map(([label, value]) => (
-            <div key={label} className="rounded-md bg-surface-container-high px-3 py-2 text-center">
-              <div className="font-mono text-[16px] font-semibold tabular"><NumberPop>{value}</NumberPop></div>
-              <div className="text-[10.5px] text-on-surface-variant">{label}</div>
-            </div>
+            <ProgressMetric
+              key={label}
+              label={label}
+              record={String(value)}
+              percent={total ? (value / total) * 100 : 0}
+            />
           ))}
         </div>
       </div>
@@ -1916,7 +1962,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
   const overviewBlocks = (
     <>
-      {showScopedKpi ? <ScopedKpiGrid stats={active.scopedStats} /> : null}
+      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} />
       <EmptyContext stats={active.scopedStats} />
       <GameAdvantageCard stats={active.scopedStats} />
       <DecisionMomentsCard stats={active.scopedStats} />
@@ -1940,7 +1986,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       <PlayerCareerHeader model={model} />
       <Filters model={model} value={filter} onChange={applyFilter} />
 
-      {showScopedKpi ? <ScopedKpiGrid stats={active.scopedStats} className="hidden md:grid" /> : null}
+      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} className="hidden md:grid" />
 
       <div className="hidden grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-5 md:grid">
         <div className="flex min-w-0 flex-col gap-5">

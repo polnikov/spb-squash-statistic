@@ -358,7 +358,7 @@ function MeetingTimeline({ meetings }: { meetings: Meeting[] }) {
               {i > 0 ? <span className="shrink-0 text-on-surface-variant/50">←</span> : null}
               <span
                 className={cn(
-                  "grid h-9 min-w-[52px] shrink-0 place-items-center rounded-lg px-2 font-mono text-[13px] font-semibold tabular",
+                  "grid h-9 min-w-[52px] shrink-0 place-items-center rounded-lg border border-outline-variant px-2 font-mono text-[13px] font-semibold tabular",
                   won ? "bg-[#04A45A]/18 text-[#04A45A]" : "bg-[#FF4747]/18 text-[#FF6B63]",
                 )}
               >

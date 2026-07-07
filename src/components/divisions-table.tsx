@@ -118,11 +118,11 @@ function HighlightTile({
   );
 }
 
-const SORT_PILLS: { key: SortKey; label: string }[] = [
-  { key: "points", label: "Рейтинг" },
-  { key: "form", label: "Форма" },
-  { key: "matches", label: "Активность" },
-  { key: "court", label: "Время" },
+const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
+  { key: "points", label: "Рейтинг", mobileWeight: 1.18 },
+  { key: "form", label: "Форма", mobileWeight: 0.95 },
+  { key: "matches", label: "Активность", mobileWeight: 1.55 },
+  { key: "court", label: "Время", mobileWeight: 0.95 },
 ];
 
 function playerHref(rid: string) {
@@ -296,12 +296,13 @@ export function DivisionsTable({
         ))}
       </div>
 
-      <div className="flex items-center gap-2 md:hidden">
+      <div className="flex w-full items-center gap-2 md:hidden">
         {SORT_PILLS.map((pill) => (
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className="relative h-9 min-w-0 flex-1 basis-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            style={{ flex: `${pill.mobileWeight} 1 0` }}
+            className="relative h-9 min-w-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
               aria-hidden
@@ -312,11 +313,11 @@ export function DivisionsTable({
             />
             <span
               className={cn(
-                "relative z-30 flex h-full min-w-0 items-center justify-center rounded-full px-1.5 transition-colors duration-200 ease-m3-standard",
+                "relative z-30 flex h-full items-center justify-center whitespace-nowrap rounded-full px-3 transition-colors duration-200 ease-m3-standard",
                 sort.key === pill.key ? "text-on-primary" : "text-muted-foreground",
               )}
             >
-              <span className="truncate">{pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}</span>
+              <span>{pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}</span>
             </span>
           </button>
         ))}
