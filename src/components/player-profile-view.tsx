@@ -1402,12 +1402,19 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
               key={o.key}
               type="button"
               onClick={() => setSort(o.key)}
-              className="h-9 shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
+                aria-hidden
                 className={cn(
-                  "flex h-full items-center rounded-full px-2.5 transition-colors",
-                  sort === o.key ? "bg-[#20c7d991] text-on-primary" : "text-on-surface-variant",
+                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  sort === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
+                )}
+              />
+              <span
+                className={cn(
+                  "relative z-30 flex h-full items-center rounded-full px-2.5 transition-colors",
+                  sort === o.key ? "text-on-primary" : "text-on-surface-variant",
                 )}
               >
                 {o.label}
@@ -1679,12 +1686,19 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               key={o.key}
               type="button"
               onClick={() => setFilter(o.key)}
-              className="h-9 shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
+                aria-hidden
                 className={cn(
-                  "flex h-full items-center rounded-full px-2.5 transition-colors",
-                  filter === o.key ? "bg-[#20c7d991] text-on-primary" : "text-on-surface-variant",
+                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  filter === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
+                )}
+              />
+              <span
+                className={cn(
+                  "relative z-30 flex h-full items-center rounded-full px-2.5 transition-colors",
+                  filter === o.key ? "text-on-primary" : "text-on-surface-variant",
                 )}
               >
                 {o.label}

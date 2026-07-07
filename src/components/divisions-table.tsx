@@ -205,7 +205,7 @@ export function DivisionsTable({
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="relative flex gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex md:self-start">
-        <TabSliderPill ind={ind} />
+        <TabSliderPill ind={ind} className="bg-brand-surface-2" />
         {DIVS.map((d) => (
           <button
             key={d}
@@ -275,12 +275,19 @@ export function DivisionsTable({
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className="h-9 rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            className="relative h-9 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
+              aria-hidden
               className={cn(
-                "flex h-full items-center rounded-full px-3 transition-colors duration-200 ease-m3-standard",
-                sort.key === pill.key ? "bg-[#20c7d991] text-on-primary" : "text-muted-foreground",
+                "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                sort.key === pill.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
+              )}
+            />
+            <span
+              className={cn(
+                "relative z-30 flex h-full items-center rounded-full px-3 transition-colors duration-200 ease-m3-standard",
+                sort.key === pill.key ? "text-on-primary" : "text-muted-foreground",
               )}
             >
               {pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}
@@ -294,12 +301,19 @@ export function DivisionsTable({
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className="h-9 min-w-0 flex-1 basis-0 rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            className="relative h-9 min-w-0 flex-1 basis-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
+              aria-hidden
               className={cn(
-                "flex h-full min-w-0 items-center justify-center rounded-full px-1.5 transition-colors duration-200 ease-m3-standard",
-                sort.key === pill.key ? "bg-[#20c7d991] text-on-primary" : "text-muted-foreground",
+                "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                sort.key === pill.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
+              )}
+            />
+            <span
+              className={cn(
+                "relative z-30 flex h-full min-w-0 items-center justify-center rounded-full px-1.5 transition-colors duration-200 ease-m3-standard",
+                sort.key === pill.key ? "text-on-primary" : "text-muted-foreground",
               )}
             >
               <span className="truncate">{pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}</span>

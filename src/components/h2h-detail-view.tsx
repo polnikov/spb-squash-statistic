@@ -686,12 +686,19 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
-              className="h-9 shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
+                aria-hidden
                 className={cn(
-                  "flex h-full items-center rounded-full px-2.5 transition-colors",
-                  filter === f.key ? "bg-[#20c7d991] text-on-primary" : "text-on-surface-variant",
+                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  filter === f.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
+                )}
+              />
+              <span
+                className={cn(
+                  "relative z-30 flex h-full items-center rounded-full px-2.5 transition-colors",
+                  filter === f.key ? "text-on-primary" : "text-on-surface-variant",
                 )}
               >
                 {f.label}

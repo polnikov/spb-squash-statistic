@@ -222,7 +222,7 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
       <div className="flex items-center gap-2">
         {/* desktop: division filter tabs (left) */}
         <div className="relative hidden gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex">
-          <TabSliderPill ind={ind} />
+          <TabSliderPill ind={ind} className="bg-brand-surface-2" />
           {DIV_SCOPES.map((s) => (
             <button
               key={String(s.key)}
