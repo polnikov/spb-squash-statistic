@@ -206,12 +206,20 @@ export async function buildPlayerProfileModelFromDb(
     .sort((a, b) => seasonStart(b) - seasonStart(a));
   const divisionsBySeason = buildDivisionsBySeason(data.results);
 
+  // The five reads below are independent of each other — one parallel wave
+  // instead of five sequential round trips.
+  const [seasonRows, stageRows, oppPlayerRows, aggRows, oppRows] = await Promise.all([
+    database.select({ id: seasons.id, label: seasons.label }).from(seasons),
+    database.select({ id: stages.id, number: stages.number }).from(stages),
+    database.select({ id: players.id, rid: players.rankedinId }).from(players),
+    database.select().from(playerStatsAggregate).where(eq(playerStatsAggregate.playerId, playerId)),
+    database.select().from(playerOpponentStats).where(eq(playerOpponentStats.playerId, playerId)),
+  ]);
+
   // season id (int) <-> label
-  const seasonRows = await database.select({ id: seasons.id, label: seasons.label }).from(seasons);
   const labelById = new Map(seasonRows.map((s) => [s.id, s.label]));
 
   // stage id -> number
-  const stageRows = await database.select({ id: stages.id, number: stages.number }).from(stages);
   const stageNumberById = new Map(stageRows.map((s) => [s.id, s.number]));
 
   // opponent display (rid/name/initials/color) from the loaded leagues, keyed by DB opponent id
@@ -221,14 +229,12 @@ export async function buildPlayerProfileModelFromDb(
       if (!oppByRid.has(p.rid)) oppByRid.set(p.rid, { rid: p.rid, name: p.name, initials: p.initials, color: p.color });
     }
   }
-  const oppPlayerRows = await database.select({ id: players.id, rid: players.rankedinId }).from(players);
   const oppDisplayById = new Map<number, OppDisplay>();
   for (const p of oppPlayerRows) {
     if (p.rid) oppDisplayById.set(p.id, oppByRid.get(p.rid) ?? { rid: p.rid, name: p.rid, initials: " - ", color: "var(--m3-surface-container-high)" });
   }
 
   // all aggregate rows for the player
-  const aggRows = await database.select().from(playerStatsAggregate).where(eq(playerStatsAggregate.playerId, playerId));
   const careerRow = aggRows.find((r) => r.scope === "career");
   const seasonByLabel = new Map<string, PlayerStatsAggregateRow>();
   const seasonDivByKey = new Map<string, PlayerStatsAggregateRow>();
@@ -249,7 +255,6 @@ export async function buildPlayerProfileModelFromDb(
   }
 
   // opponent rows by scope
-  const oppRows = await database.select().from(playerOpponentStats).where(eq(playerOpponentStats.playerId, playerId));
   const oppCareer: PlayerOpponentStats[] = [];
   const oppSeasonByLabel = new Map<string, PlayerOpponentStats[]>();
   const oppSeasonDivByKey = new Map<string, PlayerOpponentStats[]>();

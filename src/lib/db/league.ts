@@ -16,6 +16,7 @@ import { capitalizePlayerName } from "@/lib/format";
 import { resolvePoints, type PointsRule } from "@/lib/points";
 import {
   CURRENT_SEASON,
+  TOTAL_STAGES,
   normalizeSeason,
   seasonList,
   type League,
@@ -49,8 +50,10 @@ export async function loadLeague(
   }
   const seasonId = seasonRow.id;
 
+  // The five reads below are independent — issued as one parallel wave
+  // instead of five sequential round trips.
   // configured points rules (season-agnostic; resolved per stage date+division)
-  const pointsRows = await database
+  const pointsRowsQ = database
     .select({
       division: pointsTable.division,
       effectiveFrom: pointsTable.effectiveFrom,
@@ -58,26 +61,14 @@ export async function loadLeague(
       points: pointsTable.points,
     })
     .from(pointsTable);
-  const pointsRules: PointsRule[] = pointsRows.map((r) => ({
-    division: r.division,
-    effectiveFrom: r.effectiveFrom,
-    place: r.place,
-    points: Number(r.points),
-  }));
 
   // global player lookup (id -> rid/name)
-  const allPlayers = await database
+  const allPlayersQ = database
     .select({ id: players.id, rid: players.rankedinId, name: players.name })
     .from(players);
-  const idToRid = new Map<number, string>();
-  const idToName = new Map<number, string>();
-  for (const p of allPlayers) {
-    if (p.rid) idToRid.set(p.id, p.rid);
-    idToName.set(p.id, p.name);
-  }
 
   // results joined with stage metadata, ordered for stable idx assignment
-  const resRows = await database
+  const resRowsQ = database
     .select({
       stageNumber: stages.number,
       stageDate: stages.date,
@@ -103,6 +94,53 @@ export async function loadLeague(
     .innerJoin(stages, eq(results.stageId, stages.id))
     .where(eq(stages.seasonId, seasonId))
     .orderBy(asc(stages.number), asc(results.division), asc(results.place));
+
+  // matches
+  const matchRowsQ = database
+    .select({
+      stageNumber: stages.number,
+      division: matches.division,
+      playerAId: matches.playerAId,
+      playerBId: matches.playerBId,
+      gamesA: matches.gamesA,
+      gamesB: matches.gamesB,
+      winnerId: matches.winnerId,
+      scoreDetail: matches.scoreDetail,
+      durationMinutes: matches.durationMinutes,
+      retired: matches.retired,
+    })
+    .from(matches)
+    .innerJoin(stages, eq(matches.stageId, stages.id))
+    .where(eq(stages.seasonId, seasonId))
+    .orderBy(asc(stages.number), asc(matches.division));
+
+  // stage numbers/dates (shaped into the fixed 1..9 list below)
+  const stageRowsQ = database
+    .select({ number: stages.number, date: stages.date })
+    .from(stages)
+    .where(eq(stages.seasonId, seasonId));
+
+  const [pointsRows, allPlayers, resRows, matchRows, stageRows] = await Promise.all([
+    pointsRowsQ,
+    allPlayersQ,
+    resRowsQ,
+    matchRowsQ,
+    stageRowsQ,
+  ]);
+
+  const pointsRules: PointsRule[] = pointsRows.map((r) => ({
+    division: r.division,
+    effectiveFrom: r.effectiveFrom,
+    place: r.place,
+    points: Number(r.points),
+  }));
+
+  const idToRid = new Map<number, string>();
+  const idToName = new Map<number, string>();
+  for (const p of allPlayers) {
+    if (p.rid) idToRid.set(p.id, p.rid);
+    idToName.set(p.id, p.name);
+  }
 
   // assign per-season idx in first-appearance order
   const idToIdx = new Map<number, number>();
@@ -168,25 +206,6 @@ export async function loadLeague(
 
   for (const p of playerList) p.divisions.sort((a, b) => a - b);
 
-  // matches
-  const matchRows = await database
-    .select({
-      stageNumber: stages.number,
-      division: matches.division,
-      playerAId: matches.playerAId,
-      playerBId: matches.playerBId,
-      gamesA: matches.gamesA,
-      gamesB: matches.gamesB,
-      winnerId: matches.winnerId,
-      scoreDetail: matches.scoreDetail,
-      durationMinutes: matches.durationMinutes,
-      retired: matches.retired,
-    })
-    .from(matches)
-    .innerJoin(stages, eq(matches.stageId, stages.id))
-    .where(eq(stages.seasonId, seasonId))
-    .orderBy(asc(stages.number), asc(matches.division));
-
   const matchesOut: RealMatch[] = [];
   for (const m of matchRows) {
     const aIdx = idToIdx.get(m.playerAId);
@@ -213,13 +232,9 @@ export async function loadLeague(
   }
 
   // stages (fill 1..9; done = has a stored date)
-  const stageRows = await database
-    .select({ number: stages.number, date: stages.date })
-    .from(stages)
-    .where(eq(stages.seasonId, seasonId));
   const dateByNo = new Map<number, string>();
   for (const s of stageRows) dateByNo.set(s.number, s.date ?? "");
-  const stagesOut: MockStage[] = Array.from({ length: 9 }, (_, i) => {
+  const stagesOut: MockStage[] = Array.from({ length: TOTAL_STAGES }, (_, i) => {
     const no = i + 1;
     const date = dateByNo.get(no) ?? "";
     return { no, date, done: Boolean(date) };
@@ -290,11 +305,9 @@ export async function listManagedPlayers(
 export async function loadAllLeagues(
   database: Database = defaultDb,
 ): Promise<Record<string, League>> {
-  const out: Record<string, League> = {};
   const labelsWithData = await listSeasonsWithData(database);
   const labels = labelsWithData.length > 0 ? labelsWithData : seasonList();
-  for (const label of labels) {
-    out[label] = await loadLeague(label, database);
-  }
-  return out;
+  // Seasons are independent — load them in parallel.
+  const leagues = await Promise.all(labels.map((label) => loadLeague(label, database)));
+  return Object.fromEntries(labels.map((label, i) => [label, leagues[i]]));
 }
