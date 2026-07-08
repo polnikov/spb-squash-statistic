@@ -1,6 +1,6 @@
 # Local development / full-stack testing (builds the image locally).
 #   Dev infra only (postgres + redis):   docker compose -f docker-compose.dev.yml up -d
-#   Full stack incl. app/worker/caddy:   docker compose -f docker-compose.dev.yml --profile full up -d --build
+#   Full stack incl. app/caddy:         docker compose -f docker-compose.dev.yml --profile full up -d --build
 # For production delivery see docker-compose.yml (pulls the GHCR image).
 services:
   postgres:
@@ -54,24 +54,6 @@ services:
         condition: service_healthy
     expose:
       - "3000"
-
-  worker:
-    profiles: ["full"]
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bbr-worker
-    restart: unless-stopped
-    command: ["npx", "tsx", "src/workers/index.ts"]
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-bbr}:${POSTGRES_PASSWORD:-bbr}@postgres:5432/${POSTGRES_DB:-bbr}
-      REDIS_URL: redis://redis:6379
-      NODE_ENV: production
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   caddy:
     profiles: ["full"]

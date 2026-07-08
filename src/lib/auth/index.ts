@@ -47,7 +47,7 @@ export function logout(): void {
   cookies().delete(SESSION_COOKIE);
 }
 
-export function getSession(): SessionPayload | null {
+function getSession(): SessionPayload | null {
   return verifySession(cookies().get(SESSION_COOKIE)?.value);
 }
 

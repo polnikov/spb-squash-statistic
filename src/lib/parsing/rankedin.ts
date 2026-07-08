@@ -503,44 +503,6 @@ export async function importRankedinStage(input: StageImportInput): Promise<{
   };
 }
 
-/**
- * Queue worker entry point. Reads stage_division metadata, fetches RankedIn,
- * imports results/matches, recalculates stats.
- */
-export async function parseStageDivision(stageDivisionId: number): Promise<void> {
-  const sd = await db.query.stageDivisions.findFirst({
-    where: eq(stageDivisions.id, stageDivisionId),
-    with: { stage: { with: { season: true } } },
-  });
-  if (!sd) throw new Error(`stage_division ${stageDivisionId} not found`);
-  if (!sd.rankedinTournamentId) {
-    throw new Error(`stage_division ${stageDivisionId} has no RankedIn tournament id`);
-  }
-
-  await db
-    .update(stageDivisions)
-    .set({ parseStatus: "parsing", error: null })
-    .where(eq(stageDivisions.id, stageDivisionId));
-
-  try {
-    const res = await importRankedinStage({
-      tournament: sd.rankedinTournamentId,
-      classId: sd.rankedinClassId ?? undefined,
-      season: sd.stage.season.label,
-      division: sd.division,
-      stage: sd.stage.number,
-      date: sd.stage.date ?? undefined,
-    });
-    if (!res.ok) throw new Error(res.error);
-  } catch (error) {
-    await db
-      .update(stageDivisions)
-      .set({ parseStatus: "failed", error: error instanceof Error ? error.message : String(error) })
-      .where(eq(stageDivisions.id, stageDivisionId));
-    throw error;
-  }
-}
-
 async function parseRankedinTournament(input: StageImportInput): Promise<ParseRankedinTournamentResult> {
   const tournamentId = extractTournamentId(input.tournament);
   if (!tournamentId) throw new Error("Укажите ID турнира или ссылку RankedIn");

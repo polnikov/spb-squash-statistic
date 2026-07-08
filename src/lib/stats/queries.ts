@@ -92,25 +92,6 @@ export async function getPlayerSeasonStats(
   return row ? mapStatsRow(row) : null;
 }
 
-export async function getPlayerStageStats(
-  playerId: number,
-  stageId: number,
-  database: Database = defaultDb,
-): Promise<PlayerStats | null> {
-  const [row] = await database
-    .select()
-    .from(playerStatsAggregate)
-    .where(
-      and(
-        eq(playerStatsAggregate.playerId, playerId),
-        eq(playerStatsAggregate.scope, "stage"),
-        eq(playerStatsAggregate.stageId, stageId),
-      ),
-    )
-    .limit(1);
-  return row ? mapStatsRow(row) : null;
-}
-
 /** All players' stage aggregates for one stage (leaderboard source). */
 export async function getStageStats(
   stageId: number,
@@ -123,18 +104,6 @@ export async function getStageStats(
       and(eq(playerStatsAggregate.scope, "stage"), eq(playerStatsAggregate.stageId, stageId)),
     );
   return rows.map(mapStatsRow);
-}
-
-/** A player's head-to-head rows against every opponent, most-met first. */
-export async function getPlayerOpponentStats(
-  playerId: number,
-  database: Database = defaultDb,
-): Promise<PlayerOpponentStatsRow[]> {
-  return database
-    .select()
-    .from(playerOpponentStats)
-    .where(eq(playerOpponentStats.playerId, playerId))
-    .orderBy(desc(playerOpponentStats.meetingsPlayed));
 }
 
 /** Resolve the internal player id from a RankedIn id. */

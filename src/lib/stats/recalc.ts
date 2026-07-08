@@ -510,20 +510,6 @@ export async function recalcPlayer(
   });
 }
 
-/** Recompute aggregates for both players of a match. */
-export async function recalcMatch(
-  matchId: number,
-  database: Database = defaultDb,
-): Promise<void> {
-  const [row] = await database
-    .select({ playerAId: matches.playerAId, playerBId: matches.playerBId })
-    .from(matches)
-    .where(eq(matches.id, matchId))
-    .limit(1);
-  if (!row) return;
-  await recalcPlayer(row.playerAId, database);
-  await recalcPlayer(row.playerBId, database);
-}
 
 /**
  * Recompute everything touched by one parsed stage-division: regenerate
@@ -593,29 +579,6 @@ export function buildMatchGameRows(match: {
   });
 }
 
-/** Regenerate match_games for one match from its scoreDetail. */
-export async function backfillMatchGamesForMatch(
-  matchId: number,
-  database: Database = defaultDb,
-): Promise<number> {
-  const [row] = await database
-    .select({
-      id: matches.id,
-      playerAId: matches.playerAId,
-      playerBId: matches.playerBId,
-      scoreDetail: matches.scoreDetail,
-    })
-    .from(matches)
-    .where(eq(matches.id, matchId))
-    .limit(1);
-  if (!row) return 0;
-  const rows = buildMatchGameRows(row);
-  await database.transaction(async (tx) => {
-    await tx.delete(matchGames).where(eq(matchGames.matchId, matchId));
-    if (rows.length) await tx.insert(matchGames).values(rows);
-  });
-  return rows.length;
-}
 
 /** Backfill match_games for every match, then recompute every player's stats. */
 export async function backfillAll(database: Database = defaultDb): Promise<{

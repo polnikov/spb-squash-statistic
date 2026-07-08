@@ -9,7 +9,6 @@
 | --- | --- |
 | App | Next.js (App Router) + TypeScript |
 | БД | PostgreSQL (Docker) + Drizzle ORM + Drizzle-Kit |
-| Очередь/кэш | Redis + BullMQ (парсинг этапов) |
 | Прокси | Caddy (авто-TLS) |
 | Графики | Apache ECharts (`echarts` + `echarts-for-react`) |
 | UI | Tailwind CSS + shadcn/ui (Radix) + lucide-react |
@@ -26,7 +25,6 @@ docker compose -f docker-compose.dev.yml up -d   # поднимет postgres + r
 npm install
 npm run db:push                              # применить схему к БД (dev)
 npm run dev                                  # http://localhost:3000
-npm run worker                               # отдельный процесс: воркер парсинга этапов
 ```
 
 ## Скрипты
@@ -34,7 +32,6 @@ npm run worker                               # отдельный процесс
 - `dev` / `build` / `start` — Next.js.
 - `typecheck` — `tsc --noEmit`.
 - `test` / `test:watch` — Vitest.
-- `worker` — процесс BullMQ-воркера (парсинг этапов).
 - `db:generate` — сгенерировать SQL-миграции из схемы.
 - `db:migrate` — применить миграции.
 - `db:push` — синхронизировать схему напрямую (для разработки).
@@ -50,10 +47,7 @@ src/
     ui/                # примитивы shadcn/ui
   lib/
     db/                # drizzle: schema.ts, index.ts (клиент)
-    queue/             # BullMQ очередь парсинга этапов
-    redis.ts           # подключение к Redis (ioredis)
     utils.ts           # cn() и пр.
-  workers/             # entrypoint воркера BullMQ
 drizzle/               # сгенерированные SQL-миграции
 ```
 
@@ -63,7 +57,7 @@ drizzle/               # сгенерированные SQL-миграции
 docker compose -f docker-compose.dev.yml --profile full up -d --build
 ```
 
-Поднимает локально собранные `app` + `worker` и `caddy` (авто-TLS) поверх
+Поднимает локально собранные `app` и `caddy` (авто-TLS) поверх
 `postgres`/`redis`. Домен задаётся в `Caddyfile`.
 
 ## Деплой (GitHub Actions → GHCR → self-hosted)

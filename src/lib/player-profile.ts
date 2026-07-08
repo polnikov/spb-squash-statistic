@@ -1,5 +1,6 @@
 import {
   CURRENT_SEASON,
+  TOTAL_STAGES,
   getRatingRows,
   type League,
   type MockPlayer,
@@ -789,7 +790,7 @@ function buildStageSeries(
   matches: PlayerMatchRecord[],
   results: PlayerResultRecord[],
 ): PlayerProfileSeriesPoint[] {
-  return Array.from({ length: 9 }, (_, i) => {
+  return Array.from({ length: TOTAL_STAGES }, (_, i) => {
     const stage = i + 1;
     const stageMatches = matches.filter(
       (m) => m.seasonId === seasonId && m.stage === stage && (!divisionId || m.divisionId === divisionId),

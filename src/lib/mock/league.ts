@@ -121,6 +121,9 @@ function parseScore(score: string): { gamesA: number; gamesB: number; detail: { 
 }
 
 const leagueCache = new Map<string, League>();
+/** Stages in a season: 1..8 count toward the rating, 9 is the final. */
+export const TOTAL_STAGES = 9;
+export const FINAL_STAGE = TOTAL_STAGES;
 export const RATING_MAX_STAGE = 8;
 const RATING_BEST_STAGE_COUNT = 7;
 
@@ -224,7 +227,7 @@ export function buildLeague(_season: string = CURRENT_SEASON): League {
 
   for (const p of players) p.divisions.sort((a, b) => a - b);
 
-  const stages: MockStage[] = Array.from({ length: 9 }, (_, i) => {
+  const stages: MockStage[] = Array.from({ length: TOTAL_STAGES }, (_, i) => {
     const no = i + 1;
     const date = stageDates.get(no) ?? "";
     return { no, date, done: Boolean(date) };
@@ -617,29 +620,6 @@ export function getIronManLongMatches(
     }));
 }
 
-// --- Stage summaries ---
-
-export type StageSummary = {
-  no: number;
-  date: string;
-  done: boolean;
-  participants: number;
-  matches: number;
-  divisions: number;
-};
-
-export function getStageSummaries(league: League): StageSummary[] {
-  return league.stages.map((st) => {
-    const rs = league.results.filter((r) => r.stage === st.no);
-    const participants = new Set(rs.map((r) => r.playerIdx)).size;
-    const matches = Math.round(rs.reduce((s, r) => s + r.matches, 0) / 2);
-    const divisions = new Set(rs.map((r) => r.div)).size || 3;
-    return { no: st.no, date: st.date, done: st.done, participants, matches, divisions };
-  });
-}
-
-// --- Stage results (Этапы / сводка по этапу) ---
-
 export type StageResultRow = {
   place: number;
   date: string;
@@ -662,10 +642,6 @@ export type StageResultRow = {
   rank: number;
   points: number;
 };
-
-export function doneStageNumbers(league: League): number[] {
-  return league.stages.filter((s) => s.done).map((s) => s.no);
-}
 
 export function getStageResults(
   league: League,
@@ -758,198 +734,4 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
       };
     })
     .sort((a, b) => b.points - a.points);
-}
-
-// --- Player detail ---
-
-export type PlayerHistoryRow = {
-  stage: number;
-  date: string;
-  div: number;
-  place: number;
-  matches: number;
-  wins: number;
-  games: number;
-  gamesWon: number;
-  balls: number;
-  ballsWon: number;
-  court: number;
-  rank: number;
-  ratingBefore: number;
-  ratingAfter: number;
-  points: number;
-};
-
-export type PlayerDetail = {
-  idx: number;
-  name: string;
-  rid: string;
-  skill: number;
-  rank: number;
-  color: string;
-  initials: string;
-  divisions: number[];
-  season: {
-    matches: number;
-    wins: number;
-    winPct: number;
-    games: number;
-    gamesWon: number;
-    gamesPct: number;
-    balls: number;
-    ballsWon: number;
-    ballsPct: number;
-    court: number;
-    stages: number;
-    points: number;
-    best: number | null;
-  };
-  places: { p1: number; p2: number; p3: number; other: number; total: number };
-  history: PlayerHistoryRow[];
-};
-
-export function getPlayerDetail(league: League, idx: number): PlayerDetail | null {
-  const p = league.players[idx];
-  if (!p) return null;
-  const a = aggregate(league, idx);
-  const rs = league.results
-    .filter((r) => r.playerIdx === idx)
-    .sort((x, y) => x.stage - y.stage || x.div - y.div);
-
-  const places = { p1: 0, p2: 0, p3: 0, other: 0, total: rs.length };
-  for (const r of rs) {
-    if (r.place === 1) places.p1++;
-    else if (r.place === 2) places.p2++;
-    else if (r.place === 3) places.p3++;
-    else places.other++;
-  }
-
-  return {
-    idx: p.idx,
-    name: p.name,
-    rid: p.rid,
-    skill: p.skill,
-    rank: p.rank,
-    color: p.color,
-    initials: p.initials,
-    divisions: p.divisions,
-    season: {
-      matches: a.matches,
-      wins: a.wonM,
-      winPct: a.matches ? Math.round((a.wonM / a.matches) * 100) : 0,
-      games: a.games,
-      gamesWon: a.wonG,
-      gamesPct: a.games ? Math.round((a.wonG / a.games) * 100) : 0,
-      balls: a.balls,
-      ballsWon: a.wonB,
-      ballsPct: a.balls ? Math.round((a.wonB / a.balls) * 100) : 0,
-      court: a.court,
-      stages: a.stages,
-      points: a.points,
-      best: a.best,
-    },
-    places,
-    history: rs.map((r) => ({
-      stage: r.stage,
-      date: r.date,
-      div: r.div,
-      place: r.place,
-      matches: r.matches,
-      wins: r.wonM,
-      games: r.games,
-      gamesWon: r.wonG,
-      balls: r.balls,
-      ballsWon: r.wonB,
-      court: r.court,
-      rank: r.rank,
-      ratingBefore: r.ratingBefore,
-      ratingAfter: r.ratingAfter,
-      points: r.points,
-    })),
-  };
-}
-
-// --- Head-to-head (Соперники) ---
-
-export type OppMatch = {
-  stage: number;
-  div: number;
-  date: string;
-  gamesFor: number;
-  gamesAgainst: number;
-  won: boolean;
-  /** per-game ball scores from the player's perspective */
-  scoreDetail: { a: number; b: number }[];
-  durationMin: number;
-};
-
-export type OpponentGroup = {
-  oppIdx: number;
-  name: string;
-  initials: string;
-  color: string;
-  matches: number;
-  wins: number;
-  losses: number;
-  winPct: number;
-  list: OppMatch[];
-};
-
-/** The player's real head-to-head matches, grouped by opponent. */
-export function getPlayerOpponents(league: League, playerIdx: number): OpponentGroup[] {
-  if (!league.players[playerIdx]) return [];
-  const dateByStage = new Map(league.stages.map((s) => [s.no, s.date]));
-  const groups = new Map<number, OppMatch[]>();
-
-  for (const mt of league.matches) {
-    let oppIdx: number;
-    let gamesFor: number;
-    let gamesAgainst: number;
-    let scoreDetail: { a: number; b: number }[];
-    if (mt.aIdx === playerIdx) {
-      oppIdx = mt.bIdx;
-      gamesFor = mt.gamesA;
-      gamesAgainst = mt.gamesB;
-      scoreDetail = mt.detail;
-    } else if (mt.bIdx === playerIdx) {
-      oppIdx = mt.aIdx;
-      gamesFor = mt.gamesB;
-      gamesAgainst = mt.gamesA;
-      scoreDetail = mt.detail.map((g) => ({ a: g.b, b: g.a }));
-    } else {
-      continue;
-    }
-    const list = groups.get(oppIdx) ?? [];
-    list.push({
-      stage: mt.stage,
-      div: mt.division,
-      date: dateByStage.get(mt.stage) ?? "",
-      gamesFor,
-      gamesAgainst,
-      won: mt.winnerIdx === playerIdx,
-      scoreDetail,
-      durationMin: mt.durationMin,
-    });
-    groups.set(oppIdx, list);
-  }
-
-  const out: OpponentGroup[] = [];
-  for (const [oppIdx, list] of groups) {
-    list.sort((a, b) => b.stage - a.stage || a.div - b.div);
-    const wins = list.filter((m) => m.won).length;
-    const opp = league.players[oppIdx];
-    out.push({
-      oppIdx,
-      name: opp.name,
-      initials: opp.initials,
-      color: opp.color,
-      matches: list.length,
-      wins,
-      losses: list.length - wins,
-      winPct: list.length ? Math.round((wins / list.length) * 100) : 0,
-      list,
-    });
-  }
-  out.sort((a, b) => b.matches - a.matches || b.winPct - a.winPct);
-  return out;
 }
