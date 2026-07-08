@@ -57,7 +57,7 @@ export function TabSliderPill({
     <span
       aria-hidden
       className={cn(
-        "pointer-events-none absolute bottom-1 top-1 left-0 rounded-[12px] bg-surface-container-highest shadow transition-[transform,width] duration-300 ease-m3-emphasized-decel",
+        "pointer-events-none absolute bottom-1 top-1 left-0 rounded-[12px] bg-surface-container-highest shadow transition-[transform,width] duration-500 ease-m3-emphasized-decel",
         className,
       )}
       style={{ transform: `translateX(${ind.left}px)`, width: ind.width }}

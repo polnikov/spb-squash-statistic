@@ -693,7 +693,18 @@ export type PlayerOverview = {
   divisionPlaces: { div: number; place: number | null }[];
   points: number;
   matches: number;
+  matchesWon: number;
+  matchesLost: number;
   winPct: number;
+  games: number;
+  gamesWon: number;
+  gamesLost: number;
+  gameWinRatePct: number | null;
+  rallies: number;
+  ralliesWon: number;
+  ralliesLost: number;
+  rallyWinRatePct: number | null;
+  rallyBalancePerMatch: number | null;
   skillIndex: number | null;
 };
 
@@ -707,11 +718,22 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
   return league.players
     .map((p) => {
       const r = byIdx.get(p.idx);
+      const matches = r?.matches ?? 0;
+      const matchesWon = r?.wins ?? 0;
+      const matchesLost = Math.max(0, matches - matchesWon);
+      const games = r?.games ?? 0;
+      const gamesWon = r?.gamesWon ?? 0;
+      const gamesLost = Math.max(0, games - gamesWon);
+      const rallies = r?.balls ?? 0;
+      const ralliesWon = r?.ballsWon ?? 0;
+      const ralliesLost = Math.max(0, rallies - ralliesWon);
+      const gameWinRatePct = games ? (gamesWon / games) * 100 : null;
+      const rallyWinRatePct = rallies ? (ralliesWon / rallies) * 100 : null;
       const skillIndex = r
         ? calculateSkillIndex({
             matchWinRatePct: r.winPct,
-            gameWinRatePct: r.games ? (r.gamesWon / r.games) * 100 : null,
-            rallyWinRatePct: r.balls ? (r.ballsWon / r.balls) * 100 : null,
+            gameWinRatePct,
+            rallyWinRatePct,
           })
         : null;
       return {
@@ -728,8 +750,19 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
           place: placeByDiv[d as 1 | 2 | 3]?.get(p.idx) ?? null,
         })),
         points: r?.points ?? 0,
-        matches: r?.matches ?? 0,
+        matches,
+        matchesWon,
+        matchesLost,
         winPct: r?.winPct ?? 0,
+        games,
+        gamesWon,
+        gamesLost,
+        gameWinRatePct,
+        rallies,
+        ralliesWon,
+        ralliesLost,
+        rallyWinRatePct,
+        rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
         skillIndex,
       };
     })

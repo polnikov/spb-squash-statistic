@@ -4,6 +4,7 @@ import { loadAllLeagues } from "@/lib/db/league";
 import { PlayersList } from "@/components/players-list";
 import { PageHeader } from "@/components/page-header";
 import { playersLabel } from "@/lib/format";
+import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,18 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
       for (const it of player.divisionPlaces) {
         if (!places.has(it.div)) places.set(it.div, it.place);
       }
+      const matches = existing.matches + player.matches;
+      const matchesWon = existing.matchesWon + player.matchesWon;
+      const matchesLost = existing.matchesLost + player.matchesLost;
+      const games = existing.games + player.games;
+      const gamesWon = existing.gamesWon + player.gamesWon;
+      const gamesLost = existing.gamesLost + player.gamesLost;
+      const rallies = existing.rallies + player.rallies;
+      const ralliesWon = existing.ralliesWon + player.ralliesWon;
+      const ralliesLost = existing.ralliesLost + player.ralliesLost;
+      const matchWinRatePct = matches ? (matchesWon / matches) * 100 : 0;
+      const gameWinRatePct = games ? (gamesWon / games) * 100 : null;
+      const rallyWinRatePct = rallies ? (ralliesWon / rallies) * 100 : null;
 
       byRid.set(player.rid, {
         ...existing,
@@ -35,9 +48,20 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
         divisions,
         divisionPlaces: divisions.map((div) => ({ div, place: places.get(div) ?? null })),
         points: Math.max(existing.points, player.points),
-        matches: existing.matches + player.matches,
-        winPct: Math.max(existing.winPct, player.winPct),
-        skillIndex: Math.max(existing.skillIndex ?? 0, player.skillIndex ?? 0) || null,
+        matches,
+        matchesWon,
+        matchesLost,
+        winPct: matchWinRatePct,
+        games,
+        gamesWon,
+        gamesLost,
+        gameWinRatePct,
+        rallies,
+        ralliesWon,
+        ralliesLost,
+        rallyWinRatePct,
+        rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
+        skillIndex: calculateSkillIndex({ matchWinRatePct, gameWinRatePct, rallyWinRatePct }),
       });
     }
   }
