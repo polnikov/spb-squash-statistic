@@ -12,7 +12,7 @@ import {
   type IronLongMatch,
   type League,
 } from "@/lib/mock/league";
-import { fmtCourt } from "@/lib/format";
+import { fmtCourt, splitPlayerName, shortPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
@@ -26,16 +26,6 @@ const SCOPES: { key: DivisionScope; label: string }[] = [
   { key: 2, label: "Див 2" },
   { key: 3, label: "Див 3" },
 ];
-
-function splitPlayerName(name: string) {
-  const [first = name, ...rest] = name.trim().split(/\s+/);
-  return { first, rest: rest.join(" ") };
-}
-
-function shortPlayerName(name: string) {
-  const { first, rest } = splitPlayerName(name);
-  return rest ? `${first[0]}. ${rest}` : first;
-}
 
 function MetricTile({ label, value }: { label: string; value: string | number }) {
   return (
@@ -73,10 +63,6 @@ function RetiredBadge() {
       Retired
     </span>
   );
-}
-
-function playerHref(rid: string) {
-  return `/players/${encodeURIComponent(rid)}`;
 }
 
 function LongMatchCard({ m, league }: { m: IronLongMatch; league: League }) {

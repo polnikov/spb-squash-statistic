@@ -59,8 +59,8 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
     <span
       className={cn(
         "inline-flex items-center rounded-full border border-outline-variant px-2 py-0.5 text-[10.5px] font-semibold",
-        tone === "primary" && "bg-[#04A45A]/18 text-[#04A45A]",
-        tone === "error" && "bg-[#FF4747]/18 text-[#FF6B63]",
+        tone === "primary" && "bg-win/18 text-win",
+        tone === "error" && "bg-loss/18 text-loss-soft",
         tone === "neutral" && "bg-surface-container-high text-on-surface-variant",
       )}
     >
@@ -80,7 +80,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub: str
 }
 
 function MetricRow({ label, value, sign, dense = false }: { label: string; value: React.ReactNode; sign?: number | null; dense?: boolean }) {
-  const tone = sign == null ? "" : sign > 0 ? "text-[#04A45A]" : sign < 0 ? "text-[#FF4747]" : "";
+  const tone = sign == null ? "" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "";
   return (
     <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant first:border-t-0", dense ? "py-1.5" : "py-2.5")}>
       <span className={cn("text-on-surface-variant", dense ? "text-[11.5px]" : "text-[12px]")}>{label}</span>
@@ -154,7 +154,7 @@ type Meeting = { m: MatchListItem; gameWR: number | null; rallyWR: number | null
 
 function MatchScore({ match }: { match: MatchListItem }) {
   return (
-    <span className={cn("rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular", match.result === "W" ? "bg-[#04A45A]/18 text-[#04A45A]" : "bg-[#FF4747]/18 text-[#FF6B63]")}>
+    <span className={cn("rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular", match.result === "W" ? "bg-win/18 text-win" : "bg-loss/18 text-loss-soft")}>
       <NumberPop>{match.matchScore}</NumberPop>
     </span>
   );
@@ -359,7 +359,7 @@ function MeetingTimeline({ meetings }: { meetings: Meeting[] }) {
               <span
                 className={cn(
                   "grid h-9 min-w-[52px] shrink-0 place-items-center rounded-lg border border-outline-variant px-2 font-mono text-[13px] font-semibold tabular",
-                  won ? "bg-[#04A45A]/18 text-[#04A45A]" : "bg-[#FF4747]/18 text-[#FF6B63]",
+                  won ? "bg-win/18 text-win" : "bg-loss/18 text-loss-soft",
                 )}
               >
                 <NumberPop>{mt.m.matchScore}</NumberPop>
@@ -404,7 +404,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors",
-          tone === "primary" ? "bg-[#04A45A]/18 text-[#04A45A]" : tone === "error" ? "bg-[#FF4747]/18 text-[#FF6B63]" : "bg-surface-container-high text-on-surface-variant",
+          tone === "primary" ? "bg-win/18 text-win" : tone === "error" ? "bg-loss/18 text-loss-soft" : "bg-surface-container-high text-on-surface-variant",
         )}
       >
         {index > 0 ? "+" : ""}{index.toFixed(0)} · {formatMatchupStatus(status)}
@@ -435,7 +435,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
 
 function Hero({ player, opponent, stats, onClose, bigScore = false, mobile = false }: { player: PlayerProfilePlayer; opponent: PlayerOpponentStats; stats: PlayerProfileStats; onClose?: () => void; bigScore?: boolean; mobile?: boolean }) {
   const status = opponent.matchupStatus;
-  const leftColor = stats.matchesWon > stats.matchesLost ? "text-[#04A45A]" : stats.matchesWon < stats.matchesLost ? "text-[#FF4747]" : "text-on-surface";
+  const leftColor = stats.matchesWon > stats.matchesLost ? "text-win" : stats.matchesWon < stats.matchesLost ? "text-loss" : "text-on-surface";
   return (
     <div className={cardClass("relative p-4")}>
       {onClose && !mobile ? (
@@ -576,7 +576,7 @@ function ScoreDistCard({ stats }: { stats: PlayerProfileStats }) {
           <div key={r.label} className="flex items-center gap-3">
             <span className="w-8 shrink-0 font-mono text-[12px] tabular text-on-surface-variant">{r.label}</span>
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-container-high">
-              <div className={cn("h-full rounded-full", r.win ? "bg-[#04A45A]" : "bg-[#FF4747]")} style={{ width: `${(r.count / max) * 100}%` }} />
+              <div className={cn("h-full rounded-full", r.win ? "bg-win" : "bg-loss")} style={{ width: `${(r.count / max) * 100}%` }} />
             </div>
             <span className="w-5 shrink-0 text-right font-mono text-[12px] font-semibold tabular">{r.count}</span>
           </div>

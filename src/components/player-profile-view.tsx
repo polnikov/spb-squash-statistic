@@ -445,7 +445,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub: str
 }
 
 function MetricRow({ label, value, sign, noBorder = false }: { label: string; value: React.ReactNode; sign?: number | null; noBorder?: boolean }) {
-  const tone = sign == null ? "" : sign > 0 ? "text-[#04A45A]" : sign < 0 ? "text-[#FF4747]" : "";
+  const tone = sign == null ? "" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "";
   return (
     <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant py-2.5 first:border-t-0", noBorder && "border-t-0")}>
 
@@ -561,10 +561,10 @@ function ActivityBadge({ active }: { active: boolean }) {
     <span
       className={cn(
         "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold",
-        active ? "bg-[#04A45A]/18 text-[#04A45A]" : "bg-[#FF4747]/18 text-[#FF4747]",
+        active ? "bg-win/18 text-win" : "bg-loss/18 text-loss",
       )}
     >
-      <span className={cn("size-1.5 rounded-full", active ? "bg-[#04A45A]" : "bg-[#FF4747]")} />
+      <span className={cn("size-1.5 rounded-full", active ? "bg-win" : "bg-loss")} />
       {active ? "Активен" : "Неактивен"}
     </span>
   );
@@ -1282,9 +1282,9 @@ function statusTone(status: PlayerOpponentStats["matchupStatus"]) {
 function statusBadgeClass(status: PlayerOpponentStats["matchupStatus"]) {
   const tone = statusTone(status);
   return tone === "primary"
-    ? "bg-[#04A45A]/18 text-[#04A45A]"
+    ? "bg-win/18 text-win"
     : tone === "error"
-      ? "bg-[#FF4747]/18 text-[#FF6B63]"
+      ? "bg-loss/18 text-loss-soft"
       : "bg-surface-container-high text-on-surface-variant";
 }
 
@@ -1585,8 +1585,8 @@ function MatchScore({ match }: { match: MatchListItem }) {
       className={cn(
         "rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular",
         match.result === "W"
-          ? "bg-[#04A45A]/18 text-[#04A45A]"
-          : "bg-[#FF4747]/18 text-[#FF6B63]",
+          ? "bg-win/18 text-win"
+          : "bg-loss/18 text-loss-soft",
       )}
     >
       {match.matchScore}
@@ -1858,13 +1858,13 @@ function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
           <div className="inline-flex min-w-full flex-col gap-2">
             <div className="flex gap-1.5">
               {matches.map((m) => (
-                <span key={m.id} className={cn(cell, m.result === "W" ? "bg-[#04A45A]/18 text-[#04A45A]" : "invisible")}>W</span>
+                <span key={m.id} className={cn(cell, m.result === "W" ? "bg-win/18 text-win" : "invisible")}>W</span>
               ))}
             </div>
             <div className="h-px bg-outline-variant" />
             <div className="flex gap-1.5">
               {matches.map((m) => (
-                <span key={m.id} className={cn(cell, m.result === "L" ? "bg-[#FF4747]/18 text-[#FF4747]" : "invisible")}>L</span>
+                <span key={m.id} className={cn(cell, m.result === "L" ? "bg-loss/18 text-loss" : "invisible")}>L</span>
               ))}
             </div>
           </div>

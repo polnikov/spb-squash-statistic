@@ -60,7 +60,20 @@ export function matchesLabel(n: number): string {
   return `${n} ${pluralRu(n, ["матч", "матча", "матчей"])}`;
 }
 
-export function stagesLabel(n: number): string {
-  return `${n} ${pluralRu(n, ["этап", "этапа", "этапов"])}`;
+/** "Иван Петров" -> { first: "Иван", rest: "Петров" } (two-line layouts). */
+export function splitPlayerName(name: string) {
+  const [first = name, ...rest] = name.trim().split(/\s+/);
+  return { first, rest: rest.join(" ") };
+}
+
+/** "Иван Петров" -> "И. Петров" (compact rows). */
+export function shortPlayerName(name: string) {
+  const { first, rest } = splitPlayerName(name);
+  return rest ? `${first[0]}. ${rest}` : first;
+}
+
+/** Player profile route for a RankedIn id. */
+export function playerHref(rid: string) {
+  return `/players/${encodeURIComponent(rid)}`;
 }
 

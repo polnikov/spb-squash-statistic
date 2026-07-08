@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown, Search, Snail, X } from "lucide-react";
 import type { PlayerOverview } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
+import { splitPlayerName, playerHref } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
@@ -22,15 +23,6 @@ function DivBadges({ items }: { items: { div: number; place: number | null }[] }
       ))}
     </>
   );
-}
-
-function splitPlayerName(name: string) {
-  const [first = name, ...rest] = name.trim().split(/\s+/);
-  return { first, rest: rest.join(" ") };
-}
-
-function playerHref(rid: string) {
-  return `/players/${encodeURIComponent(rid)}`;
 }
 
 function SkillIndexMiniBadge({ value }: { value: number | null }) {

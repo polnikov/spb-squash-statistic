@@ -127,6 +127,11 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
+  /* win/loss semantics (match results, deltas, W/L badges) */
+  --color-win: #04a45a;
+  --color-loss: #ff4747;
+  --color-loss-soft: #ff6b63;
+
   /* type + shape + motion */
   --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;

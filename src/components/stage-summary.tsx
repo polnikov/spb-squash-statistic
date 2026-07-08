@@ -4,11 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { ChevronDown, Search, X } from "lucide-react";
 import {
+  FINAL_STAGE,
   getStageResults,
   type DivisionScope,
   type League,
 } from "@/lib/mock/league";
-import { fmtCourt, fmtDate, fmtNum } from "@/lib/format";
+import { fmtCourt, fmtDate, fmtNum, splitPlayerName, shortPlayerName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
@@ -22,16 +23,6 @@ const SCOPES: { key: DivisionScope; label: string }[] = [
 
 const ROW_LIMIT = 15;
 const MATCH_CARD_LIMIT = 12;
-
-function splitPlayerName(name: string) {
-  const [first = name, ...rest] = name.trim().split(/\s+/);
-  return { first, rest: rest.join(" ") };
-}
-
-function shortPlayerName(name: string) {
-  const { first, rest } = splitPlayerName(name);
-  return rest ? `${first[0]}. ${rest}` : first;
-}
 
 /** Form Index for a stage row: Match WR*0.45 + Game WR*0.35 + Rally WR*0.20. */
 function stageFormIndex(r: {
@@ -273,7 +264,7 @@ export function StageSummary({ league }: { league: League }) {
 
       {selectedStageDate ? (
         <div className="-my-2.5 pr-4 text-right text-[11.5px] text-on-surface-variant md:my-0">
-          {stage === 9 ? `Финал ${fmtDate(selectedStageDate)}` : fmtDate(selectedStageDate)}
+          {stage === FINAL_STAGE ? `Финал ${fmtDate(selectedStageDate)}` : fmtDate(selectedStageDate)}
         </div>
       ) : null}
 

@@ -33,7 +33,7 @@ export function RatingPositionDelta({
       aria-label={isUp ? `Поднялся на ${delta}` : `Опустился на ${Math.abs(delta)}`}
       className={cn(
         base,
-        isUp ? "bg-[#04A45A]/15 text-[#04A45A]" : "bg-[#FF4747]/15 text-[#FF4747]",
+        isUp ? "bg-win/15 text-win" : "bg-loss/15 text-loss",
         className,
       )}
     >

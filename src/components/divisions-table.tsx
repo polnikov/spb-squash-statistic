@@ -3,8 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import type { DivisionSummary, RatingRow } from "@/lib/mock/league";
-import { fmtCourt, fmtNum } from "@/lib/format";
+import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/mock/league";
+import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
@@ -25,11 +25,6 @@ const SORTABLE_DEFAULT_DIR = {
 type SortKey = keyof typeof SORTABLE_DEFAULT_DIR;
 type SortDir = "asc" | "desc";
 type SortState = { key: SortKey; dir: SortDir };
-
-function splitPlayerName(name: string) {
-  const [first = name, ...rest] = name.trim().split(/\s+/);
-  return { first, rest: rest.join(" ") };
-}
 
 function pct(won: number, total: number) {
   return total ? (won / total) * 100 : 0;
@@ -124,10 +119,6 @@ const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
   { key: "matches", label: "Активность", mobileWeight: 1.55 },
   { key: "court", label: "Время", mobileWeight: 0.95 },
 ];
-
-function playerHref(rid: string) {
-  return `/players/${encodeURIComponent(rid)}`;
-}
 
 export function DivisionsTable({
   rowsByDivision,
@@ -229,7 +220,7 @@ export function DivisionsTable({
       ) : (
       <>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
-        <MetricTile label="Сыграно этапов" value={summary.stagesDone} unit="из 9" />
+        <MetricTile label="Сыграно этапов" value={summary.stagesDone} unit={`из ${TOTAL_STAGES}`} />
         <MetricTile label="Активных игроков" value={summary.activePlayers} unit="чел" />
         <MetricTile label="Сыграно матчей" value={summary.matches} />
         <MetricTile label="Время на корте" value={Math.round(summary.court / 60)} unit="часов" />
@@ -393,7 +384,7 @@ export function DivisionsTable({
                 </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
-                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.stages}/9</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.stages}/{TOTAL_STAGES}</span>
                 </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.matches)} | {fmtNum(r.wins)}-{fmtNum(r.matches - r.wins)}</span>

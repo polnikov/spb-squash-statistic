@@ -1212,7 +1212,7 @@ function UploadManager() {
 
       {step === "done" ? (
         <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-outline-variant bg-card px-6 py-12 text-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-[#04A45A]">
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-win">
             <CheckCircle2 className="size-8" />
           </div>
           <h2 className="text-[24px] font-semibold tracking-tight">Этап загружен</h2>
