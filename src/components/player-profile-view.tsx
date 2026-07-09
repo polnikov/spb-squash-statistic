@@ -414,6 +414,35 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
 
 export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileChartProps) {
   const option = React.useMemo(() => chartOption(type, data), [type, data]);
+  const hostRef = React.useRef<HTMLDivElement>(null);
+  const [canRender, setCanRender] = React.useState(false);
+
+  React.useEffect(() => {
+    const host = hostRef.current;
+    if (!host || !option) {
+      setCanRender(false);
+      return;
+    }
+
+    let raf = 0;
+    const checkSize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        setCanRender(host.clientWidth > 0 && host.clientHeight > 0);
+      });
+    };
+
+    checkSize();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(checkSize) : null;
+    resizeObserver?.observe(host);
+    window.addEventListener("resize", checkSize);
+    return () => {
+      cancelAnimationFrame(raf);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", checkSize);
+    };
+  }, [option]);
+
   if (!option) {
     return (
       <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
@@ -421,7 +450,11 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
       </div>
     );
   }
-  return <ReactECharts option={option} style={{ height, width: "100%" }} notMerge lazyUpdate />;
+  return (
+    <div ref={hostRef} style={{ height, width: "100%" }}>
+      {canRender ? <ReactECharts option={option} style={{ height: "100%", width: "100%" }} notMerge lazyUpdate /> : null}
+    </div>
+  );
 }
 
 function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "primary" | "error" }) {
