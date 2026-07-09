@@ -10,7 +10,15 @@
 
 import { TOURNAMENTS, SEASON, SEASONS } from "@/lib/data/tournaments";
 import { defaultPointsFor } from "@/lib/points";
-import { calculateSkillIndex } from "@/lib/stats/compute";
+import {
+  SKILL_RATING_CONFIG,
+  calculateCareerSkillRating,
+  calculateSkillIndex,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityStatus,
+  type SkillRatingLevelStatus,
+  type SkillRatingReliabilityStatus,
+} from "@/lib/stats/compute";
 
 export type MockPlayer = {
   idx: number;
@@ -706,6 +714,11 @@ export type PlayerOverview = {
   rallyWinRatePct: number | null;
   rallyBalancePerMatch: number | null;
   skillIndex: number | null;
+  careerSkillIndex: number | null;
+  skillRating: number | null;
+  skillRatingReliability: number | null;
+  skillRatingReliabilityStatus: SkillRatingReliabilityStatus | null;
+  skillRatingLevelStatus: SkillRatingLevelStatus | null;
 };
 
 export function getPlayersOverview(league: League): PlayerOverview[] {
@@ -736,6 +749,11 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
             rallyWinRatePct,
           })
         : null;
+      const skillRating = calculateCareerSkillRating({
+        careerSkillIndex: skillIndex,
+        careerMatchesPlayed: matches,
+        adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
+      });
       return {
         idx: p.idx,
         rid: p.rid,
@@ -764,6 +782,11 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
         rallyWinRatePct,
         rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
         skillIndex,
+        careerSkillIndex: skillIndex,
+        skillRating: skillRating.skillRating,
+        skillRatingReliability: skillRating.reliability,
+        skillRatingReliabilityStatus: getSkillRatingReliabilityStatus(matches),
+        skillRatingLevelStatus: getSkillRatingLevelStatus(skillRating.skillRating),
       };
     })
     .sort((a, b) => b.points - a.points);

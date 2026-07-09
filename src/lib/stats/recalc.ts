@@ -6,11 +6,12 @@
  * Head-to-head (PlayerOpponentStats) and composite indexes are later phases.
  */
 
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
   matchGames,
   matches,
+  careerSkillRatingCalibration,
   playerMetricSeriesPoint,
   playerOpponentStats,
   playerStatsAggregate,
@@ -22,8 +23,12 @@ import {
 } from "@/lib/db/schema";
 import {
   classifyMatchup,
+  calculateCareerSkillRating,
   computeAggregate,
   gameFlags,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityStatus,
+  SKILL_RATING_CONFIG,
   perspective,
   recentForm,
   sampleSizeLevel,
@@ -32,10 +37,91 @@ import {
   type MatchForStats,
   type MatchPerspective,
 } from "./compute";
+import { calibrateCareerSkillRatingK } from "./skill-rating";
 
 /** Serialize a nullable number for a Drizzle `numeric` column. */
 function num3(n: number | null): string | null {
   return n === null ? null : n.toFixed(3);
+}
+
+type ActiveSkillRatingCalibration = {
+  version: number | null;
+  adaptiveK: number;
+};
+
+async function loadActiveSkillRatingCalibration(database: Database): Promise<ActiveSkillRatingCalibration> {
+  const [row] = await database
+    .select({
+      version: careerSkillRatingCalibration.version,
+      adaptiveK: careerSkillRatingCalibration.adaptiveK,
+    })
+    .from(careerSkillRatingCalibration)
+    .where(eq(careerSkillRatingCalibration.isActive, true))
+    .orderBy(desc(careerSkillRatingCalibration.version))
+    .limit(1);
+  return {
+    version: row?.version ?? null,
+    adaptiveK: row?.adaptiveK ?? SKILL_RATING_CONFIG.defaultAdaptiveK,
+  };
+}
+
+export async function recalibrateCareerSkillRating(database: Database = defaultDb): Promise<void> {
+  const [previous] = await database
+    .select()
+    .from(careerSkillRatingCalibration)
+    .where(eq(careerSkillRatingCalibration.isActive, true))
+    .orderBy(desc(careerSkillRatingCalibration.version))
+    .limit(1);
+
+  const rows = (await database
+    .select({
+      id: matches.id,
+      playerAId: matches.playerAId,
+      playerBId: matches.playerBId,
+      gamesA: matches.gamesA,
+      gamesB: matches.gamesB,
+      scoreDetail: matches.scoreDetail,
+      durationMinutes: matches.durationMinutes,
+      stageId: matches.stageId,
+      stageNumber: stages.number,
+      division: matches.division,
+      seasonId: stages.seasonId,
+      date: stages.date,
+    })
+    .from(matches)
+    .innerJoin(stages, eq(matches.stageId, stages.id))) as JoinedMatch[];
+
+  const byPlayer = new Map<number, MatchPerspective[]>();
+  for (const row of rows) {
+    (byPlayer.get(row.playerAId) ?? byPlayer.set(row.playerAId, []).get(row.playerAId)!).push(toPerspective(row, row.playerAId));
+    (byPlayer.get(row.playerBId) ?? byPlayer.set(row.playerBId, []).get(row.playerBId)!).push(toPerspective(row, row.playerBId));
+  }
+
+  const result = calibrateCareerSkillRatingK({
+    inputs: [...byPlayer.entries()].map(([playerId, perspectives]) => ({ playerId, perspectives })),
+    previousApprovedK: previous?.adaptiveK ?? null,
+  });
+
+  if (previous && result.kSource !== "empirical") return;
+
+  await database.transaction(async (tx) => {
+    await tx
+      .update(careerSkillRatingCalibration)
+      .set({ isActive: false })
+      .where(eq(careerSkillRatingCalibration.isActive, true));
+    await tx.insert(careerSkillRatingCalibration).values({
+      version: (previous?.version ?? 0) + 1,
+      adaptiveK: result.adaptiveK,
+      rawOptimalK: result.rawOptimalK,
+      baseline: "50.000",
+      kSource: result.kSource,
+      calibrationPlayersCount: result.calibrationPlayersCount,
+      calibrationMatchesCount: result.calibrationMatchesCount,
+      weightedMse: result.weightedMse === null ? null : result.weightedMse.toFixed(6),
+      algorithmVersion: "career-skill-rating-v1",
+      isActive: true,
+    });
+  });
 }
 
 type JoinedMatch = {
@@ -101,7 +187,17 @@ function aggregateRow(
   seasonsPlayed: number,
   stagesPlayed: number,
   divisionsPlayed: number,
+  calibration: ActiveSkillRatingCalibration,
 ): NewPlayerStatsAggregate {
+  const isCareer = scope === "career";
+  const rating = isCareer
+    ? calculateCareerSkillRating({
+        careerSkillIndex: c.skillIndex,
+        careerMatchesPlayed: c.matchesPlayed,
+        adaptiveK: calibration.adaptiveK,
+      })
+    : { skillRating: null, reliability: null };
+  const ratingLevel = getSkillRatingLevelStatus(rating.skillRating);
   return {
     playerId,
     scope,
@@ -176,6 +272,13 @@ function aggregateRow(
     formIndex: num3(c.formIndex),
     skillIndex: num3(c.skillIndex),
     skillIndexStatus: c.skillIndexStatus,
+    skillRating: num3(rating.skillRating),
+    skillRatingReliability: num3(rating.reliability),
+    skillRatingK: isCareer ? calibration.adaptiveK : null,
+    skillRatingCalibrationVersion: isCareer ? calibration.version : null,
+    skillRatingReliabilityStatus: isCareer ? getSkillRatingReliabilityStatus(c.matchesPlayed) : null,
+    skillRatingLevelStatus: ratingLevel,
+    skillRatingCalculatedAt: isCareer ? new Date() : null,
     matchConversionPp: num3(c.matchConversionPp),
     gameConversionPp: num3(c.gameConversionPp),
     resultConversionPp: num3(c.resultConversionPp),
@@ -400,6 +503,7 @@ export async function recalcPlayer(
   database: Database = defaultDb,
 ): Promise<void> {
   const rows = (await loadPlayerMatches(database, playerId)) as JoinedMatch[];
+  const calibration = await loadActiveSkillRatingCalibration(database);
   // chronological order drives streaks / last-N / trend metrics
   rows.sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
 
@@ -423,7 +527,7 @@ export async function recalcPlayer(
   {
     const persp = rows.map((r) => toPerspective(r, playerId));
     out.push(
-      aggregateRow(playerId, "career", null, null, null, computeAggregate(persp), bySeason.size, byStage.size, divisionCount(rows)),
+      aggregateRow(playerId, "career", null, null, null, computeAggregate(persp), bySeason.size, byStage.size, divisionCount(rows), calibration),
     );
   }
 
@@ -432,7 +536,7 @@ export async function recalcPlayer(
     const persp = seasonRows.map((r) => toPerspective(r, playerId));
     const stagesPlayed = new Set(seasonRows.map((r) => r.stageId)).size;
     out.push(
-      aggregateRow(playerId, "season", seasonId, null, null, computeAggregate(persp), 1, stagesPlayed, divisionCount(seasonRows)),
+      aggregateRow(playerId, "season", seasonId, null, null, computeAggregate(persp), 1, stagesPlayed, divisionCount(seasonRows), calibration),
     );
   }
 
@@ -443,7 +547,7 @@ export async function recalcPlayer(
     const division = seasonRows[0]!.division;
     const stagesPlayed = new Set(seasonRows.map((r) => r.stageId)).size;
     out.push(
-      aggregateRow(playerId, "season_division", seasonId, null, division, computeAggregate(persp), 1, stagesPlayed, 1),
+      aggregateRow(playerId, "season_division", seasonId, null, division, computeAggregate(persp), 1, stagesPlayed, 1, calibration),
     );
   }
 
@@ -452,7 +556,7 @@ export async function recalcPlayer(
     const persp = stageRows.map((r) => toPerspective(r, playerId));
     const seasonId = stageRows[0]?.seasonId ?? null;
     out.push(
-      aggregateRow(playerId, "stage", seasonId, stageId, null, computeAggregate(persp), 1, 1, divisionCount(stageRows)),
+      aggregateRow(playerId, "stage", seasonId, stageId, null, computeAggregate(persp), 1, 1, divisionCount(stageRows), calibration),
     );
   }
 
@@ -463,7 +567,7 @@ export async function recalcPlayer(
     const stageId = stageRows[0]!.stageId;
     const division = stageRows[0]!.division;
     out.push(
-      aggregateRow(playerId, "stage_division", seasonId, stageId, division, computeAggregate(persp), 1, 1, 1),
+      aggregateRow(playerId, "stage_division", seasonId, stageId, division, computeAggregate(persp), 1, 1, 1, calibration),
     );
   }
 
@@ -612,6 +716,7 @@ export async function backfillAll(database: Database = defaultDb): Promise<{
     playerIds.add(m.playerAId);
     playerIds.add(m.playerBId);
   }
+  await recalibrateCareerSkillRating(database);
   for (const playerId of playerIds) {
     await recalcPlayer(playerId, database);
   }

@@ -8,9 +8,15 @@ import {
   type RealMatch,
 } from "@/lib/mock/league";
 import {
+  SKILL_RATING_CONFIG,
+  calculateCareerSkillRating,
   calculateSkillIndex,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityStatus,
   getSkillIndexStatus,
   type SkillIndexStatus,
+  type SkillRatingLevelStatus,
+  type SkillRatingReliabilityStatus,
 } from "@/lib/stats/compute";
 
 export type PlayerProfileStatsScope = "career" | "season" | "season_division";
@@ -97,6 +103,11 @@ export type PlayerProfileStats = {
   formIndex: number | null;
   skillIndex: number | null;
   skillIndexStatus: SkillIndexStatus | null;
+  careerSkillIndex: number | null;
+  skillRating: number | null;
+  skillRatingReliability: number | null;
+  skillRatingReliabilityStatus: SkillRatingReliabilityStatus | null;
+  skillRatingLevelStatus: SkillRatingLevelStatus | null;
   matchConversionPp: number | null;
   gameConversionPp: number | null;
   resultConversionPp: number | null;
@@ -424,6 +435,11 @@ export function emptyStats(): PlayerProfileStats {
     formIndex: null,
     skillIndex: null,
     skillIndexStatus: null,
+    careerSkillIndex: null,
+    skillRating: null,
+    skillRatingReliability: null,
+    skillRatingReliabilityStatus: null,
+    skillRatingLevelStatus: null,
     matchConversionPp: null,
     gameConversionPp: null,
     resultConversionPp: null,
@@ -629,6 +645,16 @@ function aggregateStats(
     rallyWinRatePct: rallyWr,
   });
   stats.skillIndexStatus = getSkillIndexStatus(stats.skillIndex);
+  stats.careerSkillIndex = stats.skillIndex;
+  const skillRating = calculateCareerSkillRating({
+    careerSkillIndex: stats.careerSkillIndex,
+    careerMatchesPlayed: stats.matchesPlayed,
+    adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
+  });
+  stats.skillRating = skillRating.skillRating;
+  stats.skillRatingReliability = skillRating.reliability;
+  stats.skillRatingReliabilityStatus = getSkillRatingReliabilityStatus(stats.matchesPlayed);
+  stats.skillRatingLevelStatus = getSkillRatingLevelStatus(stats.skillRating);
   stats.matchConversionPp = matchWr !== null && gameWr !== null ? matchWr - gameWr : null;
   stats.gameConversionPp = gameWr !== null && rallyWr !== null ? gameWr - rallyWr : null;
   stats.resultConversionPp = matchWr !== null && rallyWr !== null ? matchWr - rallyWr : null;

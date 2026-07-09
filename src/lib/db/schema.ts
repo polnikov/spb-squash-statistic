@@ -60,6 +60,25 @@ export const skillIndexStatusEnum = pgEnum("skill_index_status", [
   "very_strong",
   "dominant",
 ]);
+export const skillRatingReliabilityStatusEnum = pgEnum("skill_rating_reliability_status", [
+  "insufficient",
+  "provisional",
+  "eligible",
+]);
+export const skillRatingLevelStatusEnum = pgEnum("skill_rating_level_status", [
+  "below_level",
+  "developing",
+  "competitive",
+  "good",
+  "strong",
+  "very_strong",
+  "dominant",
+]);
+export const skillRatingKSourceEnum = pgEnum("skill_rating_k_source", [
+  "empirical",
+  "previous",
+  "default",
+]);
 /** Head-to-head comfort tier. */
 export const matchupStatusEnum = pgEnum("matchup_status", [
   "very_comfortable",
@@ -373,6 +392,13 @@ export const playerStatsAggregate = pgTable(
     formIndex: numeric("form_index", { precision: 6, scale: 3 }),
     skillIndex: numeric("skill_index", { precision: 6, scale: 3 }),
     skillIndexStatus: skillIndexStatusEnum("skill_index_status"),
+    skillRating: numeric("skill_rating", { precision: 6, scale: 3 }),
+    skillRatingReliability: numeric("skill_rating_reliability", { precision: 4, scale: 3 }),
+    skillRatingK: integer("skill_rating_k"),
+    skillRatingCalibrationVersion: integer("skill_rating_calibration_version"),
+    skillRatingReliabilityStatus: skillRatingReliabilityStatusEnum("skill_rating_reliability_status"),
+    skillRatingLevelStatus: skillRatingLevelStatusEnum("skill_rating_level_status"),
+    skillRatingCalculatedAt: timestamp("skill_rating_calculated_at", { withTimezone: true }),
     matchConversionPp: numeric("match_conversion_pp", { precision: 6, scale: 3 }),
     gameConversionPp: numeric("game_conversion_pp", { precision: 6, scale: 3 }),
     resultConversionPp: numeric("result_conversion_pp", { precision: 6, scale: 3 }),
@@ -462,7 +488,33 @@ export const playerStatsAggregate = pgTable(
     index("psa_stage_idx").on(t.stageId),
     index("psa_player_scope_idx").on(t.playerId, t.scope),
     index("psa_player_season_idx").on(t.playerId, t.seasonId),
+    index("psa_skill_rating_idx").on(t.skillRating, t.matchesPlayed),
     index("psa_calculated_at_idx").on(t.calculatedAt),
+  ],
+);
+
+export const careerSkillRatingCalibration = pgTable(
+  "career_skill_rating_calibration",
+  {
+    id: serial("id").primaryKey(),
+    version: integer("version").notNull().unique(),
+    adaptiveK: integer("adaptive_k").notNull(),
+    rawOptimalK: integer("raw_optimal_k"),
+    baseline: numeric("baseline", { precision: 6, scale: 3 }).notNull().default("50.000"),
+    kSource: skillRatingKSourceEnum("k_source").notNull(),
+    calibrationPlayersCount: integer("calibration_players_count").notNull().default(0),
+    calibrationMatchesCount: integer("calibration_matches_count").notNull().default(0),
+    weightedMse: numeric("weighted_mse", { precision: 12, scale: 6 }),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    algorithmVersion: text("algorithm_version").notNull(),
+    isActive: boolean("is_active").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("career_skill_rating_calibration_active_uq")
+      .on(t.isActive)
+      .where(sql`${t.isActive} = true`),
+    index("career_skill_rating_calibration_version_idx").on(t.version),
   ],
 );
 
@@ -732,6 +784,8 @@ export type MatchGame = typeof matchGames.$inferSelect;
 export type NewMatchGame = typeof matchGames.$inferInsert;
 export type PlayerStatsAggregateRow = typeof playerStatsAggregate.$inferSelect;
 export type NewPlayerStatsAggregate = typeof playerStatsAggregate.$inferInsert;
+export type CareerSkillRatingCalibrationRow = typeof careerSkillRatingCalibration.$inferSelect;
+export type NewCareerSkillRatingCalibration = typeof careerSkillRatingCalibration.$inferInsert;
 export type PlayerOpponentStatsRow = typeof playerOpponentStats.$inferSelect;
 export type NewPlayerOpponentStats = typeof playerOpponentStats.$inferInsert;
 export type PlayerMetricSeriesPointRow = typeof playerMetricSeriesPoint.$inferSelect;

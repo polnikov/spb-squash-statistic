@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { matchGames, matches, playerStatsAggregate } from "@/lib/db/schema";
 import { loadLeague } from "@/lib/db/league";
-import { calculateSkillIndex, getSkillIndexStatus } from "@/lib/stats/compute";
+import {
+  SKILL_RATING_CONFIG,
+  calculateCareerSkillRating,
+  calculateSkillIndex,
+  getSkillIndexStatus,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityStatus,
+} from "@/lib/stats/compute";
 import {
   getPlayerCareerStats,
   getPlayerIdByRid,
@@ -115,6 +122,15 @@ d("recalc (DB, transactional rollback)", () => {
     });
     expect(career!.skillIndex === null ? null : Number(career!.skillIndex)).toBe(expectedSkill);
     expect(career!.skillIndexStatus).toBe(getSkillIndexStatus(expectedSkill));
+    const expectedRating = calculateCareerSkillRating({
+      careerSkillIndex: expectedSkill,
+      careerMatchesPlayed: career!.matchesPlayed,
+      adaptiveK: career!.skillRatingK ?? SKILL_RATING_CONFIG.defaultAdaptiveK,
+    });
+    expect(career!.skillRating === null ? null : Number(career!.skillRating)).toBe(expectedRating.skillRating);
+    expect(career!.skillRatingReliability === null ? null : Number(career!.skillRatingReliability)).toBe(expectedRating.reliability);
+    expect(career!.skillRatingReliabilityStatus).toBe(getSkillRatingReliabilityStatus(career!.matchesPlayed));
+    expect(career!.skillRatingLevelStatus).toBe(getSkillRatingLevelStatus(expectedRating.skillRating));
   });
 
   it("recalcStageDivision regenerates match_games", async () => {

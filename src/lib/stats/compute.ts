@@ -400,6 +400,10 @@ export type SkillIndexStatus =
   | "very_strong"
   | "dominant";
 
+export type SkillRatingReliabilityStatus = "insufficient" | "provisional" | "eligible";
+export type SkillRatingLevelStatus = SkillIndexStatus;
+export type SkillRatingKSource = "empirical" | "previous" | "default";
+
 export type SkillIndexScaleItem = {
   min: number;
   max: number;
@@ -468,6 +472,38 @@ export const SKILL_INDEX_SCALE: SkillIndexScaleItem[] = [
   },
 ];
 
+export const SKILL_BASELINE = 50;
+export const SKILL_RATING_ALGORITHM_VERSION = "career-skill-rating-v1";
+export const SKILL_RATING_CONFIG = {
+  minCalibrationMatches: 8,
+  minCalibrationPlayers: 12,
+  minCalibrationTotalMatches: 150,
+  kCandidates: [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30],
+  kScoreEpsilon: 0.0001,
+  kSmoothingAlpha: 0.7,
+  minAdaptiveK: 4,
+  maxAdaptiveK: 24,
+  defaultAdaptiveK: 10,
+  recalibrationMatchThreshold: 25,
+  recalibrationMaxAgeDays: 7,
+} as const;
+
+export const SKILL_RATING_LEVEL_SCALE: SkillIndexScaleItem[] = SKILL_INDEX_SCALE.map((row) => ({
+  ...row,
+}));
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+function roundToOneDecimal(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function roundToThreeDecimals(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
+
 export function calculateSkillIndex(params: {
   matchWinRatePct?: number | null;
   gameWinRatePct?: number | null;
@@ -477,6 +513,55 @@ export function calculateSkillIndex(params: {
   if (matchWinRatePct == null || gameWinRatePct == null || rallyWinRatePct == null) return null;
   const value = matchWinRatePct * 0.3 + gameWinRatePct * 0.35 + rallyWinRatePct * 0.35;
   return Math.round(value * 10) / 10;
+}
+
+export function calculateCareerSkillRating(params: {
+  careerSkillIndex: number | null;
+  careerMatchesPlayed: number;
+  adaptiveK: number;
+  baseline?: number;
+}): { skillRating: number | null; reliability: number | null } {
+  const baseline = params.baseline ?? SKILL_BASELINE;
+  const { careerSkillIndex, careerMatchesPlayed, adaptiveK } = params;
+  if (
+    careerSkillIndex === null ||
+    !Number.isFinite(careerSkillIndex) ||
+    careerMatchesPlayed <= 0 ||
+    adaptiveK <= 0
+  ) {
+    return { skillRating: null, reliability: null };
+  }
+  const reliability = careerMatchesPlayed / (careerMatchesPlayed + adaptiveK);
+  const rawRating = baseline + (careerSkillIndex - baseline) * reliability;
+  return {
+    skillRating: roundToOneDecimal(clamp(rawRating, 0, 100)),
+    reliability: roundToThreeDecimals(reliability),
+  };
+}
+
+export function getSkillRatingReliabilityStatus(careerMatchesPlayed: number): SkillRatingReliabilityStatus {
+  if (careerMatchesPlayed < 3) return "insufficient";
+  if (careerMatchesPlayed < 6) return "provisional";
+  return "eligible";
+}
+
+export function getSkillRatingReliabilityLabelRu(status?: SkillRatingReliabilityStatus | null): string | null {
+  if (!status) return null;
+  return {
+    insufficient: "Мало матчей",
+    provisional: "Предварительный",
+    eligible: "Подтверждённый",
+  }[status];
+}
+
+export function getSkillRatingLevelStatus(skillRating?: number | null): SkillRatingLevelStatus | null {
+  if (skillRating == null) return null;
+  return SKILL_RATING_LEVEL_SCALE.find((row) => skillRating >= row.min && skillRating <= row.max)?.status ?? null;
+}
+
+export function getSkillRatingLevelLabelRu(status?: SkillRatingLevelStatus | null): string | null {
+  if (!status) return null;
+  return SKILL_RATING_LEVEL_SCALE.find((row) => row.status === status)?.labelRu ?? null;
 }
 
 export function getSkillIndexStatus(skillIndex?: number | null): SkillIndexStatus | null {

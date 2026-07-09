@@ -34,7 +34,14 @@ import { H2hDetailView } from "@/components/h2h-detail-view";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
-import { SKILL_INDEX_SCALE, calculateSkillIndex, getSkillIndexLabelRu, getSkillIndexStatus } from "@/lib/stats/compute";
+import {
+  SKILL_RATING_CONFIG,
+  SKILL_RATING_LEVEL_SCALE,
+  calculateCareerSkillRating,
+  calculateSkillIndex,
+  getSkillRatingLevelLabelRu,
+  getSkillRatingLevelStatus,
+} from "@/lib/stats/compute";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
   option: EChartsOption;
@@ -570,16 +577,22 @@ function ActivityBadge({ active }: { active: boolean }) {
   );
 }
 
-function SkillIndexBadge({ stats }: { stats: PlayerProfileStats }) {
+function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
-  const skillIndex = stats.skillIndex ?? calculateSkillIndex({
+  const careerSkillIndex = stats.careerSkillIndex ?? stats.skillIndex ?? calculateSkillIndex({
     matchWinRatePct: stats.matchWinRatePct,
     gameWinRatePct: stats.gameWinRatePct,
     rallyWinRatePct: stats.rallyWinRatePct,
   });
-  const status = stats.skillIndexStatus ?? getSkillIndexStatus(skillIndex);
-  const label = getSkillIndexLabelRu(status);
+  const fallbackRating = calculateCareerSkillRating({
+    careerSkillIndex,
+    careerMatchesPlayed: stats.matchesPlayed,
+    adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
+  });
+  const skillRating = stats.skillRating ?? fallbackRating.skillRating;
+  const status = stats.skillRatingLevelStatus ?? getSkillRatingLevelStatus(skillRating);
+  const label = getSkillRatingLevelLabelRu(status);
 
   React.useEffect(() => {
     if (!open) return;
@@ -590,19 +603,19 @@ function SkillIndexBadge({ stats }: { stats: PlayerProfileStats }) {
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
 
-  if (skillIndex === null || !label) return null;
+  if (skillRating === null || !label) return null;
 
   return (
     <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-50")}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Описание skillIndex"
+        aria-label="Описание индекса игрового уровня"
         className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
         <span className="max-w-[96px] truncate">{label}</span>
-        <span className="font-mono tabular">{skillIndex.toFixed(1)}</span>
+        <span className="font-mono tabular">{skillRating.toFixed(1)}</span>
       </button>
       <div
         className={cn(
@@ -612,10 +625,10 @@ function SkillIndexBadge({ stats }: { stats: PlayerProfileStats }) {
       >
         <div className="text-[13px] font-semibold">Индекс игрового уровня</div>
         <div className="mt-1 text-[12px] leading-snug text-on-surface-variant">
-          Рассчитывается по качеству игры: Match WR 30%, Game WR 35%, Rally WR 35%.
+          Рейтинговая версия индекса игрового уровня: сырое качество игры скорректировано по числу матчей.
         </div>
         <div className="mt-3 flex flex-col gap-1.5">
-          {SKILL_INDEX_SCALE.map((row) => (
+          {SKILL_RATING_LEVEL_SCALE.map((row) => (
             <div
               key={row.status}
               className={cn(
@@ -737,7 +750,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
         <ActivityBadge active={model.active} />
-        <SkillIndexBadge stats={stats} />
+        <SkillRatingBadge stats={stats} />
         {avatar ? (
           <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
         ) : null}

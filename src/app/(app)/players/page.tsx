@@ -4,7 +4,13 @@ import { loadAllLeagues } from "@/lib/db/league";
 import { PlayersList } from "@/components/players-list";
 import { PageHeader } from "@/components/page-header";
 import { playersLabel } from "@/lib/format";
-import { calculateSkillIndex } from "@/lib/stats/compute";
+import {
+  SKILL_RATING_CONFIG,
+  calculateCareerSkillRating,
+  calculateSkillIndex,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityStatus,
+} from "@/lib/stats/compute";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +46,12 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
       const matchWinRatePct = matches ? (matchesWon / matches) * 100 : 0;
       const gameWinRatePct = games ? (gamesWon / games) * 100 : null;
       const rallyWinRatePct = rallies ? (ralliesWon / rallies) * 100 : null;
+      const skillIndex = calculateSkillIndex({ matchWinRatePct, gameWinRatePct, rallyWinRatePct });
+      const skillRating = calculateCareerSkillRating({
+        careerSkillIndex: skillIndex,
+        careerMatchesPlayed: matches,
+        adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
+      });
 
       byRid.set(player.rid, {
         ...existing,
@@ -61,7 +73,12 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
         ralliesLost,
         rallyWinRatePct,
         rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
-        skillIndex: calculateSkillIndex({ matchWinRatePct, gameWinRatePct, rallyWinRatePct }),
+        skillIndex,
+        careerSkillIndex: skillIndex,
+        skillRating: skillRating.skillRating,
+        skillRatingReliability: skillRating.reliability,
+        skillRatingReliabilityStatus: getSkillRatingReliabilityStatus(matches),
+        skillRatingLevelStatus: getSkillRatingLevelStatus(skillRating.skillRating),
       });
     }
   }

@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateCareerSkillRating,
   calculateSkillIndex,
   classifyMatchup,
   computeAggregate,
   gameFlags,
+  getSkillRatingLevelLabelRu,
+  getSkillRatingLevelStatus,
+  getSkillRatingReliabilityLabelRu,
+  getSkillRatingReliabilityStatus,
   getSkillIndexLabelRu,
   getSkillIndexScaleItem,
   getSkillIndexShortLabelRu,
@@ -234,6 +239,82 @@ describe("skillIndex", () => {
     const expectedForm = 50 * 0.45 + (4 / 7) * 100 * 0.35 + (65 / 127) * 100 * 0.2;
     expect(aggregate.formIndex).toBeCloseTo(expectedForm, 4);
     expect(aggregate.skillIndex).not.toBeCloseTo(expectedForm, 4);
+  });
+});
+
+describe("skillRating", () => {
+  it("shrinks career skill index toward 50 with adaptive K and rounds", () => {
+    expect(calculateCareerSkillRating({ careerSkillIndex: 75.4, careerMatchesPlayed: 10, adaptiveK: 10 })).toEqual({
+      skillRating: 62.7,
+      reliability: 0.5,
+    });
+    expect(calculateCareerSkillRating({ careerSkillIndex: 58.35, careerMatchesPlayed: 100, adaptiveK: 10 })).toEqual({
+      skillRating: 57.6,
+      reliability: 0.909,
+    });
+  });
+
+  it("returns null when source index or sample is missing", () => {
+    expect(calculateCareerSkillRating({ careerSkillIndex: null, careerMatchesPlayed: 10, adaptiveK: 10 })).toEqual({
+      skillRating: null,
+      reliability: null,
+    });
+    expect(calculateCareerSkillRating({ careerSkillIndex: 55, careerMatchesPlayed: 0, adaptiveK: 10 })).toEqual({
+      skillRating: null,
+      reliability: null,
+    });
+    expect(calculateCareerSkillRating({ careerSkillIndex: 55, careerMatchesPlayed: 10, adaptiveK: 0 })).toEqual({
+      skillRating: null,
+      reliability: null,
+    });
+  });
+
+  it("keeps early samples close to neutral baseline", () => {
+    const low = calculateCareerSkillRating({ careerSkillIndex: 80, careerMatchesPlayed: 1, adaptiveK: 10 });
+    const high = calculateCareerSkillRating({ careerSkillIndex: 80, careerMatchesPlayed: 80, adaptiveK: 10 });
+    expect(low.skillRating).toBe(52.7);
+    expect(high.skillRating).toBe(76.7);
+  });
+
+  it("maps all level boundaries", () => {
+    const cases: [number, ReturnType<typeof getSkillRatingLevelStatus>][] = [
+      [44.9, "below_level"],
+      [45, "developing"],
+      [49.9, "developing"],
+      [50, "competitive"],
+      [54.9, "competitive"],
+      [55, "good"],
+      [59.9, "good"],
+      [60, "strong"],
+      [66.9, "strong"],
+      [67, "very_strong"],
+      [71.9, "very_strong"],
+      [72, "dominant"],
+    ];
+    for (const [value, status] of cases) expect(getSkillRatingLevelStatus(value)).toBe(status);
+    expect(getSkillRatingLevelStatus(65)).toBe("strong");
+    expect(getSkillRatingLevelStatus(null)).toBeNull();
+  });
+
+  it("returns level and reliability labels", () => {
+    expect(getSkillRatingLevelLabelRu("good")).toBe("Хороший");
+    expect(getSkillRatingLevelLabelRu("very_strong")).toBe("Очень сильный");
+    expect(getSkillRatingLevelLabelRu(null)).toBeNull();
+    expect(getSkillRatingReliabilityStatus(2)).toBe("insufficient");
+    expect(getSkillRatingReliabilityStatus(5)).toBe("provisional");
+    expect(getSkillRatingReliabilityStatus(6)).toBe("eligible");
+    expect(getSkillRatingReliabilityLabelRu("eligible")).toBe("Подтверждённый");
+  });
+
+  it("does not affect formIndex", () => {
+    const aggregate = computeAggregate([perspective(m1, true), perspective(m2, true)]);
+    const before = aggregate.formIndex;
+    calculateCareerSkillRating({
+      careerSkillIndex: aggregate.skillIndex,
+      careerMatchesPlayed: aggregate.matchesPlayed,
+      adaptiveK: 10,
+    });
+    expect(aggregate.formIndex).toBe(before);
   });
 });
 

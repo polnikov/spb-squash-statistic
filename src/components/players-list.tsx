@@ -15,7 +15,7 @@ const MOBILE_PAGE_SIZE = 16;
 const DESKTOP_PAGE_SIZE = 24;
 
 type MobilePlayersView = "leaderboard" | "profiles";
-type LeaderboardSortKey = "skillIndex" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
+type LeaderboardSortKey = "skillRating" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
 type SortDirection = "asc" | "desc";
 type SlideDirection = -1 | 1;
 
@@ -25,7 +25,7 @@ const MOBILE_VIEW_TABS: { key: MobilePlayersView; label: string }[] = [
 ];
 
 const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
-  { key: "skillIndex", label: "SkillIndex" },
+  { key: "skillRating", label: "SkillRating" },
   { key: "matches", label: "Матчи" },
   { key: "matchWr", label: "Match WR" },
   { key: "gameWr", label: "Game WR" },
@@ -51,8 +51,8 @@ function formatSigned(value: number | null | undefined) {
 
 function leaderboardSortValue(player: PlayerOverview, key: LeaderboardSortKey) {
   switch (key) {
-    case "skillIndex":
-      return player.skillIndex ?? -1;
+    case "skillRating":
+      return player.skillRating ?? -1;
     case "matches":
       return player.matches;
     case "matchWr":
@@ -153,7 +153,7 @@ function MobileLeaderboardSort({
   );
 }
 
-function SkillIndexMiniBadge({ value }: { value: number | null }) {
+function SkillRatingMiniBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
     <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
@@ -163,7 +163,7 @@ function SkillIndexMiniBadge({ value }: { value: number | null }) {
   );
 }
 
-function SkillIndexInlineBadge({ value }: { value: number | null }) {
+function SkillRatingInlineBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b]">
@@ -194,7 +194,7 @@ function MobileLeaderboardCard({ player, position }: { player: PlayerOverview; p
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <div className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{player.name}</div>
-            <SkillIndexInlineBadge value={player.skillIndex} />
+            <SkillRatingInlineBadge value={player.skillRating} />
           </div>
           <div className="mt-0.5 text-[11px] text-on-surface-variant">
             Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">{player.matches} · {player.matchesWon} - {player.matchesLost}</span>
@@ -222,7 +222,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
         className="relative flex min-h-[178px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center text-center"
         style={avatarBackgroundStyle(avatar)}
       >
-        <SkillIndexMiniBadge value={player.skillIndex} />
+        <SkillRatingMiniBadge value={player.skillRating} />
         <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-2 px-3.5 pb-4 text-left">
           <div className="min-w-0 text-[13.5px] font-semibold leading-tight text-white">
@@ -242,7 +242,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
       href={playerHref(player.rid)}
       className="relative flex flex-col items-center gap-[11px] rounded-lg border border-outline-variant bg-card px-3.5 pb-4 pt-5 text-center"
     >
-      <SkillIndexMiniBadge value={player.skillIndex} />
+      <SkillRatingMiniBadge value={player.skillRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[60px] text-xl" />
       <div className="w-full text-balance break-words text-[13.5px] font-semibold leading-tight">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -263,7 +263,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
         className="group relative flex min-h-[168px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         style={avatarBackgroundStyle(avatar)}
       >
-        <SkillIndexMiniBadge value={player.skillIndex} />
+        <SkillRatingMiniBadge value={player.skillRating} />
         <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-3 px-4 pb-4">
           <div className="min-w-0 text-sm font-semibold leading-tight text-white">
@@ -283,7 +283,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
       href={playerHref(player.rid)}
       className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
     >
-      <SkillIndexMiniBadge value={player.skillIndex} />
+      <SkillRatingMiniBadge value={player.skillRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
       <div className="w-full truncate text-sm font-semibold">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -341,7 +341,7 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
   const [scope, setScope] = React.useState<"all" | 1 | 2 | 3>("all");
   const [mobileView, setMobileView] = React.useState<MobilePlayersView>("leaderboard");
   const [mobileSlideDirection, setMobileSlideDirection] = React.useState<SlideDirection>(1);
-  const [leaderboardSort, setLeaderboardSort] = React.useState<LeaderboardSortKey>("skillIndex");
+  const [leaderboardSort, setLeaderboardSort] = React.useState<LeaderboardSortKey>("skillRating");
   const [leaderboardDirection, setLeaderboardDirection] = React.useState<SortDirection>("desc");
   const [expanded, setExpanded] = React.useState(false);
   const { setRef, ind } = useTabSlider(String(scope));
