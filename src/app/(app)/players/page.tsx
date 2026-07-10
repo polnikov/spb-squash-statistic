@@ -1,5 +1,6 @@
 import { getPlayersOverview, type PlayerOverview } from "@/lib/league";
 import { loadAllLeagues } from "@/lib/db/league";
+import { loadCareerSkillRatingsByRid } from "@/lib/db/skill-rating";
 import { PlayersList } from "@/components/players-list";
 import {
   SKILL_RATING_CONFIG,
@@ -83,9 +84,35 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
   return [...byRid.values()];
 }
 
+/**
+ * Overwrite the locally computed rating with the stored one. The aggregate is
+ * calibrated (fitted `adaptive_k`), the local computation is not, so the two
+ * disagree by ~0.1. Players missing from the aggregate keep the computed value.
+ */
+function applyStoredSkillRatings(
+  players: PlayerOverview[],
+  stored: Awaited<ReturnType<typeof loadCareerSkillRatingsByRid>>,
+): PlayerOverview[] {
+  return players.map((player) => {
+    const row = stored.get(player.rid);
+    if (!row || row.skillRating === null) return player;
+    return {
+      ...player,
+      skillIndex: row.skillIndex ?? player.skillIndex,
+      careerSkillIndex: row.skillIndex ?? player.careerSkillIndex,
+      skillRating: row.skillRating,
+      skillRatingReliability: row.skillRatingReliability,
+      skillRatingReliabilityStatus: row.skillRatingReliabilityStatus ?? player.skillRatingReliabilityStatus,
+      skillRatingLevelStatus: row.skillRatingLevelStatus ?? player.skillRatingLevelStatus,
+    };
+  });
+}
+
 export default async function PlayersPage() {
   const leagues = await loadAllLeagues();
-  const players = mergePlayersByRid(Object.values(leagues).map(getPlayersOverview));
+  const merged = mergePlayersByRid(Object.values(leagues).map(getPlayersOverview));
+  const stored = await loadCareerSkillRatingsByRid(merged.map((p) => p.rid));
+  const players = applyStoredSkillRatings(merged, stored);
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
