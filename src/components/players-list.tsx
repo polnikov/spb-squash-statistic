@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, Snail, X } from "lucide-react";
+import { Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
 import { cn } from "@/lib/utils";
-import { splitPlayerName, playerHref } from "@/lib/format";
+import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { NumberPop } from "@/components/ui/number-pop";
+import { PageHeader } from "@/components/page-header";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
 
 const MOBILE_PAGE_SIZE = 16;
@@ -163,49 +165,55 @@ function SkillRatingMiniBadge({ value }: { value: number | null }) {
   );
 }
 
-function SkillRatingInlineBadge({ value }: { value: number | null }) {
+function SkillRatingInlineBadge({ value, animationKey }: { value: number | null; animationKey?: string }) {
   if (value === null) return null;
   return (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b]">
       <Snail className="size-3 shrink-0" />
-      <span className="font-mono tabular">{value.toFixed(1)}</span>
+      <span className="font-mono tabular"><NumberPop key={animationKey}>{value.toFixed(1)}</NumberPop></span>
     </span>
   );
 }
 
-function LeaderboardTile({ label, value }: { label: string; value: string }) {
+function LeaderboardTile({ label, value, animationKey }: { label: string; value: string; animationKey: string }) {
   return (
     <div className="min-w-0 rounded-md bg-surface-container-high px-1 py-2 text-center">
       <div className="text-[9px] leading-tight text-on-surface-variant">{label}</div>
-      <div className="mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface">{value}</div>
+      <div className="mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface">
+        <NumberPop key={animationKey}>{value}</NumberPop>
+      </div>
     </div>
   );
 }
 
-function MobileLeaderboardCard({ player, position }: { player: PlayerOverview; position: number }) {
+function MobileLeaderboardCard({ player, position, animationKey }: { player: PlayerOverview; position: number; animationKey: string }) {
   return (
     <Link
       href={playerHref(player.rid)}
       className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel active:scale-[0.99]"
     >
       <div className="flex items-center gap-3">
-        <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">{position}</span>
+        <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">
+          <NumberPop key={`${animationKey}-position`}>{position}</NumberPop>
+        </span>
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-9 text-[13px]" />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <div className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{player.name}</div>
-            <SkillRatingInlineBadge value={player.skillRating} />
+            <SkillRatingInlineBadge value={player.skillRating} animationKey={`${animationKey}-skill`} />
           </div>
           <div className="mt-0.5 text-[11px] text-on-surface-variant">
-            Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">{player.matches} · {player.matchesWon} - {player.matchesLost}</span>
+            Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
+              <NumberPop key={`${animationKey}-matches`}>{`${player.matches} · ${player.matchesWon} - ${player.matchesLost}`}</NumberPop>
+            </span>
           </div>
         </div>
       </div>
       <div className="mt-[13px] grid grid-cols-4 gap-1.5">
-        <LeaderboardTile label="Match WR" value={formatPct(player.winPct)} />
-        <LeaderboardTile label="Game WR" value={formatPct(player.gameWinRatePct)} />
-        <LeaderboardTile label="Rally WR" value={formatPct(player.rallyWinRatePct)} />
-        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} />
+        <LeaderboardTile label="Match WR" value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} />
+        <LeaderboardTile label="Game WR" value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} />
+        <LeaderboardTile label="Rally WR" value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} />
+        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
       </div>
     </Link>
   );
@@ -336,7 +344,13 @@ function MobileDivisionTabs({
   );
 }
 
-export function PlayersList({ players }: { players: PlayerOverview[] }) {
+export function PlayersList({
+  players,
+  title,
+}: {
+  players: PlayerOverview[];
+  title?: string;
+}) {
   const [query, setQuery] = React.useState("");
   const [scope, setScope] = React.useState<"all" | 1 | 2 | 3>("all");
   const [mobileView, setMobileView] = React.useState<MobilePlayersView>("leaderboard");
@@ -375,6 +389,7 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
   const leaderboard = q ? leaderboardAll.filter((p) => p.name.toLowerCase().includes(q)) : leaderboardAll;
   const leaderboardFirst = leaderboard.slice(0, MOBILE_PAGE_SIZE);
   const leaderboardRest = leaderboard.slice(MOBILE_PAGE_SIZE);
+  const leaderboardAnimationKey = `${leaderboardSort}-${leaderboardDirection}`;
 
   React.useEffect(() => setExpanded(false), [query, scope, mobileView, leaderboardDirection, leaderboardSort]);
 
@@ -398,6 +413,8 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {title ? <PageHeader title={title} subtitle={playersLabel(filtered.length)} icon={Users} /> : null}
+
       <div className="flex h-[46px] w-full items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:hidden">
         <Search className="size-4 text-muted-foreground" />
         <input
@@ -525,7 +542,12 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
             <MobileLeaderboardSort value={leaderboardSort} direction={leaderboardDirection} onChange={changeLeaderboardSort} />
             <div className="flex flex-col gap-2">
               {leaderboardFirst.map((p) => (
-                <MobileLeaderboardCard key={p.rid} player={p} position={leaderboardRanks.get(p.rid) ?? 0} />
+                <MobileLeaderboardCard
+                  key={p.rid}
+                  player={p}
+                  position={leaderboardRanks.get(p.rid) ?? 0}
+                  animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                />
               ))}
             </div>
             {leaderboardRest.length > 0 ? (
@@ -534,7 +556,12 @@ export function PlayersList({ players }: { players: PlayerOverview[] }) {
                   <div className="min-h-0 overflow-hidden">
                     <div className="flex flex-col gap-2 pt-2">
                       {leaderboardRest.map((p) => (
-                        <MobileLeaderboardCard key={p.rid} player={p} position={leaderboardRanks.get(p.rid) ?? 0} />
+                        <MobileLeaderboardCard
+                          key={p.rid}
+                          player={p}
+                          position={leaderboardRanks.get(p.rid) ?? 0}
+                          animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                        />
                       ))}
                     </div>
                   </div>

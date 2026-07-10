@@ -1,9 +1,6 @@
-import { Users } from "lucide-react";
 import { getPlayersOverview, type PlayerOverview } from "@/lib/league";
 import { loadAllLeagues } from "@/lib/db/league";
 import { PlayersList } from "@/components/players-list";
-import { PageHeader } from "@/components/page-header";
-import { playersLabel } from "@/lib/format";
 import {
   SKILL_RATING_CONFIG,
   calculateCareerSkillRating,
@@ -92,8 +89,7 @@ export default async function PlayersPage() {
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
-      <PageHeader title="Игроки" subtitle={playersLabel(players.length)} icon={Users} />
-      <PlayersList players={players} />
+      <PlayersList players={players} title="Игроки" />
     </div>
   );
 }
