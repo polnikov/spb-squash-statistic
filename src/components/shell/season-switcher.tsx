@@ -84,8 +84,10 @@ export function SeasonSwitcher({
                 key={s}
                 onClick={() => selectSeason(s)}
                 className={cn(
-                  "relative flex h-9 w-full items-center justify-end rounded-[12px] px-4 text-right font-mono text-[13px] font-semibold tabular",
-                  season === s ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant",
+                  "relative flex h-9 w-full items-center justify-end rounded-[12px] px-4 text-right font-mono text-[13px] font-semibold tabular transition-colors duration-200 ease-m3-standard",
+                  season === s
+                    ? "bg-surface-container-highest text-on-surface"
+                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface",
                 )}
               >
                 {season === s ? <span className="absolute left-3 size-2 rounded-full bg-primary" /> : null}

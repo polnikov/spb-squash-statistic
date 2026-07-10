@@ -862,7 +862,11 @@ export function H2hDetailView({
     window.setTimeout(() => onClose(), 500);
   }, [onClose]);
 
-  // Esc closes, background scroll lock, focus into panel.
+  // Esc closes, focus into panel. The panel covers the page (opaque full-screen
+  // on mobile, backdrop on desktop), so we deliberately do NOT lock body scroll:
+  // overriding `overflow` reflows the underlying profile and shifts its
+  // header/filters, and `overscroll-contain` on the panel's own scroller already
+  // stops scroll from chaining to the page behind it.
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") requestClose();
@@ -881,13 +885,8 @@ export function H2hDetailView({
       }
     }
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     panelRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [requestClose]);
 
   const overview = (

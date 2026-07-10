@@ -869,7 +869,7 @@ function Filters({
   const divisionW = divisionItems.length === 1 ? "w-auto" : "w-full min-w-0 max-w-full";
 
   return (
-    <div className="sticky top-[53px] z-20 -mx-2 px-2 py-2 md:static md:mx-0 md:p-0">
+    <div className="sticky top-[53px] z-20 -mx-2 bg-[rgba(22,22,22,0.86)] px-2 py-2 backdrop-blur-[14px] md:static md:mx-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
       <div className={cn("grid w-full items-center gap-1 md:flex md:flex-wrap md:gap-2", mobileCols)}>
         <SegmentedControl
           items={seasonItems}
