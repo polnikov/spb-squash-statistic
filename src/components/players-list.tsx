@@ -70,6 +70,12 @@ function formatSigned(value: number | null | undefined) {
   return `${value > 0 ? "+" : ""}${value.toFixed(1)}`;
 }
 
+/** Green above zero, red below, neutral at zero / unknown. */
+function balanceToneClass(value: number | null | undefined) {
+  if (value == null || value === 0) return undefined;
+  return value > 0 ? "text-win" : "text-loss";
+}
+
 function leaderboardSortValue(player: PlayerOverview, key: LeaderboardSortKey) {
   switch (key) {
     case "skillRating":
@@ -194,11 +200,11 @@ function SkillRatingInlineBadge({ value, animationKey }: { value: number | null;
   );
 }
 
-function LeaderboardTile({ label, value, animationKey }: { label: string; value: string; animationKey: string }) {
+function LeaderboardTile({ label, value, animationKey, valueClassName }: { label: string; value: string; animationKey: string; valueClassName?: string }) {
   return (
     <div className="min-w-0 rounded-md bg-surface-container-high px-1 py-2 text-center">
       <div className="text-[9px] leading-tight text-on-surface-variant">{label}</div>
-      <div className="mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface">
+      <div className={cn("mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface", valueClassName)}>
         <NumberPop key={animationKey}>{value}</NumberPop>
       </div>
     </div>
@@ -232,7 +238,7 @@ function MobileLeaderboardCard({ player, position, animationKey }: { player: Pla
         <LeaderboardTile label="Match WR" value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} />
         <LeaderboardTile label="Game WR" value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} />
         <LeaderboardTile label="Rally WR" value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} />
-        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
+        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
       </div>
     </Link>
   );
@@ -447,12 +453,14 @@ function DesktopMetric({
   animationKey,
   animate = true,
   fill,
+  valueClassName,
 }: {
   value: string;
   animationKey: string;
   animate?: boolean;
   /** 0..1 proportion; draws a left-to-right accent bar behind the value. */
   fill?: number | null;
+  valueClassName?: string;
 }) {
   const pct = fill == null ? null : Math.max(0, Math.min(1, fill)) * 100;
   return (
@@ -464,7 +472,7 @@ function DesktopMetric({
           style={{ width: `${pct}%` }}
         />
       )}
-      <span className="relative z-10 block truncate">
+      <span className={cn("relative z-10 block truncate", valueClassName)}>
         {animate ? <NumberPop key={animationKey}>{value}</NumberPop> : value}
       </span>
     </div>
@@ -497,7 +505,7 @@ function DesktopLeaderboardCard({
       <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
       <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
       <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
-      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
+      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
       <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center text-[11.5px] font-semibold text-on-surface">
         {reliability}
       </div>
