@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { matchesLabel } from "@/lib/format";
+import { matchesLabel, pluralRu } from "@/lib/format";
 import type { EChartsOption } from "echarts";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
@@ -819,7 +819,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
           <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} />
           <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} />
           <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} />
-          <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} побед подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
+          <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
         </div>
         <ResultsTimeline matches={model.contexts.career.matches} />
       </div>
