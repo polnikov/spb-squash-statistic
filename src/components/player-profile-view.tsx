@@ -77,7 +77,7 @@ type FilterValue = {
 };
 
 const CHART_COLORS = {
-  primary: "#20c7d9",
+  primary: "#f472b6",
   secondary: "#ff70d5",
   tertiary: "#ffa52a",
   error: "#ff6b63",
@@ -1499,7 +1499,7 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
                   sort === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />
@@ -1783,7 +1783,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
                   filter === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />

@@ -156,10 +156,10 @@
 /* Flat 2.0 dark (default, so the app paints without a light flash) */
 :root {
   color-scheme: dark;
-  --m3-primary: #20c7d9;
+  --m3-primary: #f472b6;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: rgba(32, 199, 217, 0.16);
-  --m3-on-primary-container: #8ef3ff;
+  --m3-primary-container: rgba(244, 114, 182, 0.16);
+  --m3-on-primary-container: #fbcfe8;
   --m3-secondary: #1dafe8;
   --m3-on-secondary: #ffffff;
   --m3-secondary-container: rgba(29, 175, 232, 0.16);
@@ -189,7 +189,7 @@
   --m3-outline-variant: rgba(255, 255, 255, 0.09);
   --m3-inverse-surface: #dedede;
   --m3-inverse-on-surface: #212121;
-  --m3-inverse-primary: #7eeaf5;
+  --m3-inverse-primary: #f9a8d4;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
 }
@@ -197,10 +197,10 @@
 /* Keep optional light mode close to the same neutral system if toggled later. */
 .light {
   color-scheme: light;
-  --m3-primary: #20c7d9;
+  --m3-primary: #f472b6;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: rgba(32, 199, 217, 0.14);
-  --m3-on-primary-container: #087b88;
+  --m3-primary-container: rgba(244, 114, 182, 0.14);
+  --m3-on-primary-container: #9d174d;
   --m3-secondary: #1dafe8;
   --m3-on-secondary: #ffffff;
   --m3-secondary-container: rgba(29, 175, 232, 0.14);
@@ -230,7 +230,7 @@
   --m3-outline-variant: rgba(0, 0, 0, 0.11);
   --m3-inverse-surface: #212121;
   --m3-inverse-on-surface: #ededed;
-  --m3-inverse-primary: #8ef3ff;
+  --m3-inverse-primary: #fbcfe8;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
 }

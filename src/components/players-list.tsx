@@ -131,7 +131,7 @@ function MobileLeaderboardSort({
             <span
               aria-hidden
               className={cn(
-                "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
                 value === sort.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
               )}
             />

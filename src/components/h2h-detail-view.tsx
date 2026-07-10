@@ -36,7 +36,7 @@ const EChart = dynamic(() => import("echarts-for-react"), { ssr: false }) as Rea
 /* ---------------------------------------------------------------- atoms --- */
 
 const C = {
-  primary: "#20c7d9",
+  primary: "#f472b6",
   tertiary: "#ffa52a",
   secondary: "#7eeaf5",
   error: "#ff6b63",
@@ -691,7 +691,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#20c7d991] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
                   filter === f.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />
