@@ -446,14 +446,27 @@ function DesktopMetric({
   value,
   animationKey,
   animate = true,
+  fill,
 }: {
   value: string;
   animationKey: string;
   animate?: boolean;
+  /** 0..1 proportion; draws a left-to-right accent bar behind the value. */
+  fill?: number | null;
 }) {
+  const pct = fill == null ? null : Math.max(0, Math.min(1, fill)) * 100;
   return (
-    <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[12.5px] font-semibold tabular text-on-surface">
-      {animate ? <NumberPop key={animationKey}>{value}</NumberPop> : value}
+    <div className="relative min-w-0 overflow-hidden rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[12.5px] font-semibold tabular text-on-surface">
+      {pct != null && (
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 bg-[#f9a8d4]/30 transition-[width] duration-500 ease-m3-emphasized-decel"
+          style={{ width: `${pct}%` }}
+        />
+      )}
+      <span className="relative z-10 block truncate">
+        {animate ? <NumberPop key={animationKey}>{value}</NumberPop> : value}
+      </span>
     </div>
   );
 }
@@ -479,11 +492,11 @@ function DesktopLeaderboardCard({
       </span>
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
       <span className="min-w-0 truncate text-sm font-semibold text-on-surface">{player.name}</span>
-      <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} />
+      <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} fill={player.skillRating === null ? null : player.skillRating / 100} />
       <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
-      <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} />
-      <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} />
-      <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} />
+      <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
+      <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
+      <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
       <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
       <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center text-[11.5px] font-semibold text-on-surface">
         {reliability}
