@@ -175,6 +175,8 @@ export type PlayerOpponentStats = {
   opponentName: string;
   opponentInitials: string;
   opponentColor: string;
+  /** Opponent's career skill rating; null when unknown (e.g. TS fallback). */
+  opponentSkillRating?: number | null;
   meetingsPlayed: number;
   h2hMatchesWon: number;
   h2hMatchesLost: number;

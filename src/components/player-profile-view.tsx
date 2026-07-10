@@ -2073,7 +2073,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       </div>
 
       {h2hOpponent && h2hMatches.length > 0 ? (
-        <H2hDetailView player={model.player} opponent={h2hOpponent} matches={h2hMatches} onClose={closeH2h} />
+        <H2hDetailView player={model.player} opponent={h2hOpponent} matches={h2hMatches} playerSkillRating={model.careerStats.skillRating} onClose={closeH2h} />
       ) : null}
     </div>
   );

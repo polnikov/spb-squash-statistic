@@ -6,7 +6,7 @@
  * comes from the loaded leagues.
  */
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
   players,
@@ -161,12 +161,17 @@ function mapAggregate(r: PlayerStatsAggregateRow): PlayerProfileStats {
 
 type OppDisplay = { rid: string; name: string; initials: string; color: string };
 
-function mapOpponent(r: PlayerOpponentStatsRow, display: OppDisplay | undefined): PlayerOpponentStats {
+function mapOpponent(
+  r: PlayerOpponentStatsRow,
+  display: OppDisplay | undefined,
+  skillRating: number | null,
+): PlayerOpponentStats {
   return {
     opponentRid: display?.rid ?? String(r.opponentId),
     opponentName: display?.name ?? " - ",
     opponentInitials: display?.initials ?? " - ",
     opponentColor: display?.color ?? "var(--m3-surface-container-high)",
+    opponentSkillRating: skillRating,
     meetingsPlayed: r.meetingsPlayed,
     h2hMatchesWon: r.h2hMatchesWon,
     h2hMatchesLost: r.h2hMatchesLost,
@@ -212,13 +217,22 @@ export async function buildPlayerProfileModelFromDb(
 
   // The five reads below are independent of each other — one parallel wave
   // instead of five sequential round trips.
-  const [seasonRows, stageRows, oppPlayerRows, aggRows, oppRows] = await Promise.all([
+  const [seasonRows, stageRows, oppPlayerRows, aggRows, oppRows, careerRatingRows] = await Promise.all([
     database.select({ id: seasons.id, label: seasons.label }).from(seasons),
     database.select({ id: stages.id, number: stages.number }).from(stages),
     database.select({ id: players.id, rid: players.rankedinId }).from(players),
     database.select().from(playerStatsAggregate).where(eq(playerStatsAggregate.playerId, playerId)),
     database.select().from(playerOpponentStats).where(eq(playerOpponentStats.playerId, playerId)),
+    database
+      .select({ playerId: playerStatsAggregate.playerId, skillRating: playerStatsAggregate.skillRating })
+      .from(playerStatsAggregate)
+      .where(and(eq(playerStatsAggregate.scope, "career"), isNull(playerStatsAggregate.seasonId))),
   ]);
+
+  // opponent career skill ratings, keyed by DB player id
+  const careerRatingByPlayerId = new Map<number, number | null>(
+    careerRatingRows.map((r) => [r.playerId, num(r.skillRating)]),
+  );
 
   // season id (int) <-> label
   const labelById = new Map(seasonRows.map((s) => [s.id, s.label]));
@@ -263,7 +277,7 @@ export async function buildPlayerProfileModelFromDb(
   const oppSeasonByLabel = new Map<string, PlayerOpponentStats[]>();
   const oppSeasonDivByKey = new Map<string, PlayerOpponentStats[]>();
   for (const r of oppRows) {
-    const mapped = mapOpponent(r, oppDisplayById.get(r.opponentId));
+    const mapped = mapOpponent(r, oppDisplayById.get(r.opponentId), careerRatingByPlayerId.get(r.opponentId) ?? null);
     const label = r.seasonId != null ? labelById.get(r.seasonId) : undefined;
     if (r.scope === "career") oppCareer.push(mapped);
     else if (r.scope === "season" && label) (oppSeasonByLabel.get(label) ?? oppSeasonByLabel.set(label, []).get(label)!).push(mapped);
