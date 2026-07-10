@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import { SortHeaderButton } from "@/components/ui/sort-header";
 import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/league";
 import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -320,39 +321,39 @@ export function DivisionsTable({
           <thead>
             <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
               <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
-                <button onClick={() => setSortKey("place")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">#{sortMark("place")}</button>
+                <SortHeaderButton label="#" active={sort.key === "place"} direction={sort.dir} onClick={() => setSortKey("place")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">#</span>
               </th>
               <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("points")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Рейтинг{sortMark("points")}</button>
+                <SortHeaderButton label="Рейтинг" active={sort.key === "points"} direction={sort.dir} onClick={() => setSortKey("points")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Рейтинг</span>
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">Этапов</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("matches")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Матчи{sortMark("matches")}</button>
+                <SortHeaderButton label="Матчи" active={sort.key === "matches"} direction={sort.dir} onClick={() => setSortKey("matches")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Матчи</span>
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("matchWr")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Match WR{sortMark("matchWr")}</button>
+                <SortHeaderButton label="Match WR" active={sort.key === "matchWr"} direction={sort.dir} onClick={() => setSortKey("matchWr")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Match WR</span>
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">Геймы</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("gameWr")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Game WR{sortMark("gameWr")}</button>
+                <SortHeaderButton label="Game WR" active={sort.key === "gameWr"} direction={sort.dir} onClick={() => setSortKey("gameWr")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Game WR</span>
               </th>
               <th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium md:w-auto md:px-4">Розыгрыши</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("rallyWr")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Rally WR{sortMark("rallyWr")}</button>
+                <SortHeaderButton label="Rally WR" active={sort.key === "rallyWr"} direction={sort.dir} onClick={() => setSortKey("rallyWr")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Rally WR</span>
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("court")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Время{sortMark("court")}</button>
+                <SortHeaderButton label="Время" active={sort.key === "court"} direction={sort.dir} onClick={() => setSortKey("court")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Время</span>
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <button onClick={() => setSortKey("form")} className="hidden w-full items-center justify-center font-medium hover:text-on-surface md:inline-flex">Форма{sortMark("form")}</button>
+                <SortHeaderButton label="Форма" active={sort.key === "form"} direction={sort.dir} onClick={() => setSortKey("form")} className="hidden w-full md:inline-flex" />
                 <span className="md:hidden">Форма</span>
               </th>
             </tr>

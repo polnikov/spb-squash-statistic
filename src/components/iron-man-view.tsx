@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { SortHeaderButton } from "@/components/ui/sort-header";
 import {
   getIronManLongMatches,
   getIronManRows,
@@ -188,11 +189,6 @@ function ironSortValue(row: IronRow, key: IronSortKey) {
   return row[key];
 }
 
-function SortIcon({ active, direction }: { active: boolean; direction: IronSort["direction"] }) {
-  if (!active) return <ArrowUpDown className="size-3 opacity-55" />;
-  return direction === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />;
-}
-
 export function IronManView({ league }: { league: League }) {
   const [scope, setScope] = React.useState<DivisionScope>("all");
   const [half, setHalf] = React.useState<1 | 2>(1);
@@ -319,14 +315,13 @@ export function IronManView({ league }: { league: League }) {
                         className={cn("px-4 py-3 text-center font-medium", column.className)}
                       >
                         {column.sortKey ? (
-                          <button
-                            type="button"
+                          <SortHeaderButton
+                            label={column.label}
+                            active={sort.key === column.sortKey}
+                            direction={sort.direction}
                             onClick={() => toggleSort(column.sortKey!)}
-                            className="inline-flex items-center justify-center gap-1 transition-colors hover:text-on-surface"
-                          >
-                            {column.label}
-                            <SortIcon active={sort.key === column.sortKey} direction={sort.direction} />
-                          </button>
+                            className="inline-flex"
+                          />
                         ) : (
                           column.label
                         )}
