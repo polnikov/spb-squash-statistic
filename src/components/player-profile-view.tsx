@@ -78,7 +78,7 @@ type FilterValue = {
 
 const CHART_COLORS = {
   primary: "#f472b6",
-  secondary: "#ff70d5",
+  secondary: "#7eeaf5",
   tertiary: "#ffa52a",
   error: "#ff6b63",
   text: "#b6b6b6",
