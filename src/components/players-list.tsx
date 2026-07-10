@@ -492,14 +492,14 @@ function DesktopLeaderboardCard({
   return (
     <Link
       href={playerHref(player.rid)}
-      className="grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
       style={DESKTOP_LEADERBOARD_GRID}
     >
       <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">
         <NumberPop key={`${animationKey}-position`}>{String(position)}</NumberPop>
       </span>
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
-      <span className="min-w-0 truncate text-sm font-semibold text-on-surface">{player.name}</span>
+      <span className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</span>
       <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} fill={player.skillRating === null ? null : player.skillRating / 100} />
       <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
       <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />

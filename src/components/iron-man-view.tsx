@@ -331,12 +331,12 @@ export function IronManView({ league }: { league: League }) {
                 </thead>
                 <tbody>
                   {visibleRows.map((r) => (
-                    <tr key={r.playerIdx} className="border-t border-outline-variant transition-colors hover:bg-surface-container-high/40">
+                    <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-surface-container-high/40">
                       <td className="w-px whitespace-nowrap px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.pos}</td>
                       <td className="px-4 py-3">
                         <Link href={playerHref(r.rid)} className="flex items-center gap-3">
                           <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-9 text-[13px]" />
-                          <span className="whitespace-nowrap font-medium">{r.name}</span>
+                          <span className="whitespace-nowrap font-medium text-on-surface transition-colors group-hover:text-primary">{r.name}</span>
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{fmtCourt(r.court)}</td>

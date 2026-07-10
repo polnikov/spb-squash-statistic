@@ -56,7 +56,7 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
           <PlayerAvatar rid={row.original.rid} initials={row.original.initials} color={row.original.color} className="size-8 text-xs" />
-          <span className="text-sm font-medium text-on-surface">{row.original.name}</span>
+          <span className="text-sm font-medium text-on-surface transition-colors group-hover:text-primary">{row.original.name}</span>
         </div>
       ),
     },
@@ -254,7 +254,7 @@ export function RatingTable({
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
                 onClick={() => router.push(`/players/${encodeURIComponent(row.original.rid)}`)}
-                className="cursor-pointer border-t border-border transition-colors hover:bg-brand-surface-2/40"
+                className="group cursor-pointer border-t border-border transition-colors hover:bg-brand-surface-2/40"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

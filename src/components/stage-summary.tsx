@@ -308,7 +308,7 @@ export function StageSummary({ league }: { league: League }) {
                           </span>
                           <span className="hidden items-center gap-2.5 md:flex">
                             <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-8 text-xs" />
-                            <span className="whitespace-nowrap text-sm font-medium text-on-surface">{r.name}</span>
+                            <span className="whitespace-nowrap text-sm font-medium text-on-surface transition-colors group-hover:text-primary">{r.name}</span>
                           </span>
                         </Link>
                       </td>
