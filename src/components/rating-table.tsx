@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import type { RatingRow } from "@/lib/mock/league";
+import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";

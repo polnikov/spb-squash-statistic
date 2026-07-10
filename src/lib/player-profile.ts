@@ -1,12 +1,13 @@
 import {
-  CURRENT_SEASON,
   TOTAL_STAGES,
+  currentSeasonOf,
   getRatingRows,
+  seasonStart,
   type League,
   type MockPlayer,
   type MockResult,
   type RealMatch,
-} from "@/lib/mock/league";
+} from "@/lib/league";
 import {
   SKILL_RATING_CONFIG,
   calculateCareerSkillRating,
@@ -319,11 +320,6 @@ function reliability(level: SampleSizeLevel): number {
 
 function numberOrNull(value: number): number | null {
   return Number.isFinite(value) ? value : null;
-}
-
-export function seasonStart(label: string): number {
-  const [start] = label.split("/");
-  return Number(start) || 0;
 }
 
 export function contextKey(seasonId: string | null, divisionId: number | null): string {
@@ -760,11 +756,12 @@ export function collectPlayerData(leagues: Record<string, League>, rid: string) 
   let player: MockPlayer | null = null;
   const results: PlayerResultRecord[] = [];
   const matches: PlayerMatchRecord[] = [];
+  const currentSeason = currentSeasonOf(leagues);
 
   for (const [seasonId, league] of Object.entries(leagues)) {
     const p = league.players.find((item) => item.rid === rid);
     if (!p) continue;
-    if (!player || seasonId === CURRENT_SEASON) player = p;
+    if (!player || seasonId === currentSeason) player = p;
     for (const result of league.results) {
       if (result.playerIdx === p.idx) results.push({ ...result, seasonId });
     }
@@ -946,7 +943,8 @@ export function currentDivisionPlaces(
   rid: string,
   divisions: number[],
 ): PlayerProfileDivisionPlace[] {
-  const cur = leagues[CURRENT_SEASON];
+  const currentSeason = currentSeasonOf(leagues);
+  const cur = currentSeason ? leagues[currentSeason] : undefined;
   return divisions.map((div) => ({
     div,
     place: cur ? getRatingRows(cur, div as 1 | 2 | 3).find((r) => r.rid === rid)?.place ?? null : null,
@@ -1037,7 +1035,8 @@ export function resolveProfilePlayerRid(id: string, leagues: Record<string, Leag
 
   const legacyIdx = Number(decoded);
   if (!Number.isInteger(legacyIdx) || legacyIdx < 0) return null;
-  const currentPlayer = leagues[CURRENT_SEASON]?.players[legacyIdx];
+  const currentSeason = currentSeasonOf(leagues);
+  const currentPlayer = currentSeason ? leagues[currentSeason]?.players[legacyIdx] : undefined;
   if (currentPlayer) return currentPlayer.rid;
   for (const league of Object.values(leagues)) {
     const player = league.players[legacyIdx];
@@ -1083,16 +1082,17 @@ export function buildPlayerProfileModel(
   }
 
   const normalized = normalizePlayerProfileContext(query, seasons, divisionsBySeason);
+  const currentSeason = currentSeasonOf(leagues);
 
   return {
     player,
     careerStats,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
-    active: seasons.includes(CURRENT_SEASON),
+    active: currentSeason != null && seasons.includes(currentSeason),
     roster: buildRoster(leagues, rid),
     filters: {
-      seasons: seasons.map((seasonId) => ({ id: seasonId, label: seasonId, isCurrent: seasonId === CURRENT_SEASON })),
+      seasons: seasons.map((seasonId) => ({ id: seasonId, label: seasonId, isCurrent: seasonId === currentSeason })),
       divisionsBySeason,
     },
     contexts,

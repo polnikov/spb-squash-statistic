@@ -3,16 +3,15 @@ import { Layers } from "lucide-react";
 import {
   getDivisionSummary,
   getRatingRows,
-  normalizeSeason,
   type DivisionSummary,
   type RatingRow,
-} from "@/lib/mock/league";
-import { loadLeague } from "@/lib/db/league";
+} from "@/lib/league";
+import { loadLeague, resolveSeason } from "@/lib/db/league";
 import { DivisionsTable } from "@/components/divisions-table";
 import { PageHeader } from "@/components/page-header";
 
 export default async function DivisionsPage({ searchParams }: { searchParams?: { season?: string } }) {
-  const season = normalizeSeason(searchParams?.season);
+  const season = await resolveSeason(searchParams?.season);
   const league = await loadLeague(season);
   const rowsByDivision = {
     1: getRatingRows(league, 1),

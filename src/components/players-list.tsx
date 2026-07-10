@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Search, Snail, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { PlayerOverview } from "@/lib/mock/league";
+import type { PlayerOverview } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { splitPlayerName, playerHref } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";

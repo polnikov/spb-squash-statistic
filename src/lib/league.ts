@@ -1,15 +1,12 @@
 /**
- * League data built from the real RankedIn tournament exports (see
- * src/lib/data/tournaments.ts). Player aggregates come from the players CSVs,
- * head-to-head matches from the matches CSVs. The query helpers below operate on
- * this normalized `League` shape; swap `buildLeague` for Drizzle queries later.
+ * The normalized `League` shape and the pure query helpers that derive standings,
+ * Iron Man tables, stage results, and player overviews from it.
  *
- * `skill`/`rank` carry the real RankedIn rating; `points` is derived from final
- * placement (the CSVs don't include tournament ranking points).
+ * Leagues are assembled from the database by `loadLeague` in `@/lib/db/league`;
+ * nothing here reads a data source. `skill`/`rank` carry the RankedIn rating,
+ * `points` come from the configured `points_table`.
  */
 
-import { TOURNAMENTS, SEASON, SEASONS } from "@/lib/data/tournaments";
-import { defaultPointsFor } from "@/lib/points";
 import {
   SKILL_RATING_CONFIG,
   calculateCareerSkillRating,
@@ -81,170 +78,26 @@ export type League = {
   matches: RealMatch[];
 };
 
-export const CURRENT_SEASON = SEASON;
-
-/** Only the seasons present in the imported data. */
-export function seasonList(): string[] {
-  return [...SEASONS];
+/** Leading year of a "YY/YY" season label, e.g. "25/26" -> 25. */
+export function seasonStart(label: string): number {
+  const [start] = label.split("/");
+  return Number(start) || 0;
 }
 
-export function normalizeSeason(season?: string | null): string {
-  // Accept any well-formed YY/YY label (incl. admin-imported seasons not in the
-  // static seed list). loadLeague returns an empty league if it has no data.
-  return season && /^\d{2}\/\d{2}$/.test(season) ? season : CURRENT_SEASON;
+/**
+ * Newest season among the loaded leagues. The caller loads them from the DB
+ * (`loadAllLeagues` keys them by `listSeasonsWithData`), so this is the current
+ * season as the database sees it — there is no hardcoded label anywhere.
+ */
+export function currentSeasonOf(leagues: Record<string, League>): string | null {
+  return Object.keys(leagues).sort((a, b) => seasonStart(b) - seasonStart(a))[0] ?? null;
 }
 
-// Admin-controlled display names. Keep empty until an admin override is set.
-// The public app always reads MockPlayer.name, which falls back to rankedinName.
-const ADMIN_PLAYER_NAMES: Record<string, string> = {};
-
-function displayNameFor(rid: string, rankedinName: string): string {
-  return ADMIN_PLAYER_NAMES[rid]?.trim() || rankedinName;
-}
-
-function hashHue(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h % 360;
-}
-
-function initialsOf(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((w) => w[0] ?? "").join("").toUpperCase();
-}
-
-/** Parse a RankedIn score like "3:1 (11:8, 10:12, 11:5, 11:3)". */
-function parseScore(score: string): { gamesA: number; gamesB: number; detail: { a: number; b: number }[] } {
-  const head = score.match(/^\s*(\d+)\s*:\s*(\d+)/);
-  const gamesA = head ? +head[1] : 0;
-  const gamesB = head ? +head[2] : 0;
-  const detail: { a: number; b: number }[] = [];
-  const paren = score.match(/\(([^)]*)\)/);
-  if (paren) {
-    for (const part of paren[1].split(",")) {
-      const g = part.trim().match(/(\d+)\s*:\s*(\d+)/);
-      if (g) detail.push({ a: +g[1], b: +g[2] });
-    }
-  }
-  return { gamesA, gamesB, detail };
-}
-
-const leagueCache = new Map<string, League>();
 /** Stages in a season: 1..8 count toward the rating, 9 is the final. */
 export const TOTAL_STAGES = 9;
 export const FINAL_STAGE = TOTAL_STAGES;
 export const RATING_MAX_STAGE = 8;
 const RATING_BEST_STAGE_COUNT = 7;
-
-export function buildLeague(_season: string = CURRENT_SEASON): League {
-  const season = normalizeSeason(_season);
-  const cached = leagueCache.get(season);
-  if (cached) return cached;
-
-  const tournaments = TOURNAMENTS.filter((t) => t.season === season);
-
-  const idToIdx = new Map<string, number>();
-  const players: MockPlayer[] = [];
-
-  for (const t of tournaments) {
-    for (const pl of t.players) {
-      if (!idToIdx.has(pl.id)) {
-        const idx = players.length;
-        idToIdx.set(pl.id, idx);
-        const hue = hashHue(pl.id);
-        const rankedinName = pl.name;
-        const adminName = ADMIN_PLAYER_NAMES[pl.id]?.trim() || undefined;
-        const displayName = displayNameFor(pl.id, rankedinName);
-        players.push({
-          idx,
-          name: displayName,
-          rankedinName,
-          adminName,
-          rid: pl.id,
-          skill: pl.rating,
-          rank: Math.round(pl.rating * 100),
-          hue,
-          color: `oklch(0.63 0.17 ${hue})`,
-          initials: initialsOf(displayName),
-          divisions: [],
-        });
-      } else {
-        const ex = players[idToIdx.get(pl.id)!];
-        if (pl.rating > ex.skill) {
-          ex.skill = pl.rating;
-          ex.rank = Math.round(pl.rating * 100);
-        }
-      }
-    }
-  }
-
-  const rosters: Record<number, number[]> = { 1: [], 2: [], 3: [] };
-  const results: MockResult[] = [];
-  const stageDates = new Map<number, string>();
-
-  for (const t of tournaments) {
-    stageDates.set(t.stage, t.date);
-    for (const pl of t.players) {
-      const idx = idToIdx.get(pl.id)!;
-      const player = players[idx];
-      if (!player.divisions.includes(t.division)) player.divisions.push(t.division);
-      if (!rosters[t.division].includes(idx)) rosters[t.division].push(idx);
-      results.push({
-        div: t.division,
-        stage: t.stage,
-        date: t.date,
-        playerIdx: idx,
-        place: pl.place,
-        matches: pl.matches,
-        wonM: pl.wins,
-        lostM: pl.losses,
-        games: pl.games,
-        wonG: pl.gamesWon,
-        lostG: pl.gamesLost,
-        balls: pl.balls,
-        wonB: pl.ballsWon,
-        lostB: pl.ballsLost,
-        court: pl.court,
-        rank: Math.round(pl.rating * 100),
-        ratingBefore: pl.ratingBefore,
-        ratingAfter: pl.ratingAfter,
-        points: defaultPointsFor(pl.place),
-      });
-    }
-  }
-
-  const matches: RealMatch[] = [];
-  for (const t of tournaments) {
-    for (const mt of t.matches) {
-      const aIdx = idToIdx.get(mt.a);
-      const bIdx = idToIdx.get(mt.b);
-      if (aIdx == null || bIdx == null) continue;
-      const { gamesA, gamesB, detail } = parseScore(mt.score);
-      matches.push({
-        stage: t.stage,
-        division: t.division,
-        aIdx,
-        bIdx,
-        gamesA,
-        gamesB,
-        winnerIdx: gamesA >= gamesB ? aIdx : bIdx,
-        detail,
-        durationMin: mt.dur,
-      });
-    }
-  }
-
-  for (const p of players) p.divisions.sort((a, b) => a - b);
-
-  const stages: MockStage[] = Array.from({ length: TOTAL_STAGES }, (_, i) => {
-    const no = i + 1;
-    const date = stageDates.get(no) ?? "";
-    return { no, date, done: Boolean(date) };
-  });
-
-  const league = { season, players, rosters, stages, results, matches };
-  leagueCache.set(season, league);
-  return league;
-}
 
 export type Aggregate = {
   points: number;

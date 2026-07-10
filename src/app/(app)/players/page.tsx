@@ -1,5 +1,5 @@
 import { Users } from "lucide-react";
-import { getPlayersOverview, type PlayerOverview } from "@/lib/mock/league";
+import { getPlayersOverview, type PlayerOverview } from "@/lib/league";
 import { loadAllLeagues } from "@/lib/db/league";
 import { PlayersList } from "@/components/players-list";
 import { PageHeader } from "@/components/page-header";

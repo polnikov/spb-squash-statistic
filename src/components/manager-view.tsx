@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import {
   type League,
-} from "@/lib/mock/league";
+} from "@/lib/league";
 import {
   createPlayerAction,
   deleteImportedStageAction,

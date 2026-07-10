@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/mock/league";
+import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/league";
 import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";

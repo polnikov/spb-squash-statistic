@@ -1,8 +1,7 @@
 /**
- * DB-backed replacement for `buildLeague`. Returns the exact same `League`
- * shape the UI/query helpers expect, assembled from Drizzle tables instead of
- * the bundled CSV mock. Server components call this; the resulting plain object
- * is safe to pass as props into client components.
+ * Assembles the `League` shape the UI/query helpers expect from the Drizzle
+ * tables. Server components call this; the resulting plain object is safe to
+ * pass as props into client components.
  *
  * Player `idx` is a per-season array index (consistent within a single loaded
  * league); `results`/`matches` reference players by that idx, mapped from DB
@@ -15,16 +14,13 @@ import { matches, players, pointsTable, results, seasons, stageDivisions, stages
 import { capitalizePlayerName } from "@/lib/format";
 import { resolvePoints, type PointsRule } from "@/lib/points";
 import {
-  CURRENT_SEASON,
   TOTAL_STAGES,
-  normalizeSeason,
-  seasonList,
   type League,
   type MockPlayer,
   type MockResult,
   type MockStage,
   type RealMatch,
-} from "@/lib/mock/league";
+} from "@/lib/league";
 
 function hashHue(id: string): number {
   let h = 0;
@@ -39,11 +35,9 @@ function initialsOf(name: string): string {
 const num = (v: string | null): number => (v === null ? 0 : Number(v));
 
 export async function loadLeague(
-  seasonLabel: string = CURRENT_SEASON,
+  season: string,
   database: Database = defaultDb,
 ): Promise<League> {
-  const season = normalizeSeason(seasonLabel);
-
   const [seasonRow] = await database.select().from(seasons).where(eq(seasons.label, season)).limit(1);
   if (!seasonRow) {
     return { season, players: [], rosters: { 1: [], 2: [], 3: [] }, stages: [], results: [], matches: [] };
@@ -305,9 +299,31 @@ export async function listManagedPlayers(
 export async function loadAllLeagues(
   database: Database = defaultDb,
 ): Promise<Record<string, League>> {
-  const labelsWithData = await listSeasonsWithData(database);
-  const labels = labelsWithData.length > 0 ? labelsWithData : seasonList();
+  const labels = await listSeasonsWithData(database);
   // Seasons are independent — load them in parallel.
   const leagues = await Promise.all(labels.map((label) => loadLeague(label, database)));
   return Object.fromEntries(labels.map((label, i) => [label, leagues[i]]));
+}
+
+/**
+ * Newest season that actually has data, or null on an empty database.
+ * `listSeasonsWithData` already orders newest-first.
+ */
+export async function getCurrentSeason(database: Database = defaultDb): Promise<string | null> {
+  const [newest] = await listSeasonsWithData(database);
+  return newest ?? null;
+}
+
+/**
+ * The season a page should render: the requested one when it exists in the DB,
+ * otherwise the newest season with data. Admin-imported seasons resolve on their
+ * own, with no hardcoded list to keep in sync.
+ */
+export async function resolveSeason(
+  requested?: string | null,
+  database: Database = defaultDb,
+): Promise<string> {
+  const labels = await listSeasonsWithData(database);
+  if (requested && labels.includes(requested)) return requested;
+  return labels[0] ?? "";
 }

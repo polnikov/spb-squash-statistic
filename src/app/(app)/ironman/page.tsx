@@ -1,11 +1,10 @@
 import { Bot } from "lucide-react";
-import { normalizeSeason } from "@/lib/mock/league";
-import { loadLeague } from "@/lib/db/league";
+import { loadLeague, resolveSeason } from "@/lib/db/league";
 import { IronManView } from "@/components/iron-man-view";
 import { PageHeader } from "@/components/page-header";
 
 export default async function IronManPage({ searchParams }: { searchParams?: { season?: string } }) {
-  const season = normalizeSeason(searchParams?.season);
+  const season = await resolveSeason(searchParams?.season);
   const league = await loadLeague(season);
 
   return (

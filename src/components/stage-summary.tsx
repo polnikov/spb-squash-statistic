@@ -8,7 +8,7 @@ import {
   getStageResults,
   type DivisionScope,
   type League,
-} from "@/lib/mock/league";
+} from "@/lib/league";
 import { fmtCourt, fmtDate, fmtNum, splitPlayerName, shortPlayerName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";

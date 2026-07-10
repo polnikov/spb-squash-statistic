@@ -6,7 +6,7 @@ import { NAV_ITEMS, isActive } from "./nav-items";
 import { cn } from "@/lib/utils";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
 
-export function Sidebar({ seasons }: { seasons?: string[] }) {
+export function Sidebar({ seasons }: { seasons: string[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const season = searchParams.get("season");

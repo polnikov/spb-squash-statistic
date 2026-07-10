@@ -2,32 +2,28 @@
 
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
-import { normalizeSeason, seasonList } from "@/lib/mock/league";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export function SeasonSwitcher({
   hideOnPlayerDetail = false,
   variant = "default",
-  seasons: seasonsProp,
+  seasons,
 }: {
   hideOnPlayerDetail?: boolean;
   variant?: "default" | "header";
-  /** Seasons with data, from the DB. Falls back to the static list if empty. */
-  seasons?: string[];
+  /** Seasons with data, newest first, from the DB. Empty => the control hides. */
+  seasons: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
-  // Use the DB-provided list as-is (empty => no seasons shown). Only fall back
-  // to the static list when the prop is omitted entirely.
-  const seasons = React.useMemo(
-    () => seasonsProp ?? seasonList(),
-    [seasonsProp],
-  );
-  const season = normalizeSeason(searchParams.get("season"));
+  // Mirrors `resolveSeason` on the server: the requested season when the DB has
+  // it, otherwise the newest one.
+  const requested = searchParams.get("season");
+  const season = requested && seasons.includes(requested) ? requested : seasons[0] ?? "";
 
   React.useEffect(() => {
     if (!open) return;

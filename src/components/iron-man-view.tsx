@@ -11,7 +11,7 @@ import {
   type IronRow,
   type IronLongMatch,
   type League,
-} from "@/lib/mock/league";
+} from "@/lib/league";
 import { fmtCourt, splitPlayerName, shortPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";

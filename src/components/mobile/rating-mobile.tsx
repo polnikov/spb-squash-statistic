@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Star } from "lucide-react";
-import type { RatingRow } from "@/lib/mock/league";
+import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";

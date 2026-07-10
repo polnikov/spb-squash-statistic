@@ -17,7 +17,7 @@ import {
   type PlayerOpponentStatsRow,
   type PlayerStatsAggregateRow,
 } from "@/lib/db/schema";
-import { CURRENT_SEASON, type League } from "@/lib/mock/league";
+import { currentSeasonOf, seasonStart, type League } from "@/lib/league";
 import {
   buildDivisionsBySeason,
   buildPlayerProfileModel,
@@ -31,7 +31,6 @@ import {
   normalizePlayerProfileContext,
   pickPlayerSnapshot,
   placeDistribution,
-  seasonStart,
   type MatchListItem,
   type MatchupStatus,
   type PlayerOpponentStats,
@@ -358,16 +357,17 @@ export async function buildPlayerProfileModelFromDb(
   }
 
   const normalized = normalizePlayerProfileContext(query, seasonsList, divisionsBySeason);
+  const currentSeason = currentSeasonOf(leagues);
 
   return {
     player,
     careerStats,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
-    active: seasonsList.includes(CURRENT_SEASON),
+    active: currentSeason != null && seasonsList.includes(currentSeason),
     roster: buildRoster(leagues, rid),
     filters: {
-      seasons: seasonsList.map((seasonId) => ({ id: seasonId, label: seasonId, isCurrent: seasonId === CURRENT_SEASON })),
+      seasons: seasonsList.map((seasonId) => ({ id: seasonId, label: seasonId, isCurrent: seasonId === currentSeason })),
       divisionsBySeason,
     },
     contexts,
