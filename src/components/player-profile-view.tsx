@@ -643,7 +643,7 @@ function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Описание индекса игрового уровня"
+        aria-label="Описание Skill Rating"
         className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
@@ -656,9 +656,9 @@ function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
         )}
       >
-        <div className="text-[13px] font-semibold">Индекс игрового уровня</div>
+        <div className="text-[13px] font-semibold">Skill Rating</div>
         <div className="mt-1 text-[12px] leading-snug text-on-surface-variant">
-          Рейтинговая версия индекса игрового уровня: сырое качество игры скорректировано по числу матчей.
+          Рейтинг игрового уровня: сырое качество игры скорректировано по числу матчей.
         </div>
         <div className="mt-3 flex flex-col gap-1.5">
           {SKILL_RATING_LEVEL_SCALE.map((row) => (

@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, Snail, Users, X } from "lucide-react";
+import { Rocket, Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
+import { getSkillRatingReliabilityLabelRu } from "@/lib/stats/compute";
 import { cn } from "@/lib/utils";
 import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
@@ -14,7 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
 
 const MOBILE_PAGE_SIZE = 16;
-const DESKTOP_PAGE_SIZE = 24;
+const DESKTOP_LEADERBOARD_PAGE_SIZE = 15;
 
 type MobilePlayersView = "leaderboard" | "profiles";
 type LeaderboardSortKey = "skillRating" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
@@ -27,13 +28,31 @@ const MOBILE_VIEW_TABS: { key: MobilePlayersView; label: string }[] = [
 ];
 
 const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
-  { key: "skillRating", label: "SkillRating" },
+  { key: "skillRating", label: "Skill Rating" },
   { key: "matches", label: "Матчи" },
   { key: "matchWr", label: "Match WR" },
   { key: "gameWr", label: "Game WR" },
   { key: "rallyWr", label: "Rally WR" },
   { key: "rallyBalance", label: "+/- очков/матч" },
 ];
+
+/**
+ * Desktop leaderboard columns. The same track list sizes the header row and
+ * every card. `sort` omitted => the header renders as a plain label.
+ */
+const DESKTOP_LEADERBOARD_COLUMNS: { label: string; width: string; sort?: LeaderboardSortKey }[] = [
+  { sort: "skillRating", label: "Skill Rating", width: "104px" },
+  { sort: "matches", label: "Матчи", width: "104px" },
+  { sort: "matchWr", label: "Match WR", width: "92px" },
+  { sort: "gameWr", label: "Game WR", width: "92px" },
+  { sort: "rallyWr", label: "Rally WR", width: "92px" },
+  { sort: "rallyBalance", label: "+/- очков/матч", width: "104px" },
+  { label: "Надёжность", width: "132px" },
+];
+
+const DESKTOP_LEADERBOARD_GRID = {
+  gridTemplateColumns: `44px 52px minmax(0, 1fr) ${DESKTOP_LEADERBOARD_COLUMNS.map((c) => c.width).join(" ")}`,
+} as const;
 
 const SLIDESHOW_TRANSITION = { duration: 0.42, ease: [0.2, 0, 0, 1] } as const;
 const slideshowVariants = {
@@ -289,13 +308,185 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center"
     >
       <SkillRatingMiniBadge value={player.skillRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
       <div className="w-full truncate text-sm font-semibold">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
         <DivBadges items={player.divisionPlaces} />
+      </div>
+    </Link>
+  );
+}
+
+const CAROUSEL_FADE = 56;
+
+/** Fade only the edges that have content scrolled past them. */
+function carouselMask(atStart: boolean, atEnd: boolean): string | undefined {
+  if (atStart && atEnd) return undefined;
+  const left = atStart ? "black 0px" : `transparent 0px, black ${CAROUSEL_FADE}px`;
+  const right = atEnd ? "black 100%" : `black calc(100% - ${CAROUSEL_FADE}px), transparent 100%`;
+  return `linear-gradient(to right, ${left}, ${right})`;
+}
+
+function DesktopPlayersCarousel({ players }: { players: PlayerOverview[] }) {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [edges, setEdges] = React.useState({ atStart: true, atEnd: true });
+
+  React.useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const syncEdges = () => {
+      const max = node.scrollWidth - node.clientWidth;
+      setEdges({ atStart: node.scrollLeft <= 1, atEnd: node.scrollLeft >= max - 1 });
+    };
+
+    // React's onWheel is passive, so preventDefault() there is a no-op -- the
+    // listener has to be attached manually. `scroll-smooth` on the node turns
+    // each scrollLeft assignment into an animated scroll.
+    const onWheel = (event: WheelEvent) => {
+      if (event.shiftKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      if (node.scrollWidth <= node.clientWidth) return;
+      event.preventDefault();
+      node.scrollLeft += event.deltaY;
+    };
+
+    syncEdges();
+    node.addEventListener("wheel", onWheel, { passive: false });
+    node.addEventListener("scroll", syncEdges, { passive: true });
+    const observer = new ResizeObserver(syncEdges);
+    observer.observe(node);
+    return () => {
+      node.removeEventListener("wheel", onWheel);
+      node.removeEventListener("scroll", syncEdges);
+      observer.disconnect();
+    };
+  }, [players.length]);
+
+  const mask = carouselMask(edges.atStart, edges.atEnd);
+
+  return (
+    <div
+      ref={ref}
+      style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
+      className="hidden overflow-x-auto overscroll-x-contain scroll-smooth pb-1 [scrollbar-width:none] md:block [&::-webkit-scrollbar]:hidden"
+    >
+      <div className="flex gap-3">
+        {players.map((p) => (
+          <div key={p.rid} className="w-[208px] shrink-0">
+            <DesktopPlayerCard player={p} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DesktopLeaderboardHeader({
+  sort,
+  direction,
+  onChange,
+}: {
+  sort: LeaderboardSortKey;
+  direction: SortDirection;
+  onChange: (key: LeaderboardSortKey) => void;
+}) {
+  return (
+    <div className="grid items-end gap-2 px-4" style={DESKTOP_LEADERBOARD_GRID}>
+      {/* title occupies the position + avatar + name tracks; -ml cancels the
+          header's px-4 so the icon lines up with the card's outer edge */}
+      <div className="col-span-3 -ml-4 flex items-center gap-2.5">
+        <span className="flex size-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high">
+          <Rocket className="size-4 text-primary" />
+        </span>
+        <h2 className="text-base font-semibold text-on-surface">Leader Board</h2>
+      </div>
+      {DESKTOP_LEADERBOARD_COLUMNS.map((column) => {
+        const base = "flex items-center justify-center gap-1 rounded-md px-1 py-1 text-center text-[11px] font-semibold leading-tight";
+        if (!column.sort) {
+          return (
+            <div key={column.label} className={cn(base, "text-on-surface-variant")}>
+              <span className="text-balance">{column.label}</span>
+            </div>
+          );
+        }
+        const active = sort === column.sort;
+        const sortKey = column.sort;
+        return (
+          <button
+            key={column.label}
+            type="button"
+            onClick={() => onChange(sortKey)}
+            aria-pressed={active}
+            aria-label={
+              active
+                ? `${column.label}: сортировка ${direction === "desc" ? "по убыванию" : "по возрастанию"}`
+                : `Сортировать по «${column.label}»`
+            }
+            className={cn(
+              base,
+              "transition-colors duration-200 ease-m3-standard hover:text-on-surface",
+              active ? "text-primary" : "text-on-surface-variant",
+            )}
+          >
+            <span className="text-balance">{column.label}</span>
+            <span className={cn("font-mono text-[10px] tabular", active ? "opacity-100" : "opacity-0")}>
+              {direction === "desc" ? "↓" : "↑"}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DesktopMetric({
+  value,
+  animationKey,
+  animate = true,
+}: {
+  value: string;
+  animationKey: string;
+  animate?: boolean;
+}) {
+  return (
+    <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[12.5px] font-semibold tabular text-on-surface">
+      {animate ? <NumberPop key={animationKey}>{value}</NumberPop> : value}
+    </div>
+  );
+}
+
+function DesktopLeaderboardCard({
+  player,
+  position,
+  animationKey,
+}: {
+  player: PlayerOverview;
+  position: number;
+  animationKey: string;
+}) {
+  const reliability = getSkillRatingReliabilityLabelRu(player.skillRatingReliabilityStatus) ?? "x";
+  return (
+    <Link
+      href={playerHref(player.rid)}
+      className="grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      style={DESKTOP_LEADERBOARD_GRID}
+    >
+      <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">
+        <NumberPop key={`${animationKey}-position`}>{String(position)}</NumberPop>
+      </span>
+      <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
+      <span className="min-w-0 truncate text-sm font-semibold text-on-surface">{player.name}</span>
+      <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} />
+      <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
+      <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} />
+      <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} />
+      <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} />
+      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
+      <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center text-[11.5px] font-semibold text-on-surface">
+        {reliability}
       </div>
     </Link>
   );
@@ -371,8 +562,6 @@ export function PlayersList({
   );
   const mobileFirst = filtered.slice(0, MOBILE_PAGE_SIZE);
   const mobileRest = filtered.slice(MOBILE_PAGE_SIZE);
-  const desktopFirst = filtered.slice(0, DESKTOP_PAGE_SIZE);
-  const desktopRest = filtered.slice(DESKTOP_PAGE_SIZE);
   const leaderboardAll = React.useMemo(
     () =>
       [...players].sort((a, b) => {
@@ -390,6 +579,26 @@ export function PlayersList({
   const leaderboardFirst = leaderboard.slice(0, MOBILE_PAGE_SIZE);
   const leaderboardRest = leaderboard.slice(MOBILE_PAGE_SIZE);
   const leaderboardAnimationKey = `${leaderboardSort}-${leaderboardDirection}`;
+  // Desktop leaderboard honours the division tabs, so its places are ranked
+  // within the selected division rather than across the whole roster.
+  const desktopLeaderboardAll = React.useMemo(
+    () =>
+      players
+        .filter((p) => scope === "all" || p.divisions.includes(scope))
+        .sort((a, b) => {
+          const dir = leaderboardDirection === "desc" ? -1 : 1;
+          const byMetric = (leaderboardSortValue(a, leaderboardSort) - leaderboardSortValue(b, leaderboardSort)) * dir;
+          return byMetric || a.name.localeCompare(b.name, "ru");
+        }),
+    [leaderboardDirection, leaderboardSort, players, scope],
+  );
+  const desktopLeaderboardRanks = React.useMemo(
+    () => new Map(desktopLeaderboardAll.map((p, index) => [p.rid, index + 1])),
+    [desktopLeaderboardAll],
+  );
+  const desktopLeaderboard = q ? desktopLeaderboardAll.filter((p) => p.name.toLowerCase().includes(q)) : desktopLeaderboardAll;
+  const desktopLeaderboardFirst = desktopLeaderboard.slice(0, DESKTOP_LEADERBOARD_PAGE_SIZE);
+  const desktopLeaderboardRest = desktopLeaderboard.slice(DESKTOP_LEADERBOARD_PAGE_SIZE);
 
   React.useEffect(() => setExpanded(false), [query, scope, mobileView, leaderboardDirection, leaderboardSort]);
 
@@ -579,31 +788,53 @@ export function PlayersList({
       </AnimatePresence>
       </div>
 
-      {/* desktop: 4-col cards */}
-      <div className="hidden md:block">
-        <div className="grid grid-cols-4 gap-3">
-          {desktopFirst.map((p) => (
-            <DesktopPlayerCard key={p.rid} player={p} />
-          ))}
-        </div>
-        {desktopRest.length > 0 ? (
+      {/* desktop: one-row card carousel */}
+      <DesktopPlayersCarousel players={filtered} />
+
+      {/* desktop: full-width leaderboard cards under sortable metric headers */}
+      <div className="hidden flex-col gap-3 md:flex">
+        {desktopLeaderboard.length > 0 ? (
           <>
-            {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr) */}
-            <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-              <div className="min-h-0 overflow-hidden">
-                <div className="grid grid-cols-4 gap-3 pt-3">
-                  {desktopRest.map((p) => (
-                    <DesktopPlayerCard key={p.rid} player={p} />
-                  ))}
-                </div>
-              </div>
+            <DesktopLeaderboardHeader
+              sort={leaderboardSort}
+              direction={leaderboardDirection}
+              onChange={changeLeaderboardSort}
+            />
+            <div className="flex flex-col gap-2">
+              {desktopLeaderboardFirst.map((p) => (
+                <DesktopLeaderboardCard
+                  key={p.rid}
+                  player={p}
+                  position={desktopLeaderboardRanks.get(p.rid) ?? 0}
+                  animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                />
+              ))}
             </div>
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-3 w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
-            >
-              {expanded ? "Свернуть" : `Показать еще ${desktopRest.length}`}
-            </button>
+            {desktopLeaderboardRest.length > 0 ? (
+              <>
+                {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr) */}
+                <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="flex flex-col gap-2 pt-2">
+                      {desktopLeaderboardRest.map((p) => (
+                        <DesktopLeaderboardCard
+                          key={p.rid}
+                          player={p}
+                          position={desktopLeaderboardRanks.get(p.rid) ?? 0}
+                          animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setExpanded((v) => !v)}
+                  className="w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                >
+                  {expanded ? "Свернуть" : `Показать еще ${desktopLeaderboardRest.length}`}
+                </button>
+              </>
+            ) : null}
           </>
         ) : null}
       </div>
