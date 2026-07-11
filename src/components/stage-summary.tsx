@@ -13,6 +13,7 @@ import { fmtCourt, fmtDate, fmtNum, splitPlayerName, shortPlayerName } from "@/l
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
 
 const SCOPES: { key: DivisionScope; label: string }[] = [
@@ -276,6 +277,7 @@ export function StageSummary({ league }: { league: League }) {
           </div>
         ) : (
           <>
+            <TabTransition tabKey={`${scope}-${stage}`} rise={false}>
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <table className="w-max min-w-full table-auto border-collapse">
                 <thead>
@@ -324,6 +326,7 @@ export function StageSummary({ league }: { league: League }) {
                 </tbody>
               </table>
             </div>
+            </TabTransition>
             {moreCount > 0 && (
               <button
                 onClick={() => setExpanded(true)}

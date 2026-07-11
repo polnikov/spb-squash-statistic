@@ -33,6 +33,7 @@ import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { H2hDetailView } from "@/components/h2h-detail-view";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
 import { STRENGTH_BANDS, getStrengthBand } from "@/lib/stats/compute";
 
@@ -2032,22 +2033,24 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
       <div className="flex flex-col gap-4 md:hidden">
         <SegmentedControl items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} equal />
-        {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overviewBlocks}</div> : null}
-        {mobileTab === "charts" ? (
-          <div className="flex flex-col gap-4">
-            <div className={cardClass("relative p-4")}>
-              <InfoPopover items={CHARTS_INFO} stats={active.scopedStats} mobileSafe />
-              <div className="mb-3 flex flex-col gap-2">
-                <h2 className="text-base font-semibold tracking-tight">Графики</h2>
-                <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} />
+        <TabTransition tabKey={mobileTab} className="flex flex-col gap-4">
+          {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overviewBlocks}</div> : null}
+          {mobileTab === "charts" ? (
+            <div className="flex flex-col gap-4">
+              <div className={cardClass("relative p-4")}>
+                <InfoPopover items={CHARTS_INFO} stats={active.scopedStats} mobileSafe />
+                <div className="mb-3 flex flex-col gap-2">
+                  <h2 className="text-base font-semibold tracking-tight">Графики</h2>
+                  <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} />
+                </div>
+                <PlayerProfileChart type={chartType} data={chartPayload(active)} height={260} />
+                <p className="mt-3 text-[11.5px] text-on-surface-variant">{active.context.description}</p>
               </div>
-              <PlayerProfileChart type={chartType} data={chartPayload(active)} height={260} />
-              <p className="mt-3 text-[11.5px] text-on-surface-variant">{active.context.description}</p>
             </div>
-          </div>
-        ) : null}
-        {mobileTab === "opponents" ? <OpponentsSection active={active} onOpen={openH2h} mobile hideModeTabs={singleContext} /> : null}
-        {mobileTab === "matches" ? <MatchHistorySection active={active} mobile /> : null}
+          ) : null}
+          {mobileTab === "opponents" ? <OpponentsSection active={active} onOpen={openH2h} mobile hideModeTabs={singleContext} /> : null}
+          {mobileTab === "matches" ? <MatchHistorySection active={active} mobile /> : null}
+        </TabTransition>
       </div>
 
       {h2hOpponent && h2hMatches.length > 0 ? (

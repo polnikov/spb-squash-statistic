@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { NumberPop } from "@/components/ui/number-pop";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { TabTransition } from "@/components/ui/tab-transition";
 
 const EChart = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
   option: EChartsOption;
@@ -945,9 +946,11 @@ export function H2hDetailView({
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
           <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} mobile />
           <Segmented items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} className="shrink-0" equal />
-          {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overview}</div> : null}
-          {mobileTab === "charts" ? <MobileCharts meetings={meetings} stats={stats} /> : null}
-          {mobileTab === "matches" ? <MatchHistory matches={matches} mobile /> : null}
+          <TabTransition tabKey={mobileTab} className="flex flex-col gap-4">
+            {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overview}</div> : null}
+            {mobileTab === "charts" ? <MobileCharts meetings={meetings} stats={stats} /> : null}
+            {mobileTab === "matches" ? <MatchHistory matches={matches} mobile /> : null}
+          </TabTransition>
         </div>
         <button
           type="button"

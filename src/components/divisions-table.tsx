@@ -9,6 +9,7 @@ import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
 
 const DIVS = [1, 2, 3] as const;
@@ -315,6 +316,7 @@ export function DivisionsTable({
         ))}
       </div>
 
+      <TabTransition tabKey={div} rise={false}>
       <div className="min-w-0 overflow-hidden rounded-2xl bg-card md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
@@ -406,6 +408,7 @@ export function DivisionsTable({
           </table>
         </div>
       </div>
+      </TabTransition>
       </>
       )}
     </div>

@@ -17,6 +17,7 @@ import { fmtCourt, splitPlayerName, shortPlayerName, playerHref } from "@/lib/fo
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
 
 const ROW_LIMIT = 15;
@@ -305,6 +306,7 @@ export function IronManView({ league }: { league: League }) {
 
           {/* desktop: table */}
           <div className="hidden overflow-hidden rounded-lg bg-card md:block">
+            <TabTransition tabKey={`${scope}-${half}`} rise={false}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
@@ -351,6 +353,7 @@ export function IronManView({ league }: { league: League }) {
                 </tbody>
               </table>
             </div>
+            </TabTransition>
             {moreCount > 0 ? (
               <button
                 onClick={() => setExpanded(true)}

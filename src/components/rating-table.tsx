@@ -18,6 +18,7 @@ import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
 type RatingDivision = 1 | 2 | 3;
@@ -221,6 +222,7 @@ export function RatingTable({
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
+      <TabTransition tabKey={scope} rise={false}>
       <div className="overflow-hidden rounded-lg bg-card">
         <table className="w-full text-sm">
           <thead>
@@ -271,6 +273,7 @@ export function RatingTable({
           </tbody>
         </table>
       </div>
+      </TabTransition>
       )}
     </div>
   );
