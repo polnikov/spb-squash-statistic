@@ -7,15 +7,7 @@
  * `points` come from the configured `points_table`.
  */
 
-import {
-  SKILL_RATING_CONFIG,
-  calculateCareerSkillRating,
-  calculateSkillIndex,
-  getSkillRatingLevelStatus,
-  getSkillRatingReliabilityStatus,
-  type SkillRatingLevelStatus,
-  type SkillRatingReliabilityStatus,
-} from "@/lib/stats/compute";
+import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export type MockPlayer = {
   idx: number;
@@ -568,10 +560,13 @@ export type PlayerOverview = {
   rallyBalancePerMatch: number | null;
   skillIndex: number | null;
   careerSkillIndex: number | null;
-  skillRating: number | null;
-  skillRatingReliability: number | null;
-  skillRatingReliabilityStatus: SkillRatingReliabilityStatus | null;
-  skillRatingLevelStatus: SkillRatingLevelStatus | null;
+  /**
+   * Strength Rating (Elo) and its game count. The pure builder cannot compute
+   * Elo (it needs the global cross-player history), so it leaves these null/0;
+   * the players page fills them from `players` via loadCareerStrengthRatingsByRid.
+   */
+  strengthRating: number | null;
+  strengthRatingGames: number;
 };
 
 export function getPlayersOverview(league: League): PlayerOverview[] {
@@ -602,11 +597,6 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
             rallyWinRatePct,
           })
         : null;
-      const skillRating = calculateCareerSkillRating({
-        careerSkillIndex: skillIndex,
-        careerMatchesPlayed: matches,
-        adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
-      });
       return {
         idx: p.idx,
         rid: p.rid,
@@ -636,10 +626,8 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
         rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
         skillIndex,
         careerSkillIndex: skillIndex,
-        skillRating: skillRating.skillRating,
-        skillRatingReliability: skillRating.reliability,
-        skillRatingReliabilityStatus: getSkillRatingReliabilityStatus(matches),
-        skillRatingLevelStatus: getSkillRatingLevelStatus(skillRating.skillRating),
+        strengthRating: null,
+        strengthRatingGames: 0,
       };
     })
     .sort((a, b) => b.points - a.points);

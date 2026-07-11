@@ -434,35 +434,35 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
 }
 
 /** Skill-rating pill: snail icon + value, lime accent. */
-function SkillRatingPill({ value }: { value: number | null | undefined }) {
+function StrengthPill({ value }: { value: number | null | undefined }) {
   if (value == null) return null;
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
-      <span className="font-mono tabular">{value.toFixed(1)}</span>
+      <span className="font-mono tabular">{value}</span>
     </span>
   );
 }
 
 /** The pill pinned to a top corner of the mobile hero card. */
-function SkillRatingCorner({ value, side }: { value: number | null | undefined; side: "left" | "right" }) {
+function StrengthCorner({ value, side }: { value: number | null | undefined; side: "left" | "right" }) {
   if (value == null) return null;
   return (
     <span className={cn("absolute top-2 z-10", side === "left" ? "left-2" : "right-2")}>
-      <SkillRatingPill value={value} />
+      <StrengthPill value={value} />
     </span>
   );
 }
 
-function Hero({ player, opponent, stats, playerSkillRating, onClose, bigScore = false, mobile = false }: { player: PlayerProfilePlayer; opponent: PlayerOpponentStats; stats: PlayerProfileStats; playerSkillRating?: number | null; onClose?: () => void; bigScore?: boolean; mobile?: boolean }) {
+function Hero({ player, opponent, stats, playerStrengthRating, onClose, bigScore = false, mobile = false }: { player: PlayerProfilePlayer; opponent: PlayerOpponentStats; stats: PlayerProfileStats; playerStrengthRating?: number | null; onClose?: () => void; bigScore?: boolean; mobile?: boolean }) {
   const status = opponent.matchupStatus;
   const leftColor = stats.matchesWon > stats.matchesLost ? "text-win" : stats.matchesWon < stats.matchesLost ? "text-loss" : "text-on-surface";
   return (
     <div className={cardClass("relative p-4")}>
       {mobile ? (
         <>
-          <SkillRatingCorner value={playerSkillRating} side="left" />
-          <SkillRatingCorner value={opponent.opponentSkillRating} side="right" />
+          <StrengthCorner value={playerStrengthRating} side="left" />
+          <StrengthCorner value={opponent.opponentStrengthRating} side="right" />
         </>
       ) : null}
       {onClose && !mobile ? (
@@ -483,7 +483,7 @@ function Hero({ player, opponent, stats, playerSkillRating, onClose, bigScore = 
       ) : (
         <div className={cn("grid grid-cols-[minmax(0,1fr)_88px_auto_88px_minmax(0,1fr)] items-center gap-4 text-center", onClose && "px-11")}>
           <span className="flex min-w-0 flex-col items-end gap-1">
-            <SkillRatingPill value={playerSkillRating} />
+            <StrengthPill value={playerStrengthRating} />
             <span className="min-w-0 max-w-full truncate text-right text-[15px] font-semibold">{player.name}</span>
           </span>
           <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[88px] text-2xl" />
@@ -494,7 +494,7 @@ function Hero({ player, opponent, stats, playerSkillRating, onClose, bigScore = 
           </span>
           <PlayerAvatar rid={opponent.opponentRid} initials={opponent.opponentInitials} color={opponent.opponentColor} className="size-[88px] text-2xl" />
           <span className="flex min-w-0 flex-col items-start gap-1">
-            <SkillRatingPill value={opponent.opponentSkillRating} />
+            <StrengthPill value={opponent.opponentStrengthRating} />
             <span className="min-w-0 max-w-full truncate text-left text-[15px] font-semibold">{opponent.opponentName}</span>
           </span>
         </div>
@@ -822,13 +822,13 @@ export function H2hDetailView({
   player,
   opponent,
   matches,
-  playerSkillRating,
+  playerStrengthRating,
   onClose,
 }: {
   player: PlayerProfilePlayer;
   opponent: PlayerOpponentStats;
   matches: MatchListItem[];
-  playerSkillRating?: number | null;
+  playerStrengthRating?: number | null;
   onClose: () => void;
 }) {
   const stats = React.useMemo(() => h2hStatsFromMatches(matches), [matches]);
@@ -920,7 +920,7 @@ export function H2hDetailView({
         >
           {/* scrollable content */}
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain p-5">
-            <Hero player={player} opponent={opponent} stats={stats} playerSkillRating={playerSkillRating} onClose={requestClose} bigScore />
+            <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} onClose={requestClose} bigScore />
             <div className="grid items-stretch gap-5 lg:grid-cols-2">
               <KpiGrid stats={stats} />
               <CharacterCard stats={stats} compact />
@@ -943,7 +943,7 @@ export function H2hDetailView({
       {/* Mobile: full-screen page — Panel reveal (transitions.dev): slides in from the right. */}
       <div className={cn("app-bg fixed inset-0 z-[80] flex flex-col transition-transform duration-500 ease-m3-emphasized-decel md:hidden", shown ? "translate-x-0" : "translate-x-full")}>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
-          <Hero player={player} opponent={opponent} stats={stats} playerSkillRating={playerSkillRating} mobile />
+          <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} mobile />
           <Segmented items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} className="shrink-0" equal />
           {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overview}</div> : null}
           {mobileTab === "charts" ? <MobileCharts meetings={meetings} stats={stats} /> : null}

@@ -9,15 +9,9 @@ import {
   type RealMatch,
 } from "@/lib/league";
 import {
-  SKILL_RATING_CONFIG,
-  calculateCareerSkillRating,
   calculateSkillIndex,
-  getSkillRatingLevelStatus,
-  getSkillRatingReliabilityStatus,
   getSkillIndexStatus,
   type SkillIndexStatus,
-  type SkillRatingLevelStatus,
-  type SkillRatingReliabilityStatus,
 } from "@/lib/stats/compute";
 
 export type PlayerProfileStatsScope = "career" | "season" | "season_division";
@@ -105,10 +99,13 @@ export type PlayerProfileStats = {
   skillIndex: number | null;
   skillIndexStatus: SkillIndexStatus | null;
   careerSkillIndex: number | null;
-  skillRating: number | null;
-  skillRatingReliability: number | null;
-  skillRatingReliabilityStatus: SkillRatingReliabilityStatus | null;
-  skillRatingLevelStatus: SkillRatingLevelStatus | null;
+  /**
+   * Strength Rating (Elo). Global per player, so it is meaningful only for the
+   * career scope; season/division stats carry null. Filled from `players` by
+   * the DB builder — the pure builder leaves it null.
+   */
+  strengthRating: number | null;
+  strengthRatingGames: number;
   matchConversionPp: number | null;
   gameConversionPp: number | null;
   resultConversionPp: number | null;
@@ -175,8 +172,8 @@ export type PlayerOpponentStats = {
   opponentName: string;
   opponentInitials: string;
   opponentColor: string;
-  /** Opponent's career skill rating; null when unknown (e.g. TS fallback). */
-  opponentSkillRating?: number | null;
+  /** Opponent's career Strength Rating (Elo); null when unknown. */
+  opponentStrengthRating?: number | null;
   meetingsPlayed: number;
   h2hMatchesWon: number;
   h2hMatchesLost: number;
@@ -434,10 +431,8 @@ export function emptyStats(): PlayerProfileStats {
     skillIndex: null,
     skillIndexStatus: null,
     careerSkillIndex: null,
-    skillRating: null,
-    skillRatingReliability: null,
-    skillRatingReliabilityStatus: null,
-    skillRatingLevelStatus: null,
+    strengthRating: null,
+    strengthRatingGames: 0,
     matchConversionPp: null,
     gameConversionPp: null,
     resultConversionPp: null,
@@ -644,15 +639,10 @@ function aggregateStats(
   });
   stats.skillIndexStatus = getSkillIndexStatus(stats.skillIndex);
   stats.careerSkillIndex = stats.skillIndex;
-  const skillRating = calculateCareerSkillRating({
-    careerSkillIndex: stats.careerSkillIndex,
-    careerMatchesPlayed: stats.matchesPlayed,
-    adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
-  });
-  stats.skillRating = skillRating.skillRating;
-  stats.skillRatingReliability = skillRating.reliability;
-  stats.skillRatingReliabilityStatus = getSkillRatingReliabilityStatus(stats.matchesPlayed);
-  stats.skillRatingLevelStatus = getSkillRatingLevelStatus(stats.skillRating);
+  // Strength Rating (Elo) is computed by the global engine and stored on
+  // `players`; the pure builder has no access to it, so leave it null here.
+  stats.strengthRating = null;
+  stats.strengthRatingGames = 0;
   stats.matchConversionPp = matchWr !== null && gameWr !== null ? matchWr - gameWr : null;
   stats.gameConversionPp = gameWr !== null && rallyWr !== null ? gameWr - rallyWr : null;
   stats.resultConversionPp = matchWr !== null && rallyWr !== null ? matchWr - rallyWr : null;

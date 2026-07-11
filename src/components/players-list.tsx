@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Rocket, Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
-import { getSkillRatingReliabilityLabelRu } from "@/lib/stats/compute";
+import { getStrengthReliabilityLabelRu, strengthRatingReliability } from "@/lib/stats/compute";
 import { cn } from "@/lib/utils";
 import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
@@ -18,7 +18,7 @@ const MOBILE_PAGE_SIZE = 16;
 const DESKTOP_LEADERBOARD_PAGE_SIZE = 15;
 
 type MobilePlayersView = "leaderboard" | "profiles";
-type LeaderboardSortKey = "skillRating" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
+type LeaderboardSortKey = "strength" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
 type SortDirection = "asc" | "desc";
 type SlideDirection = -1 | 1;
 
@@ -28,7 +28,7 @@ const MOBILE_VIEW_TABS: { key: MobilePlayersView; label: string }[] = [
 ];
 
 const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
-  { key: "skillRating", label: "Skill Rating" },
+  { key: "strength", label: "Strength" },
   { key: "matches", label: "Матчи" },
   { key: "matchWr", label: "Match WR" },
   { key: "gameWr", label: "Game WR" },
@@ -41,7 +41,7 @@ const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
  * every card. `sort` omitted => the header renders as a plain label.
  */
 const DESKTOP_LEADERBOARD_COLUMNS: { label: string; width: string; sort?: LeaderboardSortKey }[] = [
-  { sort: "skillRating", label: "Skill Rating", width: "104px" },
+  { sort: "strength", label: "Strength", width: "104px" },
   { sort: "matches", label: "Матчи", width: "104px" },
   { sort: "matchWr", label: "Match WR", width: "92px" },
   { sort: "gameWr", label: "Game WR", width: "92px" },
@@ -78,8 +78,8 @@ function balanceToneClass(value: number | null | undefined) {
 
 function leaderboardSortValue(player: PlayerOverview, key: LeaderboardSortKey) {
   switch (key) {
-    case "skillRating":
-      return player.skillRating ?? -1;
+    case "strength":
+      return player.strengthRating ?? -1;
     case "matches":
       return player.matches;
     case "matchWr":
@@ -180,22 +180,22 @@ function MobileLeaderboardSort({
   );
 }
 
-function SkillRatingMiniBadge({ value }: { value: number | null }) {
+function StrengthMiniBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
     <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
-      <span className="font-mono tabular">{value.toFixed(1)}</span>
+      <span className="font-mono tabular">{value}</span>
     </span>
   );
 }
 
-function SkillRatingInlineBadge({ value, animationKey }: { value: number | null; animationKey?: string }) {
+function StrengthInlineBadge({ value, animationKey }: { value: number | null; animationKey?: string }) {
   if (value === null) return null;
   return (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b]">
       <Snail className="size-3 shrink-0" />
-      <span className="font-mono tabular"><NumberPop key={animationKey}>{value.toFixed(1)}</NumberPop></span>
+      <span className="font-mono tabular"><NumberPop key={animationKey}>{String(value)}</NumberPop></span>
     </span>
   );
 }
@@ -225,7 +225,7 @@ function MobileLeaderboardCard({ player, position, animationKey }: { player: Pla
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <div className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{player.name}</div>
-            <SkillRatingInlineBadge value={player.skillRating} animationKey={`${animationKey}-skill`} />
+            <StrengthInlineBadge value={player.strengthRating} animationKey={`${animationKey}-skill`} />
           </div>
           <div className="mt-0.5 text-[11px] text-on-surface-variant">
             Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
@@ -255,7 +255,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
         className="relative flex min-h-[178px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center text-center"
         style={avatarBackgroundStyle(avatar)}
       >
-        <SkillRatingMiniBadge value={player.skillRating} />
+        <StrengthMiniBadge value={player.strengthRating} />
         <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-2 px-3.5 pb-4 text-left">
           <div className="min-w-0 text-[13.5px] font-semibold leading-tight text-white">
@@ -275,7 +275,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
       href={playerHref(player.rid)}
       className="relative flex flex-col items-center gap-[11px] rounded-lg border border-outline-variant bg-card px-3.5 pb-4 pt-5 text-center"
     >
-      <SkillRatingMiniBadge value={player.skillRating} />
+      <StrengthMiniBadge value={player.strengthRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[60px] text-xl" />
       <div className="w-full text-balance break-words text-[13.5px] font-semibold leading-tight">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -296,7 +296,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
         className="group relative flex min-h-[168px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         style={avatarBackgroundStyle(avatar)}
       >
-        <SkillRatingMiniBadge value={player.skillRating} />
+        <StrengthMiniBadge value={player.strengthRating} />
         <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#161616] to-transparent" />
         <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-3 px-4 pb-4">
           <div className="min-w-0 text-sm font-semibold leading-tight text-white">
@@ -316,7 +316,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
       href={playerHref(player.rid)}
       className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center"
     >
-      <SkillRatingMiniBadge value={player.skillRating} />
+      <StrengthMiniBadge value={player.strengthRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
       <div className="w-full truncate text-sm font-semibold">{player.name}</div>
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -488,7 +488,7 @@ function DesktopLeaderboardCard({
   position: number;
   animationKey: string;
 }) {
-  const reliability = getSkillRatingReliabilityLabelRu(player.skillRatingReliabilityStatus) ?? "x";
+  const reliability = getStrengthReliabilityLabelRu(strengthRatingReliability(player.strengthRatingGames)) ?? "x";
   return (
     <div
       className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
@@ -501,7 +501,7 @@ function DesktopLeaderboardCard({
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
       </Link>
       <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
-      <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} fill={player.skillRating === null ? null : player.skillRating / 100} />
+      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} animationKey={`${animationKey}-skill`} fill={player.strengthRating === null ? null : player.strengthRating / 2200} />
       <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
       <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
       <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
@@ -568,7 +568,7 @@ export function PlayersList({
   const [scope, setScope] = React.useState<"all" | 1 | 2 | 3>("all");
   const [mobileView, setMobileView] = React.useState<MobilePlayersView>("leaderboard");
   const [mobileSlideDirection, setMobileSlideDirection] = React.useState<SlideDirection>(1);
-  const [leaderboardSort, setLeaderboardSort] = React.useState<LeaderboardSortKey>("skillRating");
+  const [leaderboardSort, setLeaderboardSort] = React.useState<LeaderboardSortKey>("strength");
   const [leaderboardDirection, setLeaderboardDirection] = React.useState<SortDirection>("desc");
   const [expanded, setExpanded] = React.useState(false);
   const { setRef, ind } = useTabSlider(String(scope));
