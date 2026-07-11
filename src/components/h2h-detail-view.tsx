@@ -472,7 +472,7 @@ function Hero({ player, opponent, stats, playerStrengthRating, onClose, bigScore
         </button>
       ) : null}
       {mobile ? (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+        <div className="mt-7 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
           <span className="line-clamp-2 whitespace-pre-line text-right text-[15px] font-semibold leading-tight text-primary">{player.name.replace(" ", "\n")}</span>
           <span className="inline-flex items-center gap-2 rounded-lg bg-surface-container-high px-3 py-1.5 font-mono text-[20px] font-bold tabular">
             <span className={leftColor}>{stats.matchesWon}</span>
