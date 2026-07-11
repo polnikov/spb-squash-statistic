@@ -501,7 +501,7 @@ function DesktopLeaderboardCard({
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
       </Link>
       <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
-      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} animationKey={`${animationKey}-skill`} fill={player.strengthRating === null ? null : player.strengthRating / 2200} />
+      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} animationKey={`${animationKey}-skill`} fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200} />
       <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
       <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
       <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />

@@ -618,7 +618,7 @@ function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
 
-  if (rating === null || !band) return null;
+  if (rating === null) return null;
 
   return (
     <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-50")}>
@@ -629,7 +629,6 @@ function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
         className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
-        <span className="max-w-[96px] truncate">{band.labelRu}</span>
         <span className="font-mono tabular">{rating}</span>
       </button>
       <div
