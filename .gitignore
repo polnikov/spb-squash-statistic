@@ -43,6 +43,8 @@ yarn-error.log*
 /.specstory/
 /.agents/
 /.claude/
+/.impeccable/
+/CLAUDE.md
 
 # design workflow artifacts (kept locally as reference, not in the repo)
 /mockups/
