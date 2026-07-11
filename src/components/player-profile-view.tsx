@@ -34,14 +34,7 @@ import { H2hDetailView } from "@/components/h2h-detail-view";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
-import {
-  SKILL_RATING_CONFIG,
-  SKILL_RATING_LEVEL_SCALE,
-  calculateCareerSkillRating,
-  calculateSkillIndex,
-  getSkillRatingLevelLabelRu,
-  getSkillRatingLevelStatus,
-} from "@/lib/stats/compute";
+import { STRENGTH_BANDS, getStrengthBand } from "@/lib/stats/compute";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
   option: EChartsOption;
@@ -610,22 +603,11 @@ function ActivityBadge({ active }: { active: boolean }) {
   );
 }
 
-function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
+function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
-  const careerSkillIndex = stats.careerSkillIndex ?? stats.skillIndex ?? calculateSkillIndex({
-    matchWinRatePct: stats.matchWinRatePct,
-    gameWinRatePct: stats.gameWinRatePct,
-    rallyWinRatePct: stats.rallyWinRatePct,
-  });
-  const fallbackRating = calculateCareerSkillRating({
-    careerSkillIndex,
-    careerMatchesPlayed: stats.matchesPlayed,
-    adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
-  });
-  const skillRating = stats.skillRating ?? fallbackRating.skillRating;
-  const status = stats.skillRatingLevelStatus ?? getSkillRatingLevelStatus(skillRating);
-  const label = getSkillRatingLevelLabelRu(status);
+  const rating = stats.strengthRating;
+  const band = getStrengthBand(rating);
 
   React.useEffect(() => {
     if (!open) return;
@@ -636,19 +618,18 @@ function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
     return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
 
-  if (skillRating === null || !label) return null;
+  if (rating === null) return null;
 
   return (
     <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-50")}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Описание Skill Rating"
+        aria-label="Описание Strength Rating"
         className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
-        <span className="max-w-[96px] truncate">{label}</span>
-        <span className="font-mono tabular">{skillRating.toFixed(1)}</span>
+        <span className="font-mono tabular">{rating}</span>
       </button>
       <div
         className={cn(
@@ -656,26 +637,26 @@ function SkillRatingBadge({ stats }: { stats: PlayerProfileStats }) {
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
         )}
       >
-        <div className="text-[13px] font-semibold">Skill Rating</div>
+        <div className="text-[13px] font-semibold">Strength Rating</div>
         <div className="mt-1 text-[12px] leading-snug text-on-surface-variant">
-          Рейтинг игрового уровня: сырое качество игры скорректировано по числу матчей.
+          Рейтинг силы (Elo): обновляется после каждого матча с учётом силы соперника и разгромности счёта.
         </div>
         <div className="mt-3 flex flex-col gap-1.5">
-          {SKILL_RATING_LEVEL_SCALE.map((row) => (
+          {STRENGTH_BANDS.map((b) => (
             <div
-              key={row.status}
+              key={b.labelRu}
               className={cn(
                 "rounded-[10px] border px-2.5 py-2",
-                row.status === status
+                b === band
                   ? "border-[#dff7a5]/65 bg-[#dff7a5]/12 text-on-surface"
                   : "border-outline-variant bg-surface-container-low text-on-surface-variant",
               )}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[12.5px] font-semibold">{row.labelRu}</span>
-                <span className="shrink-0 font-mono text-[12px] tabular">{row.min}-{row.max}</span>
+                <span className="text-[12.5px] font-semibold">{b.labelRu}</span>
+                <span className="shrink-0 font-mono text-[12px] tabular">{b.max === Infinity ? `${b.min}+` : `${b.min}-${b.max}`}</span>
               </div>
-              <div className="mt-1 text-[11.5px] leading-snug">{row.descriptionRu}</div>
+              <div className="mt-1 text-[11.5px] leading-snug">{b.descriptionRu}</div>
             </div>
           ))}
         </div>
@@ -783,7 +764,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
         <ActivityBadge active={model.active} />
-        <SkillRatingBadge stats={stats} />
+        <StrengthRatingBadge stats={stats} />
         {avatar ? (
           <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
         ) : null}
@@ -2077,7 +2058,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       </div>
 
       {h2hOpponent && h2hMatches.length > 0 ? (
-        <H2hDetailView player={model.player} opponent={h2hOpponent} matches={h2hMatches} playerSkillRating={model.careerStats.skillRating} onClose={closeH2h} />
+        <H2hDetailView player={model.player} opponent={h2hOpponent} matches={h2hMatches} playerStrengthRating={model.careerStats.strengthRating} onClose={closeH2h} />
       ) : null}
     </div>
   );

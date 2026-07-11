@@ -400,10 +400,6 @@ export type SkillIndexStatus =
   | "very_strong"
   | "dominant";
 
-export type SkillRatingReliabilityStatus = "insufficient" | "provisional" | "eligible";
-export type SkillRatingLevelStatus = SkillIndexStatus;
-export type SkillRatingKSource = "empirical" | "previous" | "default";
-
 export type SkillIndexScaleItem = {
   min: number;
   max: number;
@@ -472,36 +468,44 @@ export const SKILL_INDEX_SCALE: SkillIndexScaleItem[] = [
   },
 ];
 
-export const SKILL_BASELINE = 50;
-export const SKILL_RATING_ALGORITHM_VERSION = "career-skill-rating-v1";
-export const SKILL_RATING_CONFIG = {
-  minCalibrationMatches: 8,
-  minCalibrationPlayers: 12,
-  minCalibrationTotalMatches: 150,
-  kCandidates: [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30],
-  kScoreEpsilon: 0.0001,
-  kSmoothingAlpha: 0.7,
-  minAdaptiveK: 4,
-  maxAdaptiveK: 24,
-  defaultAdaptiveK: 10,
-  recalibrationMatchThreshold: 25,
-  recalibrationMaxAgeDays: 7,
-} as const;
+export type StrengthReliabilityStatus = "provisional" | "established";
 
-export const SKILL_RATING_LEVEL_SCALE: SkillIndexScaleItem[] = SKILL_INDEX_SCALE.map((row) => ({
-  ...row,
-}));
+export type StrengthBand = {
+  min: number;
+  /** Inclusive upper bound; `Infinity` for the top band. */
+  max: number;
+  labelRu: string;
+  descriptionRu: string;
+};
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, n));
+/**
+ * Strength Rating gradation, shown only in the info popover (the badge itself
+ * carries the bare number). Bands are tunable after observing the real
+ * distribution once the Elo has been rebuilt.
+ */
+export const STRENGTH_BANDS: StrengthBand[] = [
+  { min: 0, max: 1199, labelRu: "Начальный", descriptionRu: "Ещё нарабатывает базу против соперников лиги." },
+  { min: 1200, max: 1399, labelRu: "Развивающийся", descriptionRu: "Конкурентен отрезками, чаще уступает более сильным." },
+  { min: 1400, max: 1599, labelRu: "Средний", descriptionRu: "Держит равный уровень с основной массой игроков." },
+  { min: 1600, max: 1799, labelRu: "Уверенный", descriptionRu: "Стабильно обыгрывает игроков ниже и борется с равными." },
+  { min: 1800, max: 1999, labelRu: "Сильный", descriptionRu: "Превосходит большинство соперников по силе игры." },
+  { min: 2000, max: 2199, labelRu: "Очень сильный", descriptionRu: "Один из сильнейших, редко проигрывает по силе." },
+  { min: 2200, max: Infinity, labelRu: "Элита", descriptionRu: "Топ лиги — доминирует над полем." },
+];
+
+export function getStrengthBand(rating?: number | null): StrengthBand | null {
+  if (rating == null) return null;
+  return STRENGTH_BANDS.find((b) => rating >= b.min && rating <= b.max) ?? null;
 }
 
-function roundToOneDecimal(n: number): number {
-  return Math.round(n * 10) / 10;
+/** Provisional while fewer than 10 completed games (matches strength engine). */
+export function strengthRatingReliability(games: number): StrengthReliabilityStatus {
+  return games < 10 ? "provisional" : "established";
 }
 
-function roundToThreeDecimals(n: number): number {
-  return Math.round(n * 1000) / 1000;
+export function getStrengthReliabilityLabelRu(status?: StrengthReliabilityStatus | null): string | null {
+  if (!status) return null;
+  return { provisional: "Предварительный", established: "Подтверждённый" }[status];
 }
 
 export function calculateSkillIndex(params: {
@@ -513,55 +517,6 @@ export function calculateSkillIndex(params: {
   if (matchWinRatePct == null || gameWinRatePct == null || rallyWinRatePct == null) return null;
   const value = matchWinRatePct * 0.3 + gameWinRatePct * 0.35 + rallyWinRatePct * 0.35;
   return Math.round(value * 10) / 10;
-}
-
-export function calculateCareerSkillRating(params: {
-  careerSkillIndex: number | null;
-  careerMatchesPlayed: number;
-  adaptiveK: number;
-  baseline?: number;
-}): { skillRating: number | null; reliability: number | null } {
-  const baseline = params.baseline ?? SKILL_BASELINE;
-  const { careerSkillIndex, careerMatchesPlayed, adaptiveK } = params;
-  if (
-    careerSkillIndex === null ||
-    !Number.isFinite(careerSkillIndex) ||
-    careerMatchesPlayed <= 0 ||
-    adaptiveK <= 0
-  ) {
-    return { skillRating: null, reliability: null };
-  }
-  const reliability = careerMatchesPlayed / (careerMatchesPlayed + adaptiveK);
-  const rawRating = baseline + (careerSkillIndex - baseline) * reliability;
-  return {
-    skillRating: roundToOneDecimal(clamp(rawRating, 0, 100)),
-    reliability: roundToThreeDecimals(reliability),
-  };
-}
-
-export function getSkillRatingReliabilityStatus(careerMatchesPlayed: number): SkillRatingReliabilityStatus {
-  if (careerMatchesPlayed < 3) return "insufficient";
-  if (careerMatchesPlayed < 6) return "provisional";
-  return "eligible";
-}
-
-export function getSkillRatingReliabilityLabelRu(status?: SkillRatingReliabilityStatus | null): string | null {
-  if (!status) return null;
-  return {
-    insufficient: "Мало матчей",
-    provisional: "Предварительный",
-    eligible: "Подтверждённый",
-  }[status];
-}
-
-export function getSkillRatingLevelStatus(skillRating?: number | null): SkillRatingLevelStatus | null {
-  if (skillRating == null) return null;
-  return SKILL_RATING_LEVEL_SCALE.find((row) => skillRating >= row.min && skillRating <= row.max)?.status ?? null;
-}
-
-export function getSkillRatingLevelLabelRu(status?: SkillRatingLevelStatus | null): string | null {
-  if (!status) return null;
-  return SKILL_RATING_LEVEL_SCALE.find((row) => row.status === status)?.labelRu ?? null;
 }
 
 export function getSkillIndexStatus(skillIndex?: number | null): SkillIndexStatus | null {

@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  calculateCareerSkillRating,
   calculateSkillIndex,
   classifyMatchup,
   computeAggregate,
   gameFlags,
-  getSkillRatingLevelLabelRu,
-  getSkillRatingLevelStatus,
-  getSkillRatingReliabilityLabelRu,
-  getSkillRatingReliabilityStatus,
+  getStrengthBand,
+  getStrengthReliabilityLabelRu,
+  strengthRatingReliability,
   getSkillIndexLabelRu,
   getSkillIndexScaleItem,
   getSkillIndexShortLabelRu,
@@ -242,79 +240,39 @@ describe("skillIndex", () => {
   });
 });
 
-describe("skillRating", () => {
-  it("shrinks career skill index toward 50 with adaptive K and rounds", () => {
-    expect(calculateCareerSkillRating({ careerSkillIndex: 75.4, careerMatchesPlayed: 10, adaptiveK: 10 })).toEqual({
-      skillRating: 62.7,
-      reliability: 0.5,
-    });
-    expect(calculateCareerSkillRating({ careerSkillIndex: 58.35, careerMatchesPlayed: 100, adaptiveK: 10 })).toEqual({
-      skillRating: 57.6,
-      reliability: 0.909,
-    });
-  });
-
-  it("returns null when source index or sample is missing", () => {
-    expect(calculateCareerSkillRating({ careerSkillIndex: null, careerMatchesPlayed: 10, adaptiveK: 10 })).toEqual({
-      skillRating: null,
-      reliability: null,
-    });
-    expect(calculateCareerSkillRating({ careerSkillIndex: 55, careerMatchesPlayed: 0, adaptiveK: 10 })).toEqual({
-      skillRating: null,
-      reliability: null,
-    });
-    expect(calculateCareerSkillRating({ careerSkillIndex: 55, careerMatchesPlayed: 10, adaptiveK: 0 })).toEqual({
-      skillRating: null,
-      reliability: null,
-    });
-  });
-
-  it("keeps early samples close to neutral baseline", () => {
-    const low = calculateCareerSkillRating({ careerSkillIndex: 80, careerMatchesPlayed: 1, adaptiveK: 10 });
-    const high = calculateCareerSkillRating({ careerSkillIndex: 80, careerMatchesPlayed: 80, adaptiveK: 10 });
-    expect(low.skillRating).toBe(52.7);
-    expect(high.skillRating).toBe(76.7);
-  });
-
-  it("maps all level boundaries", () => {
-    const cases: [number, ReturnType<typeof getSkillRatingLevelStatus>][] = [
-      [44.9, "below_level"],
-      [45, "developing"],
-      [49.9, "developing"],
-      [50, "competitive"],
-      [54.9, "competitive"],
-      [55, "good"],
-      [59.9, "good"],
-      [60, "strong"],
-      [66.9, "strong"],
-      [67, "very_strong"],
-      [71.9, "very_strong"],
-      [72, "dominant"],
+describe("strength rating helpers", () => {
+  it("maps every Elo band boundary", () => {
+    const cases: [number, string | null][] = [
+      [0, "Начальный"],
+      [1199, "Начальный"],
+      [1200, "Развивающийся"],
+      [1399, "Развивающийся"],
+      [1400, "Средний"],
+      [1599, "Средний"],
+      [1600, "Уверенный"],
+      [1799, "Уверенный"],
+      [1800, "Сильный"],
+      [1999, "Сильный"],
+      [2000, "Очень сильный"],
+      [2199, "Очень сильный"],
+      [2200, "Элита"],
+      [3000, "Элита"],
     ];
-    for (const [value, status] of cases) expect(getSkillRatingLevelStatus(value)).toBe(status);
-    expect(getSkillRatingLevelStatus(65)).toBe("strong");
-    expect(getSkillRatingLevelStatus(null)).toBeNull();
+    for (const [rating, label] of cases) expect(getStrengthBand(rating)?.labelRu).toBe(label);
+    expect(getStrengthBand(null)).toBeNull();
   });
 
-  it("returns level and reliability labels", () => {
-    expect(getSkillRatingLevelLabelRu("good")).toBe("Хороший");
-    expect(getSkillRatingLevelLabelRu("very_strong")).toBe("Очень сильный");
-    expect(getSkillRatingLevelLabelRu(null)).toBeNull();
-    expect(getSkillRatingReliabilityStatus(2)).toBe("insufficient");
-    expect(getSkillRatingReliabilityStatus(5)).toBe("provisional");
-    expect(getSkillRatingReliabilityStatus(6)).toBe("eligible");
-    expect(getSkillRatingReliabilityLabelRu("eligible")).toBe("Подтверждённый");
+  it("classifies reliability by completed games", () => {
+    expect(strengthRatingReliability(0)).toBe("provisional");
+    expect(strengthRatingReliability(9)).toBe("provisional");
+    expect(strengthRatingReliability(10)).toBe("established");
+    expect(strengthRatingReliability(200)).toBe("established");
   });
 
-  it("does not affect formIndex", () => {
-    const aggregate = computeAggregate([perspective(m1, true), perspective(m2, true)]);
-    const before = aggregate.formIndex;
-    calculateCareerSkillRating({
-      careerSkillIndex: aggregate.skillIndex,
-      careerMatchesPlayed: aggregate.matchesPlayed,
-      adaptiveK: 10,
-    });
-    expect(aggregate.formIndex).toBe(before);
+  it("returns reliability labels", () => {
+    expect(getStrengthReliabilityLabelRu("provisional")).toBe("Предварительный");
+    expect(getStrengthReliabilityLabelRu("established")).toBe("Подтверждённый");
+    expect(getStrengthReliabilityLabelRu(null)).toBeNull();
   });
 });
 

@@ -1,14 +1,8 @@
 import { getPlayersOverview, type PlayerOverview } from "@/lib/league";
 import { loadAllLeagues } from "@/lib/db/league";
-import { loadCareerSkillRatingsByRid } from "@/lib/db/skill-rating";
+import { loadCareerStrengthRatingsByRid } from "@/lib/db/strength-rating";
 import { PlayersList } from "@/components/players-list";
-import {
-  SKILL_RATING_CONFIG,
-  calculateCareerSkillRating,
-  calculateSkillIndex,
-  getSkillRatingLevelStatus,
-  getSkillRatingReliabilityStatus,
-} from "@/lib/stats/compute";
+import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +39,6 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
       const gameWinRatePct = games ? (gamesWon / games) * 100 : null;
       const rallyWinRatePct = rallies ? (ralliesWon / rallies) * 100 : null;
       const skillIndex = calculateSkillIndex({ matchWinRatePct, gameWinRatePct, rallyWinRatePct });
-      const skillRating = calculateCareerSkillRating({
-        careerSkillIndex: skillIndex,
-        careerMatchesPlayed: matches,
-        adaptiveK: SKILL_RATING_CONFIG.defaultAdaptiveK,
-      });
 
       byRid.set(player.rid, {
         ...existing,
@@ -73,10 +62,8 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
         rallyBalancePerMatch: matches ? (ralliesWon - ralliesLost) / matches : null,
         skillIndex,
         careerSkillIndex: skillIndex,
-        skillRating: skillRating.skillRating,
-        skillRatingReliability: skillRating.reliability,
-        skillRatingReliabilityStatus: getSkillRatingReliabilityStatus(matches),
-        skillRatingLevelStatus: getSkillRatingLevelStatus(skillRating.skillRating),
+        strengthRating: null,
+        strengthRatingGames: 0,
       });
     }
   }
@@ -85,25 +72,21 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
 }
 
 /**
- * Overwrite the locally computed rating with the stored one. The aggregate is
- * calibrated (fitted `adaptive_k`), the local computation is not, so the two
- * disagree by ~0.1. Players missing from the aggregate keep the computed value.
+ * Attach each player's Strength Rating (Elo) from `players`. The overview
+ * builder cannot compute Elo (it is global across players), so the rating and
+ * its game count are filled here; players without a stored rating stay null/0.
  */
-function applyStoredSkillRatings(
+function applyStoredStrengthRatings(
   players: PlayerOverview[],
-  stored: Awaited<ReturnType<typeof loadCareerSkillRatingsByRid>>,
+  stored: Awaited<ReturnType<typeof loadCareerStrengthRatingsByRid>>,
 ): PlayerOverview[] {
   return players.map((player) => {
     const row = stored.get(player.rid);
-    if (!row || row.skillRating === null) return player;
+    if (!row) return player;
     return {
       ...player,
-      skillIndex: row.skillIndex ?? player.skillIndex,
-      careerSkillIndex: row.skillIndex ?? player.careerSkillIndex,
-      skillRating: row.skillRating,
-      skillRatingReliability: row.skillRatingReliability,
-      skillRatingReliabilityStatus: row.skillRatingReliabilityStatus ?? player.skillRatingReliabilityStatus,
-      skillRatingLevelStatus: row.skillRatingLevelStatus ?? player.skillRatingLevelStatus,
+      strengthRating: row.strengthRating,
+      strengthRatingGames: row.strengthRatingGames,
     };
   });
 }
@@ -111,8 +94,8 @@ function applyStoredSkillRatings(
 export default async function PlayersPage() {
   const leagues = await loadAllLeagues();
   const merged = mergePlayersByRid(Object.values(leagues).map(getPlayersOverview));
-  const stored = await loadCareerSkillRatingsByRid(merged.map((p) => p.rid));
-  const players = applyStoredSkillRatings(merged, stored);
+  const stored = await loadCareerStrengthRatingsByRid(merged.map((p) => p.rid));
+  const players = applyStoredStrengthRatings(merged, stored);
 
   return (
     <div className="flex flex-col gap-3 md:gap-8">
