@@ -509,14 +509,12 @@ function SegmentedControl<T extends string>({
   onChange,
   className,
   equal = false,
-  mobileEqual = false,
 }: {
   items: { key: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   className?: string;
   equal?: boolean;
-  mobileEqual?: boolean;
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
@@ -530,11 +528,7 @@ function SegmentedControl<T extends string>({
           onClick={() => onChange(item.key)}
           className={cn(
             "relative z-10 h-9 whitespace-nowrap rounded-[12px] text-xs font-semibold transition-colors duration-200 ease-m3-standard",
-            equal
-              ? "min-w-0 flex-1 px-2"
-              : mobileEqual
-                ? "min-w-0 flex-1 px-2 md:flex-none md:shrink-0 md:px-3.5"
-                : "shrink-0 px-3.5",
+            equal ? "min-w-0 flex-1 px-2" : "shrink-0 px-3.5",
             value === item.key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
           )}
         >
@@ -861,7 +855,6 @@ function Filters({
           value={seasonValue}
           onChange={(seasonId) => onChange({ seasonId, divisionId: divisionForSeason(seasonId) })}
           className={cn(seasonW, "md:w-auto md:flex-none")}
-          mobileEqual={seasonItems.length > 1}
         />
         <SegmentedControl
           items={divisionItems}
