@@ -490,16 +490,17 @@ function DesktopLeaderboardCard({
 }) {
   const reliability = getSkillRatingReliabilityLabelRu(player.skillRatingReliabilityStatus) ?? "x";
   return (
-    <Link
-      href={playerHref(player.rid)}
+    <div
       className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
       style={DESKTOP_LEADERBOARD_GRID}
     >
       <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">
         <NumberPop key={`${animationKey}-position`}>{String(position)}</NumberPop>
       </span>
-      <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
-      <span className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</span>
+      <Link href={playerHref(player.rid)} aria-label={player.name}>
+        <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
+      </Link>
+      <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
       <DesktopMetric value={player.skillRating === null ? "x" : player.skillRating.toFixed(1)} animationKey={`${animationKey}-skill`} fill={player.skillRating === null ? null : player.skillRating / 100} />
       <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
       <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
@@ -509,7 +510,7 @@ function DesktopLeaderboardCard({
       <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center text-[11.5px] font-semibold text-on-surface">
         {reliability}
       </div>
-    </Link>
+    </div>
   );
 }
 

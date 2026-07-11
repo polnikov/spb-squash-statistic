@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   type ColumnDef,
   type SortingState,
@@ -54,10 +54,10 @@ function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<Ratin
       accessorKey: "name",
       header: "Игрок",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2.5">
+        <Link href={`/players/${encodeURIComponent(row.original.rid)}`} className="inline-flex items-center gap-2.5">
           <PlayerAvatar rid={row.original.rid} initials={row.original.initials} color={row.original.color} className="size-8 text-xs" />
           <span className="text-sm font-medium text-on-surface transition-colors group-hover:text-primary">{row.original.name}</span>
-        </div>
+        </Link>
       ),
     },
     {
@@ -139,7 +139,6 @@ export function RatingTable({
   totalStages: number;
   ratingMaxStage: number;
 }) {
-  const router = useRouter();
   const [scope, setScope] = React.useState<RatingDivision>(1);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const initialStage = React.useCallback(
@@ -253,8 +252,7 @@ export function RatingTable({
               <tr
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
-                onClick={() => router.push(`/players/${encodeURIComponent(row.original.rid)}`)}
-                className="group cursor-pointer border-t border-border transition-colors hover:bg-brand-surface-2/40"
+                className="group border-t border-border transition-colors hover:bg-brand-surface-2/40"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
