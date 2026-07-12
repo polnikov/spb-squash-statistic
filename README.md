@@ -4,21 +4,21 @@
 профили игроков со Strength Rating (Elo) и head-to-head. Результаты этапов
 импортируются из RankedIn через админку `/manager`.
 
-Устанавливается как PWA (standalone, домашний экран). Офлайн-режима пока нет —
+Устанавливается как PWA (standalone, домашний экран). Офлайн-режима пока нет -
 service worker не подключён.
 
 ## Возможности
 
-- **Рейтинг** — таблица дивизионов по официальным очкам RankedIn (`points`).
-- **Дивизионы / Этапы** — сводки и результаты, замороженные первые колонки при
+- **Рейтинг** - таблица дивизионов по официальным очкам RankedIn (`points`).
+- **Дивизионы / Этапы** - сводки и результаты, замороженные первые колонки при
   боковом скролле на мобиле.
-- **Iron Man** — время на корте за половину сезона.
-- **Игроки** — лидерборд по Strength Rating + карусель, профиль с графиками
+- **Iron Man** - время на корте за половину сезона.
+- **Игроки** - лидерборд по Strength Rating + карусель, профиль с графиками
   (ECharts), head-to-head, аналитика (skillIndex / formIndex).
-- **Strength Rating** — opponent-aware Elo: сила игрока с учётом силы соперника,
+- **Strength Rating** - opponent-aware Elo: сила игрока с учётом силы соперника,
   сквозь дивизионы. Глобальный хронологический пересчёт по всей истории матчей;
-  результат кэшируется на `players`, аудит — в `player_rating_history`.
-- **Админка `/manager`** — импорт этапов из RankedIn, очки, ручные правки.
+  результат кэшируется на `players`, аудит - в `player_rating_history`.
+- **Админка `/manager`** - импорт этапов из RankedIn, очки, ручные правки.
 
 ## Стек
 
@@ -33,8 +33,8 @@ service worker не подключён.
 | Тесты | Vitest |
 | Деплой | GitHub Actions → GHCR → self-hosted (Docker + Caddy) |
 
-Цветовые роли и M3-токены (тёмная тема, акцент `#f472b6`) — в
-`src/app/globals.css`. `MaterialExpressiveTheme` — обёртка `next-themes`,
+Цветовые роли и M3-токены (тёмная тема, акцент `#f472b6`) - в
+`src/app/globals.css`. `MaterialExpressiveTheme` - обёртка `next-themes`,
 держащая dark как класс по умолчанию.
 
 ## Требования
@@ -52,7 +52,7 @@ npm run dev                                        # http://localhost:3000
 ```
 
 Наполнить статистику (агрегаты, skillIndex/formIndex, Strength Rating) можно
-через импорт этапа в `/manager` — он пересчитывает всё автоматически. Полный
+через импорт этапа в `/manager` - он пересчитывает всё автоматически. Полный
 пересчёт по всей истории:
 
 ```bash
@@ -61,11 +61,11 @@ npx tsx src/scripts/backfill-stats.ts
 
 ## Скрипты
 
-- `dev` / `build` / `start` — Next.js.
-- `lint` — `next lint`; `typecheck` — `tsc --noEmit`.
-- `test` / `test:watch` — Vitest.
-- `db:generate` — SQL-миграции из схемы; `db:migrate` — применить их.
-- `db:push` — синхронизировать схему напрямую (dev); `db:studio` — Drizzle Studio.
+- `dev` / `build` / `start` - Next.js.
+- `lint` - `next lint`; `typecheck` - `tsc --noEmit`.
+- `test` / `test:watch` - Vitest.
+- `db:generate` - SQL-миграции из схемы; `db:migrate` - применить их.
+- `db:push` - синхронизировать схему напрямую (dev); `db:studio` - Drizzle Studio.
 
 ## Структура
 
@@ -92,22 +92,22 @@ docker compose -f docker-compose.dev.yml --profile full up -d --build
 ```
 
 Поднимает локально собранные `app` и `caddy` (авто-TLS) поверх `postgres` и
-`redis`. Домен — в `Caddyfile`.
+`redis`. Домен - в `Caddyfile`.
 
 ## Деплой (GitHub Actions → GHCR → self-hosted)
 
-- **`build.yml`** — на push в `main`: тесты (`tsc --noEmit`, `next lint`,
-  unit-тесты Vitest — интеграционные исключены), затем сборка и пуш образа в
+- **`build.yml`** - на push в `main`: тесты (`tsc --noEmit`, `next lint`,
+  unit-тесты Vitest - интеграционные исключены), затем сборка и пуш образа в
   GHCR (`ghcr.io/<owner>/<repo>:latest` и `:sha-<sha>`, `linux/amd64`).
-- **`deploy.yml`** — после сборки, на раннере `[self-hosted, home-server]`:
+- **`deploy.yml`** - после сборки, на раннере `[self-hosted, home-server]`:
   `cd /opt/docker/bbr` → `docker compose pull` → `up -d --remove-orphans` →
   prune → health-check `GET /api/health`. Миграции применяются в `entrypoint.sh`
   контейнера `app` (`drizzle-kit migrate`) при старте.
 
-TLS и ingress на сервере — хостовый Caddy (контейнер). Прод-`docker-compose.yml`
+TLS и ingress на сервере - хостовый Caddy (контейнер). Прод-`docker-compose.yml`
 свой Caddy не поднимает: `app` (`bbr-app`) входит во внешнюю сеть Caddy
 (`CADDY_NETWORK`), Caddy проксирует на `bbr-app:3000`. Блок сайта для
-**bbrsquashspb.ohmyapps.xyz** — в
+**bbrsquashspb.ohmyapps.xyz** - в
 [`deploy/caddy.bbrsquashspb.conf`](deploy/caddy.bbrsquashspb.conf).
 
 ### Разовая настройка сервера
