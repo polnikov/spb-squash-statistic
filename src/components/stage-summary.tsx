@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Cross, Search, X } from "lucide-react";
 import {
   FINAL_STAGE,
   getStageResults,
@@ -82,10 +82,20 @@ function MatchScoreLine({ games, player }: { games: { a: number; b: number }[]; 
   );
 }
 
-function RetiredBadge() {
+/**
+ * Red retirement badge. Desktop cards show the icon plus label; mobile cards use
+ * `iconOnly` to keep the tighter layout clean.
+ */
+function RetiredBadge({ iconOnly = false }: { iconOnly?: boolean }) {
   return (
-    <span className="shrink-0 rounded-full bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant">
-      Retired
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-full bg-error-container font-semibold text-on-error-container",
+        iconOnly ? "p-1" : "gap-1 px-2 py-0.5 text-[10.5px]",
+      )}
+    >
+      <Cross className="size-3" />
+      {iconOnly ? null : "Retired"}
     </span>
   );
 }
@@ -381,7 +391,7 @@ export function StageSummary({ league }: { league: League }) {
                         >
                           {shortPlayerName(playerA.name)}
                         </Link>
-                        {aRetired ? <RetiredBadge /> : null}
+                        {aRetired ? <RetiredBadge iconOnly /> : null}
                       </span>
                       <span
                         className={cn(
@@ -400,7 +410,7 @@ export function StageSummary({ league }: { league: League }) {
                         >
                           {shortPlayerName(playerB.name)}
                         </Link>
-                        {bRetired ? <RetiredBadge /> : null}
+                        {bRetired ? <RetiredBadge iconOnly /> : null}
                       </span>
                       <span
                         className={cn(
