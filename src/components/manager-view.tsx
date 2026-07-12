@@ -1231,6 +1231,7 @@ function UploadManager() {
               setSelectedClassId(undefined);
               setDone(null);
               setError(null);
+              setDate("");
             }}
             className={cn(PRIMARY_BTN, "mt-2 h-11 px-5 text-[13.5px]")}
           >
