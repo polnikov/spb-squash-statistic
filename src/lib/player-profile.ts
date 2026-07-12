@@ -31,7 +31,7 @@ export type PlayerProfilePlayer = {
   initials: string;
   color: string;
   skill: number;
-  rank: number;
+  rankSkill: number;
   divisions: number[];
   rankedInUrl: string;
 };
@@ -1013,7 +1013,7 @@ export function pickPlayerSnapshot(data: ReturnType<typeof collectPlayerData>): 
     initials: data.player.initials,
     color: data.player.color,
     skill: data.player.skill,
-    rank: data.player.rank,
+    rankSkill: data.player.rankSkill,
     divisions,
     rankedInUrl: `${RANKEDIN_BASE}/ru/player/${data.player.rid}`,
   };

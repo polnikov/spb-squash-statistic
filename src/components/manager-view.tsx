@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import {
+  getPlayersOverview,
   type League,
 } from "@/lib/league";
 import {
@@ -156,17 +157,21 @@ function PlayersManager({ league }: { league: League }) {
   const [createError, setCreateError] = React.useState<string | null>(null);
   const [avatars, setAvatars] = React.useState<Record<string, PlayerAvatarMedia>>({});
   const [linkOptions, setLinkOptions] = React.useState<PlayerLinkOption[]>([]);
-  const [playerEdits, setPlayerEdits] = React.useState<Record<string, { rankedinId: string; adminName: string; rank: string }>>(() =>
+  const [playerEdits, setPlayerEdits] = React.useState<Record<string, { rankedinId: string; adminName: string }>>(() =>
     Object.fromEntries(
       league.players.map((player) => [
         player.rid,
         {
           rankedinId: player.rid,
           adminName: player.adminName ?? "",
-          rank: String(player.rank),
         },
       ]),
     ),
+  );
+  // League points (best-7 stage sum) per player, shown in the "Очки" column.
+  const pointsByRid = React.useMemo(
+    () => new Map(getPlayersOverview(league).map((o) => [o.rid, o.points])),
+    [league],
   );
   const rows = React.useMemo(
     () => {
@@ -204,13 +209,12 @@ function PlayersManager({ league }: { league: League }) {
     void listPlayerLinkOptionsAction().then(setLinkOptions);
   }, []);
 
-  function patchPlayer(rid: string, patch: Partial<{ rankedinId: string; adminName: string; rank: string }>) {
+  function patchPlayer(rid: string, patch: Partial<{ rankedinId: string; adminName: string }>) {
     setPlayerEdits((current) => ({
       ...current,
       [rid]: {
         rankedinId: current[rid]?.rankedinId ?? rid,
         adminName: current[rid]?.adminName ?? "",
-        rank: current[rid]?.rank ?? "",
         ...patch,
       },
     }));
@@ -498,7 +502,7 @@ function PlayersManager({ league }: { league: League }) {
                 <th className="px-3 py-3 font-medium">Имя RankedIn</th>
                 <th className="px-3 py-3 font-medium">Имя в приложении</th>
                 <th className="px-3 py-3 font-medium">ID</th>
-                <th className="px-3 py-3 font-medium">Рейтинг</th>
+                <th className="px-3 py-3 font-medium">Очки</th>
                 <th className="px-5 py-3 font-medium">Действия</th>
               </tr>
             </thead>
@@ -508,7 +512,6 @@ function PlayersManager({ league }: { league: League }) {
                 const adminName = edit?.adminName ?? "";
                 const displayName = adminName.trim() || player.rankedinName;
                 const rankedinId = edit?.rankedinId || player.rid;
-                const rank = Number(edit?.rank);
                 const avatar = avatars[player.rid];
                 return (
                   <tr key={player.rid} className="border-t border-outline-variant transition-colors hover:bg-surface-container-high/35">
@@ -531,7 +534,7 @@ function PlayersManager({ league }: { league: League }) {
                       </div>
                     </td>
                     <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{rankedinId}</td>
-                    <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{fmtNum(Number.isFinite(rank) ? rank : player.rank)}</td>
+                    <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{fmtNum(pointsByRid.get(player.rid) ?? 0)}</td>
                     <td className="px-5 py-3 text-center">
                       <button
                         onClick={() => setEditingRid(player.rid)}

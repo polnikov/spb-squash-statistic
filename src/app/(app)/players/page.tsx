@@ -43,7 +43,7 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
       byRid.set(player.rid, {
         ...existing,
         skill: Math.max(existing.skill, player.skill),
-        rank: Math.max(existing.rank, player.rank),
+        rankSkill: Math.max(existing.rankSkill, player.rankSkill),
         divisions,
         divisionPlaces: divisions.map((div) => ({ div, place: places.get(div) ?? null })),
         points: Math.max(existing.points, player.points),

@@ -153,7 +153,7 @@ export async function loadLeague(
       rankedinName: name,
       rid,
       skill: 0,
-      rank: 0,
+      rankSkill: 0,
       hue,
       color: `oklch(0.63 0.17 ${hue})`,
       initials: initialsOf(name),
@@ -173,7 +173,7 @@ export async function loadLeague(
     const ratingAfter = num(r.ratingAfter);
     if (ratingAfter > player.skill) {
       player.skill = ratingAfter;
-      player.rank = Math.round(ratingAfter * 100);
+      player.rankSkill = Math.round(ratingAfter * 100);
     }
     resultsOut.push({
       div: r.division,
@@ -286,7 +286,7 @@ export async function listManagedPlayers(
       adminName: p.adminName ?? undefined,
       rid,
       skill: base?.skill ?? 0,
-      rank: base?.rank ?? 0,
+      rankSkill: base?.rankSkill ?? 0,
       hue,
       color: base?.color ?? `oklch(0.63 0.17 ${hue})`,
       initials: base?.initials ?? initialsOf(p.rankedinName),

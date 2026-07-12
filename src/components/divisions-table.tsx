@@ -116,7 +116,7 @@ function HighlightTile({
 }
 
 const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
-  { key: "points", label: "Рейтинг", mobileWeight: 1.18 },
+  { key: "points", label: "Очки", mobileWeight: 1.18 },
   { key: "form", label: "Форма", mobileWeight: 0.95 },
   { key: "matches", label: "Активность", mobileWeight: 1.55 },
   { key: "court", label: "Время", mobileWeight: 0.95 },
@@ -151,7 +151,7 @@ export function DivisionsTable({
   }, [rows]);
   const highlightTiles = [
     {
-      label: "Лидер рейтинга",
+      label: "Лидер по очкам",
       player: highlights.rating,
       value: highlights.rating ? fmtNum(highlights.rating.points) : "x",
     },
@@ -327,7 +327,7 @@ export function DivisionsTable({
               </th>
               <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Рейтинг" active={sort.key === "points"} direction={sort.dir} onClick={() => setSortKey("points")} className="inline-flex w-full" />
+                <SortHeaderButton label="Очки" active={sort.key === "points"} direction={sort.dir} onClick={() => setSortKey("points")} className="inline-flex w-full" />
               </th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">Этапов</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">

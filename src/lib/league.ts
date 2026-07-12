@@ -17,7 +17,8 @@ export type MockPlayer = {
   adminName?: string;
   rid: string;
   skill: number;
-  rank: number;
+  /** RankedIn Skill scaled ×100 (e.g. 19.30 → 1930). Parsed, not surfaced in UI. */
+  rankSkill: number;
   hue: number;
   color: string;
   initials: string;
@@ -540,7 +541,7 @@ export type PlayerOverview = {
   initials: string;
   color: string;
   skill: number;
-  rank: number;
+  rankSkill: number;
   divisions: number[];
   /** Per-division standing place (null if the player has no ranked result there). */
   divisionPlaces: { div: number; place: number | null }[];
@@ -604,7 +605,7 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
         initials: p.initials,
         color: p.color,
         skill: p.skill,
-        rank: p.rank,
+        rankSkill: p.rankSkill,
         divisions: p.divisions,
         divisionPlaces: p.divisions.map((d) => ({
           div: d,
