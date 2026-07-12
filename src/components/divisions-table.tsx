@@ -273,7 +273,7 @@ export function DivisionsTable({
             <span
               aria-hidden
               className={cn(
-                "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                 sort.key === pill.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
               )}
             />
@@ -300,7 +300,7 @@ export function DivisionsTable({
             <span
               aria-hidden
               className={cn(
-                "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                 sort.key === pill.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
               )}
             />

@@ -55,11 +55,11 @@ export function RatingStageSelector({
               className={cn(
                 "grid size-full place-items-center rounded-[12px] font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
                 active
-                  ? "bg-[#f472b6] text-on-primary ring-2 ring-[#f472b6]/35"
+                  ? "bg-primary text-on-primary ring-2 ring-primary/35"
                   : selectable
-                    ? "bg-[#f472b691] text-on-primary hover:bg-[#f472b6]"
+                    ? "bg-primary/60 text-on-primary hover:bg-primary"
                     : passed
-                      ? "bg-[#f472b691] text-on-primary"
+                      ? "bg-primary/60 text-on-primary"
                       : "bg-surface-container-high text-on-surface-variant/55",
                 selectable ? "cursor-pointer" : "cursor-default",
               )}

@@ -438,7 +438,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
 function StrengthPill({ value }: { value: number | null | undefined }) {
   if (value == null) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
+    <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular">{value}</span>
     </span>
@@ -725,7 +725,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                   filter === f.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />

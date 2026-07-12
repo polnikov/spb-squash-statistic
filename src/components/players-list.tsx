@@ -156,7 +156,7 @@ function MobileLeaderboardSort({
             <span
               aria-hidden
               className={cn(
-                "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                 value === sort.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
               )}
             />
@@ -183,7 +183,7 @@ function MobileLeaderboardSort({
 function StrengthMiniBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
-    <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md">
+    <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular">{value}</span>
     </span>
@@ -193,7 +193,7 @@ function StrengthMiniBadge({ value }: { value: number | null }) {
 function StrengthInlineBadge({ value, animationKey }: { value: number | null; animationKey?: string }) {
   if (value === null) return null;
   return (
-    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b]">
+    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)]">
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular"><NumberPop key={animationKey}>{String(value)}</NumberPop></span>
     </span>
@@ -211,7 +211,7 @@ function LeaderboardTile({ label, value, animationKey, valueClassName }: { label
   );
 }
 
-function MobileLeaderboardCard({ player, position, animationKey }: { player: PlayerOverview; position: number; animationKey: string }) {
+const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player, position, animationKey }: { player: PlayerOverview; position: number; animationKey: string }) {
   return (
     <Link
       href={playerHref(player.rid)}
@@ -242,7 +242,7 @@ function MobileLeaderboardCard({ player, position, animationKey }: { player: Pla
       </div>
     </Link>
   );
-}
+});
 
 function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   const avatar = usePlayerAvatar(player.rid);
@@ -285,7 +285,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   );
 }
 
-function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
+const DesktopPlayerCard = React.memo(function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
   const avatar = usePlayerAvatar(player.rid);
   const name = splitPlayerName(player.name);
 
@@ -324,7 +324,7 @@ function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
       </div>
     </Link>
   );
-}
+});
 
 const CAROUSEL_FADE = 56;
 
@@ -479,7 +479,7 @@ function DesktopMetric({
   );
 }
 
-function DesktopLeaderboardCard({
+const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
   player,
   position,
   animationKey,
@@ -512,7 +512,7 @@ function DesktopLeaderboardCard({
       </div>
     </div>
   );
-}
+});
 
 const DIV_SCOPES: { key: "all" | 1 | 2 | 3; label: string }[] = [
   { key: "all", label: "Все" },

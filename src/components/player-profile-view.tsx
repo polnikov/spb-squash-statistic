@@ -621,7 +621,7 @@ function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Описание Strength Rating"
-        className="inline-flex items-center gap-1 rounded-full border border-[#dff7a5]/45 bg-[#dff7a5]/92 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#26320b] backdrop-blur-md"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
         <span className="font-mono tabular">{rating}</span>
@@ -643,7 +643,7 @@ function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
               className={cn(
                 "rounded-[10px] border px-2.5 py-2",
                 b === band
-                  ? "border-[#dff7a5]/65 bg-[#dff7a5]/12 text-on-surface"
+                  ? "border-[color:var(--rating-badge-hue)]/65 bg-[color:var(--rating-badge-hue)]/12 text-on-surface"
                   : "border-outline-variant bg-surface-container-low text-on-surface-variant",
               )}
             >
@@ -1478,7 +1478,7 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                   sort === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />
@@ -1762,7 +1762,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               <span
                 aria-hidden
                 className={cn(
-                  "absolute inset-1 rounded-full bg-[#f472b691] transition-all duration-300 ease-m3-emphasized-decel",
+                  "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
                   filter === o.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
                 )}
               />

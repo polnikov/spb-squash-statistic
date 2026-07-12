@@ -194,6 +194,15 @@
   --m3-shadow: #000000;
 }
 
+/* Rating badge (Strength Rating snail chip). Fixed lime brand chip: dark ink on
+   pale lime reads on both themes, so it lives outside the light/dark override. */
+:root {
+  --rating-badge-hue: #dff7a5;
+  --rating-badge-bg: rgba(223, 247, 165, 0.92);
+  --rating-badge-border: rgba(223, 247, 165, 0.45);
+  --rating-badge-ink: #26320b;
+}
+
 /* Keep optional light mode close to the same neutral system if toggled later. */
 .light {
   color-scheme: light;
@@ -264,6 +273,20 @@
       font-size: 12px !important;
     }
   }
+}
+
+/* Visible keyboard focus using the accent — replaces the faint UA outline.
+   Pointer clicks keep no ring (:focus-visible), so it never reads as noise.
+   Unlayered so it wins over Tailwind's `utilities` layer regardless of specificity. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--m3-primary);
+  outline-offset: 2px;
 }
 
 /* Number pop-in (transitions.dev) — per-digit, staggered, translate+blur. */
