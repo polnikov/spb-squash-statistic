@@ -11,6 +11,7 @@ import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
+import { TabTransition } from "@/components/ui/tab-transition";
 import { PageHeader } from "@/components/page-header";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
 
@@ -810,13 +811,15 @@ export function PlayersList({
       </AnimatePresence>
       </div>
 
-      {/* desktop: one-row card carousel */}
-      <DesktopPlayersCarousel players={filtered} />
+      {/* desktop: one-row card carousel — crossfades on division-scope switch */}
+      <TabTransition tabKey={`carousel-${scope}`} rise={false} className="hidden md:block">
+        <DesktopPlayersCarousel players={filtered} />
+      </TabTransition>
 
       {/* desktop: full-width leaderboard cards under sortable metric headers */}
       <div className="hidden flex-col gap-3 md:flex">
         {desktopLeaderboard.length > 0 ? (
-          <>
+          <TabTransition tabKey={scope} rise={false} className="flex flex-col gap-3">
             <DesktopLeaderboardHeader
               sort={leaderboardSort}
               direction={leaderboardDirection}
@@ -857,7 +860,7 @@ export function PlayersList({
                 </button>
               </>
             ) : null}
-          </>
+          </TabTransition>
         ) : null}
       </div>
 
