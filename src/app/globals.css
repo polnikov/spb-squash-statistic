@@ -280,9 +280,6 @@
    Unlayered so it wins over Tailwind's `utilities` layer regardless of specificity. */
 a:focus-visible,
 button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
 [role="button"]:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--m3-primary);
