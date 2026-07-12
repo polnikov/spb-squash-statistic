@@ -49,3 +49,6 @@ yarn-error.log*
 # design workflow artifacts (kept locally as reference, not in the repo)
 /mockups/
 /BBR design/
+
+# admin guide (local reference, not in the repo)
+/docs/admin-guide/
