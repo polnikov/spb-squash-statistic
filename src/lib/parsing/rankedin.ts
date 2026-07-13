@@ -26,6 +26,10 @@ export type StageImportInput = {
   stage?: number;
   date?: string;
   playerLinks?: { rankedinId: string; playerId: number }[];
+  /** RankedIn ids to drop from the import (fake accounts). Their matches are not
+   * aggregated at all, so opponents' stats and the places are recomputed as if
+   * the player had never entered the stage. */
+  excludedRankedinIds?: string[];
 };
 
 export type ParsedStagePlayer = {
@@ -138,6 +142,7 @@ type InternalPlayerStats = ParsedStagePlayer & {
 
 type ParsedStageData = Omit<StageImportPreview, "players" | "conflicts" | "alreadyImported"> & {
   players: ParsedStagePlayer[];
+  exclusions: StageImportExclusion[];
 };
 
 type ParseRankedinTournamentResult =
@@ -150,25 +155,26 @@ export async function previewRankedinStageImport(input: StageImportInput): Promi
     return parsed;
   }
 
-  const statuses = await classifyPlayers(parsed.parsed.players);
-  const excludedIds = getRetiredOnlyPlaceZeroPlayerIds(parsed.parsed.players, parsed.parsed.matches);
-  const playersPreview = parsed.parsed.players.map((p) => ({
+  const { exclusions, ...parsedStage } = parsed.parsed;
+  const statuses = await classifyPlayers(parsedStage.players);
+  const reasonById = new Map(exclusions.map((e) => [e.rankedinId, e.reason]));
+  const playersPreview = parsedStage.players.map((p) => ({
     ...p,
     ...(statuses.get(p.rankedinId) ?? { status: "new" as const }),
-    ...(excludedIds.has(p.rankedinId)
+    ...(reasonById.has(p.rankedinId)
       ? {
           excludedFromImport: true,
-          excludeReason: "Retired во всех матчах",
+          excludeReason: reasonById.get(p.rankedinId),
         }
       : {}),
   }));
   return {
     kind: "preview",
     preview: {
-      ...parsed.parsed,
+      ...parsedStage,
       players: playersPreview,
       conflicts: playersPreview.filter((p) => !p.excludedFromImport && p.status === "conflict").length,
-      alreadyImported: await isStageImported(parsed.parsed.season, parsed.parsed.division, parsed.parsed.stage),
+      alreadyImported: await isStageImported(parsedStage.season, parsedStage.division, parsedStage.stage),
     },
   };
 }
@@ -545,10 +551,32 @@ async function parseRankedinTournament(input: StageImportInput): Promise<ParseRa
   }
 
   const warnings = collectMatchValidationWarnings(selectedMatchesData).map((w) => w.message);
-  const playerStats = processMatches(selectedMatchesData, tournamentName);
-  addPlayerStandings(playerStats, resultsData);
-  const playersRows = buildPlayerRows(playerStats);
-  const matchRows = extractMatchRows(selectedMatchesData, tournamentName);
+
+  // First pass over the raw feed, with nobody excluded. It is what the auto rule
+  // (players who retired in every match) is derived from, and it keeps the
+  // original numbers of the excluded players for the preview table.
+  const fullStats = processMatches(selectedMatchesData, tournamentName);
+  addPlayerStandings(fullStats, resultsData);
+  const fullRows = buildPlayerRows(fullStats);
+  const fullMatches = extractMatchRows(selectedMatchesData, tournamentName);
+
+  const exclusions = collectExclusions(input, fullRows, fullMatches);
+  const excludedIds = new Set(exclusions.map((e) => e.rankedinId));
+
+  // Second pass with the excluded players removed from the aggregation, so the
+  // opponents no longer carry the wins, games, balls and court time they earned
+  // against them. Places are then closed up, since a place feeds the points table.
+  let playersRows = fullRows;
+  let matchRows = fullMatches;
+  if (excludedIds.size > 0) {
+    const keptStats = processMatches(selectedMatchesData, tournamentName, excludedIds);
+    addPlayerStandings(keptStats, resultsData);
+    const keptRows = closeUpPlaces(buildPlayerRows(keptStats));
+    const keptById = new Map(keptRows.map((row) => [row.rankedinId, row]));
+    playersRows = fullRows.map((row) => keptById.get(row.rankedinId) ?? row);
+    matchRows = fullMatches.filter((m) => !excludedIds.has(m.playerAId) && !excludedIds.has(m.playerBId));
+  }
+
   const inferred = inferTournamentMeta(tournamentName, matchRows);
 
   const season = input.season?.trim() || inferred.season;
@@ -576,8 +604,46 @@ async function parseRankedinTournament(input: StageImportInput): Promise<ParseRa
       players: playersRows,
       matches: matchRows,
       warnings,
+      exclusions,
     },
   };
+}
+
+export type StageImportExclusion = { rankedinId: string; reason: string };
+
+/** Players kept out of the import: retired in every match (auto) or picked by the admin. */
+function collectExclusions(
+  input: StageImportInput,
+  playersRows: ParsedStagePlayer[],
+  matchRows: ParsedStageMatch[],
+): StageImportExclusion[] {
+  const manual = new Set((input.excludedRankedinIds ?? []).map((id) => id.trim()).filter(Boolean));
+  const out: StageImportExclusion[] = [];
+  const seen = new Set<string>();
+  for (const id of getRetiredOnlyPlaceZeroPlayerIds(playersRows, matchRows)) {
+    out.push({ rankedinId: id, reason: "Retired во всех матчах" });
+    seen.add(id);
+  }
+  for (const id of manual) {
+    if (seen.has(id)) continue;
+    out.push({ rankedinId: id, reason: "Исключён вручную" });
+    seen.add(id);
+  }
+  return out;
+}
+
+/** Renumber places into 1..N: a removed player must not leave a hole that the
+ * points table would read as a worse finish for everyone below him. */
+function closeUpPlaces(rows: ParsedStagePlayer[]): ParsedStagePlayer[] {
+  const ranked = rows
+    .filter((row) => row.place > 0)
+    .map((row) => row.place)
+    .sort((a, b) => a - b);
+  const closedUp = new Map<number, number>();
+  for (const place of ranked) {
+    if (!closedUp.has(place)) closedUp.set(place, closedUp.size + 1);
+  }
+  return rows.map((row) => (row.place > 0 ? { ...row, place: closedUp.get(row.place) ?? row.place } : row));
 }
 
 async function classifyPlayers(playersRows: ParsedStagePlayer[]) {
@@ -795,7 +861,7 @@ function deduplicateResults(rows: AnyRecord[]) {
   return deduplicated;
 }
 
-function processMatches(data: AnyRecord, tournamentName: string) {
+function processMatches(data: AnyRecord, tournamentName: string, excluded?: ReadonlySet<string>) {
   const playersData = new Map<string, InternalPlayerStats>();
   for (const match of asArray(data.Matches)) {
     const firstParticipant = asRecord(match.Challenger);
@@ -803,6 +869,11 @@ function processMatches(data: AnyRecord, tournamentName: string) {
     const firstName = getParticipantName(firstParticipant);
     const secondName = getParticipantName(secondParticipant);
     if (!firstName || !secondName) continue;
+    if (excluded?.size) {
+      // Skip before the players are created: an excluded player must leave no
+      // trace, neither a row of his own nor a win in an opponent's tally.
+      if (excluded.has(getParticipantId(firstParticipant)) || excluded.has(getParticipantId(secondParticipant))) continue;
+    }
 
     const tournamentClass = String(match.TournamentClassName ?? "");
     ensurePlayer(playersData, firstName, tournamentName, tournamentClass, firstParticipant);

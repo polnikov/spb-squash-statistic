@@ -844,6 +844,10 @@ function UploadManager() {
   const [impExpanded, setImpExpanded] = React.useState(false);
   const [impSeason, setImpSeason] = React.useState("");
   const [impDiv, setImpDiv] = React.useState("");
+  // RankedIn ids the admin unchecked in the preview (fake accounts). The server
+  // re-parses with them dropped, so the table shows the numbers that will land.
+  const [excluded, setExcluded] = React.useState<string[]>([]);
+  const [recomputing, setRecomputing] = React.useState(false);
 
   const refreshImported = React.useCallback(async () => {
     setImported(await listImportedStagesAction());
@@ -902,6 +906,7 @@ function UploadManager() {
     setSubtournaments(null);
     setSelectedClassId(res.preview.selectedSubTournament?.id);
     setPlayerLinks({});
+    setExcluded([]);
     setSeason(res.preview.season);
     setDivision(String(res.preview.division));
     setStage(String(res.preview.stage));
@@ -909,8 +914,36 @@ function UploadManager() {
     setStep("preview");
   }
 
+  /** Re-parse with a new exclusion set: dropping a player changes his opponents'
+   *  stats and everyone's place, so the preview has to come back from the server. */
+  async function applyExcluded(next: string[]) {
+    setExcluded(next);
+    if (!preview) return;
+    setRecomputing(true);
+    setError(null);
+    const res = await previewStageImportAction({
+      ...importInput,
+      classId: selectedClassId ?? preview.selectedSubTournament?.id,
+      excludedRankedinIds: next,
+    });
+    setRecomputing(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    if (res.kind !== "preview") return;
+    setPreview(res.preview);
+  }
+
+  function toggleExcluded(rankedinId: string) {
+    const next = excluded.includes(rankedinId)
+      ? excluded.filter((id) => id !== rankedinId)
+      : [...excluded, rankedinId];
+    void applyExcluded(next);
+  }
+
   async function commitImport() {
-    if (!preview || preview.conflicts > 0 || preview.alreadyImported) return;
+    if (!preview || preview.conflicts > 0 || preview.alreadyImported || recomputing) return;
     setImporting(true);
     setError(null);
     const res = await importStageAction({
@@ -920,6 +953,7 @@ function UploadManager() {
       division: preview.division,
       stage: preview.stage,
       date: preview.date || undefined,
+      excludedRankedinIds: excluded,
       playerLinks: Object.entries(playerLinks)
         .map(([rankedinId, playerId]) => ({ rankedinId, playerId: Number(playerId) }))
         .filter((link) => Number.isInteger(link.playerId) && link.playerId > 0),
@@ -1124,7 +1158,8 @@ function UploadManager() {
               <div>
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
                 <div className="mt-1 text-xs text-on-surface-variant">
-                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {playersLabel(preview.players.length)} · {matchesLabel(preview.matches.length)}
+                  Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {playersLabel(preview.players.filter((p) => !p.excludedFromImport).length)} · {matchesLabel(preview.matches.length)}
+                  {recomputing ? <span className="ml-2 text-primary">пересчёт…</span> : null}
                 </div>
               </div>
             </div>
@@ -1132,6 +1167,7 @@ function UploadManager() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
+                    <th className="w-px whitespace-nowrap px-4 py-3 font-medium">Грузить</th>
                     <th className="px-5 py-3 font-medium">Место</th>
                     <th className="px-3 py-3 font-medium">Игрок</th>
                     <th className="px-3 py-3 font-medium">ID</th>
@@ -1146,7 +1182,10 @@ function UploadManager() {
                 <tbody>
                   {preview.players.map((row) => {
                     const conflict = row.status === "conflict";
-                    const excluded = Boolean(row.excludedFromImport);
+                    const excludedRow = Boolean(row.excludedFromImport);
+                    const manual = excluded.includes(row.rankedinId);
+                    // Auto-excluded (retired in every match) rows cannot be brought back.
+                    const lockedOut = excludedRow && !manual;
                     const selectedLink = playerLinks[row.rankedinId] ?? "";
                     const possibleIds = new Set((row.possibleMatches ?? []).map((player) => player.playerId));
                     const possibleOptions = (row.possibleMatches ?? [])
@@ -1156,9 +1195,19 @@ function UploadManager() {
                     return (
                       <tr
                         key={`${row.rankedinId}-${row.place}`}
-                        className={cn("border-t border-outline-variant", conflict && "bg-error-container/45", excluded && "bg-error-container/15")}
+                        className={cn("border-t border-outline-variant", conflict && "bg-error-container/45", excludedRow && "bg-error-container/15")}
                       >
-                        <td className={cn("border-l-4 px-5 py-3 font-mono text-[13px] font-semibold tabular", excluded ? "border-error" : "border-transparent")}>{row.place}</td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={!excludedRow}
+                            disabled={lockedOut || recomputing || importing}
+                            onChange={() => toggleExcluded(row.rankedinId)}
+                            aria-label={`Загружать ${row.name}`}
+                            className="size-4 accent-primary disabled:opacity-40"
+                          />
+                        </td>
+                        <td className={cn("border-l-4 px-5 py-3 font-mono text-[13px] font-semibold tabular", excludedRow ? "border-error" : "border-transparent")}>{row.place}</td>
                         <td className="px-3 py-3 text-left">
                           <div className="text-[13px] font-[550]">{row.name}</div>
                         </td>
@@ -1180,7 +1229,7 @@ function UploadManager() {
                         <td className="w-px whitespace-nowrap px-5 py-3 text-right align-top">
                           <div className="flex flex-col items-end gap-2">
                             <PreviewStatus row={row} />
-                            {!excluded && row.status === "new" ? (
+                            {!excludedRow && row.status === "new" ? (
                               <LinkPicker
                                 value={selectedLink}
                                 possibleOptions={possibleOptions}
@@ -1203,7 +1252,7 @@ function UploadManager() {
             </button>
             <button
               onClick={commitImport}
-              disabled={importing || preview.conflicts > 0 || preview.alreadyImported}
+              disabled={importing || recomputing || preview.conflicts > 0 || preview.alreadyImported}
               className={cn(PRIMARY_BTN, "inline-flex h-11 items-center gap-2 px-5 text-[13.5px] disabled:opacity-55")}
             >
               <Check className="size-4" />
