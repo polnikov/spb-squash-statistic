@@ -155,11 +155,15 @@ function baseChartOption(): EChartsOption {
     textStyle: { color: CHART_COLORS.text, fontFamily: "Inter, sans-serif" },
     tooltip: {
       trigger: "axis",
+      // Keep the box inside the canvas: the surrounding card clips anything that
+      // escapes, so an unconfined tooltip near the left edge is cut in half on a
+      // phone.
+      confine: true,
       backgroundColor: "#1e1e1f",
       borderColor: CHART_COLORS.grid,
       borderRadius: 12,
       textStyle: { color: "#ededed", fontFamily: "Inter, sans-serif" },
-      extraCssText: "border-radius:12px;overflow:hidden;",
+      extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: CHART_COLORS.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
     grid: { left: 38, right: 18, top: 38, bottom: 34 },

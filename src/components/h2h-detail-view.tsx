@@ -209,11 +209,16 @@ function chartBase(): EChartsOption {
     textStyle: { color: C.text, fontFamily: "Inter, sans-serif" },
     tooltip: {
       trigger: "axis",
+      // Without `confine` the box is placed beside the pointer and leaves the
+      // canvas; the card then clips it, which on a phone means the tooltip is
+      // half off-screen. Cap the width too: the meeting tooltip is several lines
+      // of Russian text and would otherwise be wider than the chart.
+      confine: true,
       backgroundColor: "#1e1e1f",
       borderColor: C.grid,
       borderRadius: 12,
       textStyle: { color: "#ededed", fontFamily: "Inter, sans-serif" },
-      extraCssText: "border-radius:12px;overflow:hidden;",
+      extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: C.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
     grid: { left: 38, right: 18, top: 38, bottom: 34 },
