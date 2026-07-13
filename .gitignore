@@ -44,6 +44,7 @@ yarn-error.log*
 /.agents/
 /.claude/
 /.impeccable/
+/.playwright-mcp/
 /CLAUDE.md
 
 # design workflow artifacts (kept locally as reference, not in the repo)
