@@ -191,28 +191,28 @@ function StrengthMiniBadge({ value }: { value: number | null }) {
   );
 }
 
-function StrengthInlineBadge({ value, animationKey }: { value: number | null; animationKey?: string }) {
+function StrengthInlineBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)]">
       <Snail className="size-3 shrink-0" />
-      <span className="font-mono tabular"><NumberPop key={animationKey}>{String(value)}</NumberPop></span>
+      <span className="font-mono tabular">{value}</span>
     </span>
   );
 }
 
-function LeaderboardTile({ label, value, animationKey, valueClassName }: { label: string; value: string; animationKey: string; valueClassName?: string }) {
+function LeaderboardTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
     <div className="min-w-0 rounded-md bg-surface-container-high px-1 py-2 text-center">
       <div className="text-[9px] leading-tight text-on-surface-variant">{label}</div>
       <div className={cn("mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface", valueClassName)}>
-        <NumberPop key={animationKey}>{value}</NumberPop>
+        {value}
       </div>
     </div>
   );
 }
 
-const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player, position, animationKey }: { player: PlayerOverview; position: number; animationKey: string }) {
+const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player, position }: { player: PlayerOverview; position: number }) {
   return (
     <Link
       href={playerHref(player.rid)}
@@ -220,26 +220,26 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player
     >
       <div className="flex items-center gap-3">
         <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">
-          <NumberPop key={`${animationKey}-position`}>{position}</NumberPop>
+          {position}
         </span>
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-9 text-[13px]" />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <div className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{player.name}</div>
-            <StrengthInlineBadge value={player.strengthRating} animationKey={`${animationKey}-skill`} />
+            <StrengthInlineBadge value={player.strengthRating} />
           </div>
           <div className="mt-0.5 text-[11px] text-on-surface-variant">
             Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
-              <NumberPop key={`${animationKey}-matches`}>{`${player.matches} · ${player.matchesWon} - ${player.matchesLost}`}</NumberPop>
+              {`${player.matches} · ${player.matchesWon} - ${player.matchesLost}`}
             </span>
           </div>
         </div>
       </div>
       <div className="mt-[13px] grid grid-cols-4 gap-1.5">
-        <LeaderboardTile label="Match WR" value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} />
-        <LeaderboardTile label="Game WR" value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} />
-        <LeaderboardTile label="Rally WR" value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} />
-        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
+        <LeaderboardTile label="Match WR" value={formatPct(player.winPct)} />
+        <LeaderboardTile label="Game WR" value={formatPct(player.gameWinRatePct)} />
+        <LeaderboardTile label="Rally WR" value={formatPct(player.rallyWinRatePct)} />
+        <LeaderboardTile label="+/- очков/матч" value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} />
       </div>
     </Link>
   );
@@ -778,7 +778,6 @@ export function PlayersList({
                   key={p.rid}
                   player={p}
                   position={leaderboardRanks.get(p.rid) ?? 0}
-                  animationKey={`${leaderboardAnimationKey}-${p.rid}`}
                 />
               ))}
             </div>
@@ -792,7 +791,6 @@ export function PlayersList({
                           key={p.rid}
                           player={p}
                           position={leaderboardRanks.get(p.rid) ?? 0}
-                          animationKey={`${leaderboardAnimationKey}-${p.rid}`}
                         />
                       ))}
                     </div>

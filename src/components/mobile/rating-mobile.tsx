@@ -141,15 +141,15 @@ export function RatingMobile({
                 </div>
                 <div className="flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pt-1 text-[11.5px] text-on-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <span className="inline-flex shrink-0 items-center gap-1">
-                    Этапы<Badge><NumberPop>{`${r.stages}/${totalStages}`}</NumberPop></Badge>
+                    Этапы<Badge>{`${r.stages}/${totalStages}`}</Badge>
                   </span>
                   <span className="shrink-0">·</span>
                   <span className="inline-flex shrink-0 items-center gap-1">
-                    Матчи<Badge><NumberPop>{r.matches}</NumberPop></Badge>
+                    Матчи<Badge>{r.matches}</Badge>
                   </span>
                   <span className="shrink-0">·</span>
                   <span className="inline-flex shrink-0 items-center gap-1">
-                    Последний этап<Badge><NumberPop>{r.lastStagePoints > 0 ? `+${r.lastStagePoints}` : "x"}</NumberPop></Badge>
+                    Последний этап<Badge>{r.lastStagePoints > 0 ? `+${r.lastStagePoints}` : "x"}</Badge>
                   </span>
                 </div>
               </Link>
