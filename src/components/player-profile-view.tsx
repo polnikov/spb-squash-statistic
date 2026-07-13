@@ -148,6 +148,24 @@ function cumulative(points: PlayerProfileSeriesPoint[], field: "gameBalance" | "
   return points.map((p) => (sum += p[field]));
 }
 
+/** Stages visible at once in the places chart before the zoom slider appears. */
+const PLACES_WINDOW = 10;
+
+const PLACES_ZOOM_SLIDER = {
+  height: 16,
+  bottom: 4,
+  borderColor: "transparent",
+  backgroundColor: "rgba(255,255,255,0.04)",
+  fillerColor: "rgba(244,114,182,0.16)",
+  handleStyle: { color: CHART_COLORS.primary, borderColor: CHART_COLORS.primary },
+  moveHandleSize: 3,
+  handleSize: "120%",
+  brushSelect: false,
+  showDetail: false,
+  showDataShadow: false,
+  zoomLock: false,
+} as const;
+
 function baseChartOption(): EChartsOption {
   return {
     color: [CHART_COLORS.primary, CHART_COLORS.tertiary, CHART_COLORS.secondary, CHART_COLORS.error],
@@ -223,10 +241,18 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
     if (!places.length) return null;
     const maxPlace = Math.max(3, ...places.map((p) => p.place));
     const bars = places.map((p) => ({ value: maxPlace - p.place + 1, place: p.place }));
+    // One bar per stage, so a career spans dozens of them. Category labels
+    // ("22/23 · Э5 · Д2") cannot fit at that density, so they are dropped: the
+    // place sits on the bar and the tooltip carries the season/stage/division.
+    // Past PLACES_WINDOW stages the chart shows the latest window and the rest
+    // is reachable through the zoom slider.
+    const zoomed = places.length > PLACES_WINDOW;
+    const startValue = Math.max(0, places.length - PLACES_WINDOW);
+    const endValue = places.length - 1;
     return {
       ...option,
       legend: { show: false },
-      grid: { ...option.grid, top: 24 },
+      grid: { ...option.grid, top: 24, bottom: zoomed ? 40 : 12 },
       tooltip: {
         ...option.tooltip,
         formatter: (params: unknown) => {
@@ -236,16 +262,26 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
           return point ? `${point.label}<br/>Место: ${point.place}` : "";
         },
       },
+      dataZoom: zoomed
+        ? [
+            { type: "slider", startValue, endValue, ...PLACES_ZOOM_SLIDER },
+            // `preventDefaultMouseMove: false` leaves the vertical page scroll to
+            // the page: the chart only claims horizontal drags.
+            { type: "inside", startValue, endValue, preventDefaultMouseMove: false },
+          ]
+        : undefined,
       xAxis: {
         ...option.xAxis,
         data: places.map((p) => p.label),
-        axisLabel: { interval: 0, rotate: places.length > 7 ? 35 : 0 },
+        axisLabel: { show: false },
       },
       yAxis: {
         ...option.yAxis,
         min: 0,
         max: maxPlace,
-        interval: 1,
+        // No `interval: 1`: a division with 26 entrants would draw 26 grid lines.
+        // The axis carries no labels anyway, the grid is only a reading aid.
+        splitNumber: 4,
         axisLabel: { show: false },
         axisTick: { show: false },
       },
