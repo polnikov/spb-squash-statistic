@@ -845,11 +845,12 @@ function Filters({
   const divisionW = divisionItems.length === 1 ? "w-auto" : "w-full min-w-0 max-w-full";
 
   return (
-    // Pinned mobile filter bar. `app-bg` (a viewport-fixed gradient) makes it
-    // opaque *and* seamless with the page behind. z-[39] sits above the scrolling
-    // content pills (their labels use up to z-30) yet below the app header (z-40),
-    // so content is occluded instead of bleeding over the bar.
-    <div className="app-bg sticky top-[53px] z-[39] -mx-2 px-2 py-2 md:static md:mx-0 md:p-0">
+    // Pinned mobile filter bar. `app-bg-blend` (a viewport-anchored copy of the
+    // shell gradient) makes it opaque *and* seamless with the page behind. z-[39]
+    // sits above the scrolling content pills (their labels use up to z-30) yet
+    // below the app header (z-40), so content is occluded instead of bleeding over
+    // the bar.
+    <div className="app-bg-blend sticky top-[53px] z-[39] -mx-2 px-2 py-2 md:static md:mx-0 md:p-0">
       <div className={cn("grid w-full items-center gap-1 md:flex md:flex-wrap md:gap-2", mobileCols)}>
         <SegmentedControl
           items={seasonItems}

@@ -40,11 +40,34 @@
   100% { transform: translateX(340%) scaleX(0.45); }
 }
 
-/* App background: radial light spot over dark vertical field. */
-.app-bg {
-  background:
+/* App background: radial light spot over dark vertical field.
+ * Painted into a viewport-fixed layer rather than with `background-attachment:
+ * fixed` on the shell: the latter blocks the compositor's scroll fast path and
+ * repaints the whole viewport gradient on every scroll frame (visible stutter
+ * on mobile). The fixed pseudo-element is its own composited layer, so scroll
+ * only moves the content above it. */
+:root {
+  --app-bg-image:
     radial-gradient(circle at center, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 18%, rgba(255,255,255,0.05) 34%, transparent 58%),
     linear-gradient(180deg, #2E2E2E 0%, #1A1A1A 52%, #101010 100%);
+}
+
+.app-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--app-bg-image);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* For elements that must read as a hole in the shell background (sticky bars
+ * scrolled content passes under). Small painted area, so the fixed attachment
+ * cost stays negligible, and the gradient lines up with `.app-bg::before`. */
+.app-bg-blend {
+  background: var(--app-bg-image);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
@@ -320,9 +343,13 @@ button:focus-visible,
 .t-digit {
   display: inline-block;
   white-space: pre;
-  will-change: transform, opacity, filter;
 }
+/* `will-change` only while the pop-in runs. A permanent hint promotes every
+ * digit to its own compositor layer: a profile page carries ~500 of them, and
+ * the layer tree then has to be re-layerized and committed on every scroll
+ * frame. */
 .t-digit-group.is-animating .t-digit {
+  will-change: transform, opacity, filter;
   animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) both;
 }
 

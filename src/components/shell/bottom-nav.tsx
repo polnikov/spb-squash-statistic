@@ -9,8 +9,10 @@ export function BottomNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const season = searchParams.get("season");
+  // The bar sits over the scroll: a wide backdrop blur is re-sampled every frame,
+  // so keep the radius small and the fill nearly opaque.
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[24px] border-t border-border bg-[rgba(22,22,22,0.86)] px-1.5 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(0,0,0,0.5)] backdrop-blur-[14px] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 rounded-t-[24px] border-t border-border bg-[rgba(22,22,22,0.94)] px-1.5 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(0,0,0,0.5)] backdrop-blur-[6px] md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = isActive(item, pathname);
         const Icon = item.icon;
