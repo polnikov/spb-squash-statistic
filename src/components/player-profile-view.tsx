@@ -75,6 +75,8 @@ const CHART_COLORS = {
   secondary: "#7eeaf5",
   tertiary: "#ffa52a",
   error: "#ff6b63",
+  /** Wins. Paired with `error` wherever a chart splits a result into won/lost. */
+  success: "#22c55e",
   text: "#b6b6b6",
   grid: "rgba(255,255,255,0.09)",
 };
@@ -326,7 +328,10 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
     return {
       ...option,
       xAxis: { ...option.xAxis, data: career.map((p) => p.label) },
-      series: [barSeries("Матчи", career.map((p) => p.matchesPlayed), CHART_COLORS.primary)],
+      series: [
+        barSeries("Победы", career.map((p) => p.matchesWon), CHART_COLORS.success, "matches"),
+        barSeries("Поражения", career.map((p) => p.matchesLost), CHART_COLORS.error, "matches"),
+      ],
     };
   }
 
@@ -398,7 +403,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
       ...option,
       xAxis: { ...option.xAxis, data: stages.map((p) => `Э${p.stage}`) },
       series: [
-        barSeries("Победы", stages.map((p) => p.matchesWon), CHART_COLORS.primary, "matches"),
+        barSeries("Победы", stages.map((p) => p.matchesWon), CHART_COLORS.success, "matches"),
         barSeries("Поражения", stages.map((p) => p.matchesLost), CHART_COLORS.error, "matches"),
       ],
     };
@@ -418,12 +423,19 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
   }
 
   if (type === "scoreDistribution" && stats) {
+    // Single series, so the win/loss split has to be carried per bar.
+    const wins = [stats.wins3_0, stats.wins3_1, stats.wins3_2];
+    const losses = [stats.losses2_3, stats.losses1_3, stats.losses0_3];
+    const bars = [
+      ...wins.map((value) => ({ value, itemStyle: { color: CHART_COLORS.success } })),
+      ...losses.map((value) => ({ value, itemStyle: { color: CHART_COLORS.error } })),
+    ];
     return {
       ...option,
       legend: { show: false },
       grid: { ...option.grid, top: 16 },
       xAxis: { ...option.xAxis, data: ["3:0", "3:1", "3:2", "2:3", "1:3", "0:3"] },
-      series: [barSeries("Матчи", [stats.wins3_0, stats.wins3_1, stats.wins3_2, stats.losses2_3, stats.losses1_3, stats.losses0_3], CHART_COLORS.primary)],
+      series: [{ ...barSeries("Матчи", []), data: bars }],
     };
   }
 
