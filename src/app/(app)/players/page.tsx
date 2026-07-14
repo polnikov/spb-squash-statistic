@@ -2,6 +2,8 @@ import { currentSeasonOf, getPlayersOverview, seasonStart, type PlayerOverview }
 import { loadAllLeagues } from "@/lib/db/league";
 import { loadCareerStrengthRatingsByRid } from "@/lib/db/strength-rating";
 import { PlayersList } from "@/components/players-list";
+import { PlayerAvatarProvider } from "@/components/player-avatar";
+import { getPlayerAvatarsByRid } from "@/lib/db/player-avatar-db";
 import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export const dynamic = "force-dynamic";
@@ -115,10 +117,13 @@ export default async function PlayersPage() {
   const merged = applyCurrentSeasonPlaces(mergePlayersByRid(bySeasonAsc), currentOverview);
   const stored = await loadCareerStrengthRatingsByRid(merged.map((p) => p.rid));
   const players = applyStoredStrengthRatings(merged, stored);
+  const avatars = await getPlayerAvatarsByRid();
 
   return (
-    <div className="flex flex-col gap-3 md:gap-8">
-      <PlayersList players={players} title="Игроки" />
-    </div>
+    <PlayerAvatarProvider avatars={avatars}>
+      <div className="flex flex-col gap-3 md:gap-8">
+        <PlayersList players={players} title="Игроки" />
+      </div>
+    </PlayerAvatarProvider>
   );
 }

@@ -127,6 +127,13 @@
 			"when": 1784044900000,
 			"tag": "0017_dismissed_duplicate_pairs",
 			"breakpoints": true
+		},
+		{
+			"idx": 18,
+			"version": "7",
+			"when": 1784045000000,
+			"tag": "0018_player_avatars",
+			"breakpoints": true
 		}
 	]
 }

@@ -125,6 +125,23 @@ export const playerRankedinAliases = pgTable(
 );
 
 /**
+ * Player photo used as an avatar. One row per player; the image is a base64
+ * data URL plus the crop the admin set (scale and offset). Kept server-side so
+ * avatars are shared across devices instead of living in one browser's storage.
+ */
+export const playerAvatars = pgTable("player_avatars", {
+  playerId: integer("player_id")
+    .primaryKey()
+    .references(() => players.id, { onDelete: "cascade" }),
+  dataUrl: text("data_url").notNull(),
+  fileName: text("file_name"),
+  scale: smallint("scale").notNull().default(120),
+  offsetX: smallint("offset_x").notNull().default(0),
+  offsetY: smallint("offset_y").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Pairs the admin marked as "not the same person" in the duplicate finder. The
  * detector groups by name similarity, which sometimes flags two real people with
  * the same name; a dismissed pair drops that edge so the group never re-forms.

@@ -1,37 +1,28 @@
 "use client";
 
 import * as React from "react";
-import {
-  avatarBackgroundStyle,
-  PLAYER_AVATAR_EVENT,
-  PLAYER_AVATAR_STORAGE_KEY,
-  readPlayerAvatars,
-  type PlayerAvatarMedia,
-} from "@/lib/player-avatar-store";
+import { avatarBackgroundStyle, type PlayerAvatarMedia } from "@/lib/player-avatar-store";
 import { cn } from "@/lib/utils";
 
+/**
+ * Avatars now live in the DB, fetched by the server component and handed to this
+ * provider, so every device sees the same photos. `usePlayerAvatar` reads the map
+ * from context; without a provider it returns null (initials fallback).
+ */
+const AvatarContext = React.createContext<Record<string, PlayerAvatarMedia>>({});
+
+export function PlayerAvatarProvider({
+  avatars,
+  children,
+}: {
+  avatars: Record<string, PlayerAvatarMedia>;
+  children: React.ReactNode;
+}) {
+  return <AvatarContext.Provider value={avatars}>{children}</AvatarContext.Provider>;
+}
+
 export function usePlayerAvatar(rid: string | undefined): PlayerAvatarMedia | null {
-  const [avatars, setAvatars] = React.useState<Record<string, PlayerAvatarMedia>>({});
-
-  React.useEffect(() => {
-    setAvatars(readPlayerAvatars());
-
-    function refresh() {
-      setAvatars(readPlayerAvatars());
-    }
-
-    function onStorage(event: StorageEvent) {
-      if (event.key === PLAYER_AVATAR_STORAGE_KEY) refresh();
-    }
-
-    window.addEventListener(PLAYER_AVATAR_EVENT, refresh);
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(PLAYER_AVATAR_EVENT, refresh);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
+  const avatars = React.useContext(AvatarContext);
   return rid ? avatars[rid] ?? null : null;
 }
 

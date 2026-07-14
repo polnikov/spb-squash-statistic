@@ -29,6 +29,8 @@ import {
   importStageAction,
   listDuplicateGroupsAction,
   listImportedStagesAction,
+  listPlayerAvatarsAction,
+  savePlayerAvatarAction,
   listPlayerLinkOptionsAction,
   listPointsTablesAction,
   logoutAction,
@@ -50,8 +52,6 @@ import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
   avatarBackgroundStyle,
   fileToDataUrl,
-  readPlayerAvatars,
-  writePlayerAvatars,
   type PlayerAvatarMedia,
 } from "@/lib/player-avatar-store";
 
@@ -234,7 +234,7 @@ function PlayersManager({ league }: { league: League }) {
   }, [query]);
 
   React.useEffect(() => {
-    setAvatars(readPlayerAvatars());
+    void listPlayerAvatarsAction().then(setAvatars);
     void listPlayerLinkOptionsAction().then(setLinkOptions);
   }, []);
 
@@ -249,25 +249,22 @@ function PlayersManager({ league }: { league: League }) {
     }));
   }
 
+  // Avatar upload and the crop sliders only touch local state; the photo is
+  // written to the DB when the admin clicks "Сохранить" (see savePlayer), so the
+  // large data URL is not re-sent on every slider tick.
   async function setAvatar(rid: string, file: File) {
     const dataUrl = await fileToDataUrl(file);
-    setAvatars((current) => {
-      const next = {
-        ...current,
-        [rid]: { dataUrl, fileName: file.name, scale: 120, x: 0, y: 0 },
-      };
-      writePlayerAvatars(next);
-      return next;
-    });
+    setAvatars((current) => ({
+      ...current,
+      [rid]: { dataUrl, fileName: file.name, scale: 120, x: 0, y: 0 },
+    }));
   }
 
   function patchAvatar(rid: string, patch: Partial<PlayerAvatarMedia>) {
     setAvatars((current) => {
       const existing = current[rid];
       if (!existing) return current;
-      const next = { ...current, [rid]: { ...existing, ...patch } };
-      writePlayerAvatars(next);
-      return next;
+      return { ...current, [rid]: { ...existing, ...patch } };
     });
   }
 
@@ -280,11 +277,24 @@ function PlayersManager({ league }: { league: League }) {
       adminName: editingDraft.adminName,
       rankedinId: editingDraft.rankedinId,
     });
-    setSaving(false);
     if (!res.ok) {
+      setSaving(false);
       setSaveError(res.error ?? "Ошибка сохранения");
       return;
     }
+    // Persist the avatar too. Resolve by the old rid: if the RankedIn id was just
+    // changed, the old one is now an alias of the same player, so it still finds
+    // him.
+    const avatar = avatars[editingPlayer.rid];
+    if (avatar) {
+      const avatarRes = await savePlayerAvatarAction({ rid: editingPlayer.rid, media: avatar });
+      if (!avatarRes.ok) {
+        setSaving(false);
+        setSaveError(avatarRes.error);
+        return;
+      }
+    }
+    setSaving(false);
     setEditingRid(null);
     router.refresh();
   }

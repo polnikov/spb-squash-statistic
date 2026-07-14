@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { players, pointsTable } from "@/lib/db/schema";
 import { attachRankedinIdToPlayer, findPlayerByRankedinId } from "@/lib/db/player-identity";
 import { dismissDuplicateGroup, listDuplicateGroups, mergePlayers, type DuplicateGroupView, type MergeResult } from "@/lib/db/player-merge";
+import { deletePlayerAvatar, getPlayerAvatarsByRid, savePlayerAvatar } from "@/lib/db/player-avatar-db";
+import type { PlayerAvatarMedia } from "@/lib/player-avatar-store";
 import { login, logout, requireAdmin } from "@/lib/auth";
 import {
   deleteImportedStage,
@@ -324,6 +326,46 @@ export async function dismissDuplicateGroupAction(input: {
     return res.ok ? { ok: true } : res;
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Не удалось отклонить" };
+  }
+}
+
+// --- player avatars ---
+
+export async function listPlayerAvatarsAction(): Promise<Record<string, PlayerAvatarMedia>> {
+  requireAdmin();
+  return getPlayerAvatarsByRid();
+}
+
+export async function savePlayerAvatarAction(input: {
+  rid: string;
+  media: PlayerAvatarMedia;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  requireAdmin();
+  try {
+    const res = await savePlayerAvatar(input.rid, input.media);
+    if (res.ok) {
+      revalidatePath("/players");
+      revalidatePath(`/players/${input.rid}`);
+    }
+    return res;
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Не удалось сохранить фото" };
+  }
+}
+
+export async function deletePlayerAvatarAction(input: {
+  rid: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  requireAdmin();
+  try {
+    const res = await deletePlayerAvatar(input.rid);
+    if (res.ok) {
+      revalidatePath("/players");
+      revalidatePath(`/players/${input.rid}`);
+    }
+    return res;
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Не удалось удалить фото" };
   }
 }
 

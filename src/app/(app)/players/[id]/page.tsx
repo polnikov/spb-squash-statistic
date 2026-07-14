@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { PlayerProfileView } from "@/components/player-profile-view";
+import { PlayerAvatarProvider } from "@/components/player-avatar";
 import { loadAllLeagues } from "@/lib/db/league";
 import { findPlayerByRankedinId } from "@/lib/db/player-identity";
+import { getPlayerAvatarsByRid } from "@/lib/db/player-avatar-db";
 import { resolveProfilePlayerRid } from "@/lib/player-profile";
 import { buildPlayerProfileModelFromDb } from "@/lib/player-profile-db";
 
@@ -23,5 +25,11 @@ export default async function PlayerDetailPage({
   const model = await buildPlayerProfileModelFromDb(leagues, playerRid, searchParams);
   if (!model) notFound();
 
-  return <PlayerProfileView model={model} />;
+  const avatars = await getPlayerAvatarsByRid();
+
+  return (
+    <PlayerAvatarProvider avatars={avatars}>
+      <PlayerProfileView model={model} />
+    </PlayerAvatarProvider>
+  );
 }
