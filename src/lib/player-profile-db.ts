@@ -301,6 +301,13 @@ export async function buildPlayerProfileModelFromDb(
   careerStats.strengthRating = ownerStrength?.rating ?? null;
   careerStats.strengthRatingGames = ownerStrength?.games ?? 0;
 
+  // Leaderboard place: the Players leaderboard ranks by Strength Rating desc, so
+  // the owner's rank is one past everyone rated strictly higher. Null rating (no
+  // rating yet) has no place.
+  const ownerRating = ownerStrength?.rating ?? null;
+  const strengthRatingRank =
+    ownerRating == null ? null : 1 + playerRows.filter((p) => p.strengthRating != null && p.strengthRating > ownerRating).length;
+
   function stageSeries(label: string, division: number | null): PlayerProfileSeriesPoint[] {
     const source = division == null ? stageBySeason.get(label) ?? [] : stageDivByKey.get(`${label}::${division}`) ?? [];
     const byStage = new Map(source.map((s) => [s.stage, s.stats]));
@@ -386,6 +393,7 @@ export async function buildPlayerProfileModelFromDb(
   return {
     player,
     careerStats,
+    strengthRatingRank,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
     divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),

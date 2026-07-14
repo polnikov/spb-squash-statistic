@@ -250,6 +250,8 @@ export type PlayerProfileDivisionPlace = { div: number; place: number | null };
 export type PlayerProfileModel = {
   player: PlayerProfilePlayer;
   careerStats: PlayerProfileStats;
+  /** Place on the Players leaderboard (by Strength Rating desc). Null if unrated. */
+  strengthRatingRank: number | null;
   /** Career place distribution over all stage results (unfiltered). */
   careerPlaces: PlayerProfilePlaces;
   /** Current-season standing place per division the player plays. */
@@ -1098,6 +1100,9 @@ export function buildPlayerProfileModel(
   return {
     player,
     careerStats,
+    // Elo is global (needs cross-player history the pure builder does not have),
+    // so the DB-backed loader fills the leaderboard place; here it is unknown.
+    strengthRatingRank: null,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
     divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),

@@ -652,7 +652,7 @@ function ActivityBadge({ active }: { active: boolean }) {
   );
 }
 
-function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
+function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank: number | null }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   const rating = stats.strengthRating;
@@ -679,6 +679,7 @@ function StrengthRatingBadge({ stats }: { stats: PlayerProfileStats }) {
       >
         <Snail className="size-3 shrink-0" />
         <span className="font-mono tabular">{rating}</span>
+        {rank != null ? <span className="font-mono tabular opacity-80">· #{rank}</span> : null}
       </button>
       <div
         className={cn(
@@ -820,7 +821,7 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
         <ActivityBadge active={model.active} />
-        <StrengthRatingBadge stats={stats} />
+        <StrengthRatingBadge stats={stats} rank={model.strengthRatingRank} />
         {avatar ? (
           <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
         ) : null}
