@@ -632,6 +632,13 @@ function previewValue(value: number | string | null | undefined) {
   return value === null || value === undefined || value === "" ? "x" : value;
 }
 
+/** A live RankedIn profile has an id like "R000027113". A player who deleted his
+ * profile comes back as "D105361_76068": the stage still counts, but if he later
+ * signs up again it will be under a new id, and the admin has to link the two. */
+function isDeletedRankedinProfile(rankedinId: string) {
+  return Boolean(rankedinId) && !/^R\d+$/i.test(rankedinId.trim());
+}
+
 function PreviewStatus({ row }: { row: StageImportPreview["players"][number] }) {
   if (row.excludedFromImport) {
     return (
@@ -1143,6 +1150,18 @@ function UploadManager() {
               <span className="text-[13px] font-medium">Найдены конфликты ID: {preview.conflicts}. Исправьте игроков перед загрузкой.</span>
             </div>
           ) : null}
+          {(() => {
+            const deleted = preview.players.filter((p) => isDeletedRankedinProfile(p.rankedinId));
+            if (!deleted.length) return null;
+            return (
+              <div className="flex items-start gap-3 rounded-[14px] bg-tertiary-container px-4 py-3 text-on-tertiary-container">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <span className="text-[13px] font-medium">
+                  Профиль на RankedIn удалён у {deleted.length === 1 ? "игрока" : "игроков"}: {deleted.map((p) => p.name).join(", ")}. Этап загрузится, но при следующей регистрации у них будет новый ID: свяжите его с этим игроком в базе.
+                </span>
+              </div>
+            );
+          })()}
           {preview.warnings.length > 0 ? (
             <div className="flex flex-col gap-1 rounded-[14px] bg-surface-container-high px-4 py-3 text-xs text-on-surface-variant">
               {preview.warnings.slice(0, 3).map((warning) => <span key={warning}>{warning}</span>)}
@@ -1192,10 +1211,16 @@ function UploadManager() {
                       .filter((player) => player.rankedinId !== row.rankedinId);
                     const otherOptions = linkOptions
                       .filter((player) => player.rankedinId !== row.rankedinId && !possibleIds.has(player.playerId));
+                    const deletedProfile = isDeletedRankedinProfile(row.rankedinId);
                     return (
                       <tr
                         key={`${row.rankedinId}-${row.place}`}
-                        className={cn("border-t border-outline-variant", conflict && "bg-error-container/45", excludedRow && "bg-error-container/15")}
+                        className={cn(
+                          "border-t border-outline-variant",
+                          deletedProfile && "bg-tertiary-container/70",
+                          conflict && "bg-error-container/45",
+                          excludedRow && "bg-error-container/15",
+                        )}
                       >
                         <td className="px-4 py-3 text-center">
                           <input
@@ -1212,14 +1237,24 @@ function UploadManager() {
                           <div className="text-[13px] font-[550]">{row.name}</div>
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <a
-                            href={row.playerUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={cn("font-mono text-[11px] tabular underline-offset-2 hover:underline", conflict ? "text-error" : "text-on-surface-variant hover:text-primary")}
-                          >
-                            {row.rankedinId}
-                          </a>
+                          <div className="flex flex-col items-center gap-1">
+                            <a
+                              href={row.playerUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={cn("font-mono text-[11px] tabular underline-offset-2 hover:underline", conflict ? "text-error" : "text-on-surface-variant hover:text-primary")}
+                            >
+                              {row.rankedinId}
+                            </a>
+                            {deletedProfile ? (
+                              <span
+                                title="ID не в формате R000000000: игрок удалил профиль на RankedIn. Если он заведёт новый, свяжите его с этим игроком в базе."
+                                className="rounded-full bg-tertiary-container px-2 py-0.5 text-[10px] font-semibold text-on-tertiary-container"
+                              >
+                                профиль удалён
+                              </span>
+                            ) : null}
+                          </div>
                         </td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{previewValue(row.ratingBefore)} → {previewValue(row.ratingAfter)}</td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{previewValue(row.wins)}-{previewValue(row.losses)}</td>
