@@ -14,12 +14,16 @@ export function SortHeaderButton({
   direction,
   onClick,
   className,
+  arrowAbsolute = false,
 }: {
   label: string;
   active: boolean;
   direction: "asc" | "desc";
   onClick: () => void;
   className?: string;
+  /** Take the sort arrow out of the flow so the label sits at the true centre.
+   * Used by narrow columns (e.g. "#") where the reserved arrow slot skews it. */
+  arrowAbsolute?: boolean;
 }) {
   return (
     <button
@@ -33,12 +37,19 @@ export function SortHeaderButton({
       }
       className={cn(
         "items-center justify-center gap-1 font-medium transition-colors duration-200 ease-m3-standard",
+        arrowAbsolute && "relative",
         active ? "text-primary" : "text-on-surface-variant hover:text-on-surface",
         className,
       )}
     >
       <span>{label}</span>
-      <span className={cn("font-mono text-[10px] leading-none tabular", active ? "opacity-100" : "opacity-0")}>
+      <span
+        className={cn(
+          "font-mono text-[10px] leading-none tabular",
+          arrowAbsolute && "absolute right-0 top-1/2 -translate-y-1/2",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      >
         {direction === "desc" ? "↓" : "↑"}
       </span>
     </button>

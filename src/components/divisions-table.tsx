@@ -323,7 +323,7 @@ export function DivisionsTable({
           <thead>
             <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
               <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
-                <SortHeaderButton label="#" active={sort.key === "place"} direction={sort.dir} onClick={() => setSortKey("place")} className="inline-flex w-full" />
+                <SortHeaderButton label="#" active={sort.key === "place"} direction={sort.dir} onClick={() => setSortKey("place")} className="inline-flex w-full" arrowAbsolute />
               </th>
               <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</th>
               <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
