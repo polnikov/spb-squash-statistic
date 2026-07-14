@@ -72,13 +72,24 @@ const PLAYER_PAGE_SIZE = 15;
 const PRIMARY_BTN = "rounded-[12px] border border-primary/55 bg-primary font-semibold text-on-primary";
 
 
-function ManagerTabs({ tab, setTab }: { tab: ManagerTab; setTab: (tab: ManagerTab) => void }) {
+function ManagerTabs({
+  tab,
+  setTab,
+  duplicatesCount,
+}: {
+  tab: ManagerTab;
+  setTab: (tab: ManagerTab) => void;
+  duplicatesCount: number;
+}) {
   const { setRef, ind } = useTabSlider(tab);
   return (
     <div className="relative inline-flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
       <TabSliderPill ind={ind} />
       {MANAGER_TABS.map((item) => {
         const Icon = item.icon;
+        // Unresolved duplicates hang a count on the tab until every group is
+        // merged or dismissed.
+        const badge = item.key === "duplicates" && duplicatesCount > 0 ? duplicatesCount : null;
         return (
           <button
             key={item.key}
@@ -91,6 +102,11 @@ function ManagerTabs({ tab, setTab }: { tab: ManagerTab; setTab: (tab: ManagerTa
           >
             <Icon className="size-4" />
             {item.label}
+            {badge != null ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold leading-none text-on-error">
+                {badge}
+              </span>
+            ) : null}
           </button>
         );
       })}
@@ -1653,7 +1669,7 @@ function fmtSpan(from: string | null, to: string | null) {
   return `${fmtDate(from ?? "")} - ${fmtDate(to)}`;
 }
 
-function DuplicatesManager() {
+function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
   const router = useRouter();
   const [groups, setGroups] = React.useState<DuplicateGroupView[] | null>(null);
   const [selected, setSelected] = React.useState<Record<string, number[]>>({});
@@ -1663,8 +1679,11 @@ function DuplicatesManager() {
   const [done, setDone] = React.useState<string | null>(null);
 
   const refresh = React.useCallback(async () => {
-    setGroups(await listDuplicateGroupsAction());
-  }, []);
+    const next = await listDuplicateGroupsAction();
+    setGroups(next);
+    // Feed the tab badge so it drops as groups are merged or dismissed.
+    onCount(next.length);
+  }, [onCount]);
   React.useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -1864,13 +1883,20 @@ function DuplicatesManager() {
 
 export function ManagerView({ league }: { league: League }) {
   const [tab, setTab] = React.useState<ManagerTab>("players");
+  const [duplicatesCount, setDuplicatesCount] = React.useState(0);
+
+  // Fetch the count once so the tab badge shows even before the Дубликаты tab is
+  // opened; while the tab is open DuplicatesManager keeps it in sync via onCount.
+  React.useEffect(() => {
+    void listDuplicateGroupsAction().then((groups) => setDuplicatesCount(groups.length));
+  }, []);
 
   return (
     <>
       <DesktopOnlyNotice />
       <div className="hidden flex-col gap-5 px-1 md:flex">
         <div className="flex items-center justify-between">
-          <ManagerTabs tab={tab} setTab={setTab} />
+          <ManagerTabs tab={tab} setTab={setTab} duplicatesCount={duplicatesCount} />
           <form action={logoutAction}>
             <button
               type="submit"
@@ -1883,7 +1909,7 @@ export function ManagerView({ league }: { league: League }) {
         {tab === "players" ? <PlayersManager league={league} /> : null}
         {tab === "upload" ? <UploadManager /> : null}
         {tab === "points" ? <PointsManager /> : null}
-        {tab === "duplicates" ? <DuplicatesManager /> : null}
+        {tab === "duplicates" ? <DuplicatesManager onCount={setDuplicatesCount} /> : null}
       </div>
     </>
   );
