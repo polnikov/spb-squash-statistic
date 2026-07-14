@@ -902,9 +902,12 @@ function UploadManager() {
   const [impExpanded, setImpExpanded] = React.useState(false);
   const [impSeason, setImpSeason] = React.useState("");
   const [impDiv, setImpDiv] = React.useState("");
-  // RankedIn ids the admin unchecked in the preview (fake accounts). The server
+  // RankedIn ids the admin unchecked in the preview (real players). The server
   // re-parses with them dropped, so the table shows the numbers that will land.
   const [excluded, setExcluded] = React.useState<string[]>([]);
+  // Fake ids (F…) the admin re-activated: a real player was behind the profile,
+  // so it should import instead of being auto-excluded.
+  const [includedFakes, setIncludedFakes] = React.useState<string[]>([]);
   const [recomputing, setRecomputing] = React.useState(false);
 
   const refreshImported = React.useCallback(async () => {
@@ -965,6 +968,7 @@ function UploadManager() {
     setSelectedClassId(res.preview.selectedSubTournament?.id);
     setPlayerLinks({});
     setExcluded([]);
+    setIncludedFakes([]);
     setSeason(res.preview.season);
     setDivision(String(res.preview.division));
     setStage(String(res.preview.stage));
@@ -972,17 +976,20 @@ function UploadManager() {
     setStep("preview");
   }
 
-  /** Re-parse with a new exclusion set: dropping a player changes his opponents'
-   *  stats and everyone's place, so the preview has to come back from the server. */
-  async function applyExcluded(next: string[]) {
-    setExcluded(next);
+  /** Re-parse with new exclude/include sets: dropping or keeping a player changes
+   *  his opponents' stats and everyone's place, so the preview comes back from the
+   *  server. */
+  async function reparse(nextExcluded: string[], nextIncluded: string[]) {
+    setExcluded(nextExcluded);
+    setIncludedFakes(nextIncluded);
     if (!preview) return;
     setRecomputing(true);
     setError(null);
     const res = await previewStageImportAction({
       ...importInput,
       classId: selectedClassId ?? preview.selectedSubTournament?.id,
-      excludedRankedinIds: next,
+      excludedRankedinIds: nextExcluded,
+      includedRankedinIds: nextIncluded,
     });
     setRecomputing(false);
     if (!res.ok) {
@@ -993,11 +1000,20 @@ function UploadManager() {
     setPreview(res.preview);
   }
 
-  function toggleExcluded(rankedinId: string) {
+  /** Toggle a row's checkbox. A fake id is governed by the include list (activate
+   *  it back into the import); everyone else by the exclude list. */
+  function toggleRow(rankedinId: string) {
+    if (isFakeRankedinId(rankedinId)) {
+      const next = includedFakes.includes(rankedinId)
+        ? includedFakes.filter((id) => id !== rankedinId)
+        : [...includedFakes, rankedinId];
+      void reparse(excluded, next);
+      return;
+    }
     const next = excluded.includes(rankedinId)
       ? excluded.filter((id) => id !== rankedinId)
       : [...excluded, rankedinId];
-    void applyExcluded(next);
+    void reparse(next, includedFakes);
   }
 
   async function commitImport() {
@@ -1012,6 +1028,7 @@ function UploadManager() {
       stage: preview.stage,
       date: preview.date || undefined,
       excludedRankedinIds: excluded,
+      includedRankedinIds: includedFakes,
       playerLinks: Object.entries(playerLinks)
         .map(([rankedinId, playerId]) => ({ rankedinId, playerId: Number(playerId) }))
         .filter((link) => Number.isInteger(link.playerId) && link.playerId > 0),
@@ -1216,13 +1233,13 @@ function UploadManager() {
             );
           })()}
           {(() => {
-            const fakes = preview.players.filter((p) => isFakeRankedinId(p.rankedinId));
+            const fakes = preview.players.filter((p) => isFakeRankedinId(p.rankedinId) && p.excludedFromImport);
             if (!fakes.length) return null;
             return (
               <div className="flex items-start gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container">
                 <Info className="mt-0.5 size-4 shrink-0" />
                 <span className="text-[13px] font-medium">
-                  Фейковый ID (F…) у {fakes.length === 1 ? "игрока" : "игроков"}: {fakes.map((p) => p.name).join(", ")}. Такие записи исключены из загрузки: их матчи не идут в статистику соперников, места пересчитаны.
+                  Фейковый ID (F…) у {fakes.length === 1 ? "игрока" : "игроков"}: {fakes.map((p) => p.name).join(", ")}. По умолчанию исключены (матчи не идут в статистику, места пересчитаны). Если под ним реальный игрок - отметьте чекбокс «Грузить»: свяжите со строкой в базе или загрузите как нового.
                 </span>
               </div>
             );
@@ -1292,16 +1309,17 @@ function UploadManager() {
                     const conflict = row.status === "conflict";
                     const excludedRow = Boolean(row.excludedFromImport);
                     const manual = excluded.includes(row.rankedinId);
-                    // Auto-excluded (retired in every match) rows cannot be brought back.
-                    const lockedOut = excludedRow && !manual;
+                    const deletedProfile = isDeletedRankedinProfile(row.rankedinId);
+                    const fakeProfile = isFakeRankedinId(row.rankedinId);
+                    // A fake id is auto-excluded but can be activated back in (a real
+                    // player hid behind it). A retired-only exclusion stays locked.
+                    const lockedOut = excludedRow && !manual && !fakeProfile;
                     const selectedLink = playerLinks[row.rankedinId] ?? "";
                     const possibleIds = new Set((row.possibleMatches ?? []).map((player) => player.playerId));
                     const possibleOptions = (row.possibleMatches ?? [])
                       .filter((player) => player.rankedinId !== row.rankedinId);
                     const otherOptions = linkOptions
                       .filter((player) => player.rankedinId !== row.rankedinId && !possibleIds.has(player.playerId));
-                    const deletedProfile = isDeletedRankedinProfile(row.rankedinId);
-                    const fakeProfile = isFakeRankedinId(row.rankedinId);
                     // An unknown id that matches an existing player by name is the
                     // one row the admin has to act on (link it, or let a duplicate
                     // player be created), so it gets its own tint.
@@ -1322,7 +1340,7 @@ function UploadManager() {
                             type="checkbox"
                             checked={!excludedRow}
                             disabled={lockedOut || recomputing || importing}
-                            onChange={() => toggleExcluded(row.rankedinId)}
+                            onChange={() => toggleRow(row.rankedinId)}
                             aria-label={`Загружать ${row.name}`}
                             className="size-4 accent-primary disabled:opacity-40"
                           />
@@ -1351,10 +1369,17 @@ function UploadManager() {
                             ) : null}
                             {fakeProfile ? (
                               <span
-                                title="ID вида F000000000: фейковый профиль RankedIn. Исключён из загрузки, связывать не с кем."
-                                className="rounded-full bg-error-container px-2 py-0.5 text-[10px] font-semibold text-on-error-container"
+                                title={
+                                  excludedRow
+                                    ? "ID вида F000000000: фейковый профиль RankedIn, по умолчанию исключён. Отметьте чекбокс, если под ним реальный игрок."
+                                    : "Фейковый ID активирован: свяжите строку с реальным игроком или загрузите как нового по этому ID."
+                                }
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                  excludedRow ? "bg-error-container text-on-error-container" : "bg-tertiary-container text-on-tertiary-container",
+                                )}
                               >
-                                фейковый ID
+                                {excludedRow ? "фейковый ID" : "фейковый ID · активен"}
                               </span>
                             ) : null}
                           </div>

@@ -31,6 +31,10 @@ export type StageImportInput = {
    * aggregated at all, so opponents' stats and the places are recomputed as if
    * the player had never entered the stage. */
   excludedRankedinIds?: string[];
+  /** Fake ids (F…) the admin chose to keep after all: a real player was behind a
+   * fake profile. They override the automatic fake exclusion and import as a
+   * normal new player (linked by hand or created under the fake id). */
+  includedRankedinIds?: string[];
 };
 
 export type ParsedStagePlayer = {
@@ -619,6 +623,7 @@ function collectExclusions(
   matchRows: ParsedStageMatch[],
 ): StageImportExclusion[] {
   const manual = new Set((input.excludedRankedinIds ?? []).map((id) => id.trim()).filter(Boolean));
+  const includedFakes = new Set((input.includedRankedinIds ?? []).map((id) => id.trim()).filter(Boolean));
   const out: StageImportExclusion[] = [];
   const seen = new Set<string>();
   const add = (id: string, reason: string) => {
@@ -627,7 +632,11 @@ function collectExclusions(
     seen.add(id);
   };
   for (const player of playersRows) {
-    if (isFakeRankedinId(player.rankedinId)) add(player.rankedinId, "Фейковый профиль (ID F…)");
+    // A fake id is auto-excluded unless the admin activated it (a real player was
+    // behind that profile), in which case it imports as a normal new player.
+    if (isFakeRankedinId(player.rankedinId) && !includedFakes.has(player.rankedinId)) {
+      add(player.rankedinId, "Фейковый профиль (ID F…)");
+    }
   }
   for (const id of getRetiredOnlyPlaceZeroPlayerIds(playersRows, matchRows)) add(id, "Retired во всех матчах");
   for (const id of manual) add(id, "Исключён вручную");
