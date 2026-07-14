@@ -5,7 +5,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { players, pointsTable } from "@/lib/db/schema";
 import { attachRankedinIdToPlayer, findPlayerByRankedinId } from "@/lib/db/player-identity";
-import { listDuplicateGroups, mergePlayers, type DuplicateGroupView, type MergeResult } from "@/lib/db/player-merge";
+import { dismissDuplicateGroup, listDuplicateGroups, mergePlayers, type DuplicateGroupView, type MergeResult } from "@/lib/db/player-merge";
 import { login, logout, requireAdmin } from "@/lib/auth";
 import {
   deleteImportedStage,
@@ -311,6 +311,19 @@ export async function mergePlayersAction(input: {
     return res;
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Не удалось объединить игроков" };
+  }
+}
+
+/** Mark a wrongly-detected group as different people so it stops being flagged. */
+export async function dismissDuplicateGroupAction(input: {
+  playerIds: number[];
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  requireAdmin();
+  try {
+    const res = await dismissDuplicateGroup(input.playerIds);
+    return res.ok ? { ok: true } : res;
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Не удалось отклонить" };
   }
 }
 

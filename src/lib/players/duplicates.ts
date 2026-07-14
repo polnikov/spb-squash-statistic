@@ -96,9 +96,16 @@ function keysOf(player: DuplicateCandidate): string[] {
  * ones an admin has to read before merging, so both kinds are returned and the
  * caller decides.
  */
+/** Unordered pair key, so a dismissed pair matches regardless of member order. */
+export function pairKey(a: number, b: number): string {
+  return a < b ? `${a}-${b}` : `${b}-${a}`;
+}
+
 export function groupDuplicateCandidates<T extends DuplicateCandidate>(
   players: T[],
   typoDistance = 2,
+  /** Pairs the admin marked as different people; their edge is skipped. */
+  dismissed: ReadonlySet<string> = new Set(),
 ): DuplicateGroup<T>[] {
   const keys = new Map<number, string[]>(players.map((p) => [p.id, keysOf(p)]));
 
@@ -120,6 +127,9 @@ export function groupDuplicateCandidates<T extends DuplicateCandidate>(
   const exactEdge = new Set<number>();
   for (let i = 0; i < players.length; i++) {
     for (let j = i + 1; j < players.length; j++) {
+      // A pair the admin rejected is not an edge, so the two never end up in one
+      // group even if the names still look alike.
+      if (dismissed.has(pairKey(players[i].id, players[j].id))) continue;
       const a = keys.get(players[i].id) ?? [];
       const b = keys.get(players[j].id) ?? [];
       const exact = a.some((x) => b.includes(x));

@@ -1,6 +1,7 @@
 import { and, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
+  dismissedDuplicatePairs,
   matchGames,
   matches,
   playerRankedinAliases,
@@ -9,7 +10,7 @@ import {
   rosters,
   stages,
 } from "@/lib/db/schema";
-import { groupDuplicateCandidates, type DuplicateMatchKind } from "@/lib/players/duplicates";
+import { groupDuplicateCandidates, pairKey, type DuplicateMatchKind } from "@/lib/players/duplicates";
 import { backfillAll } from "@/lib/stats/recalc";
 
 export type DuplicatePlayer = {
@@ -103,6 +104,11 @@ export async function listDuplicateGroups(database: Database = defaultDb): Promi
     aliasesByPlayer.set(row.playerId, [...(aliasesByPlayer.get(row.playerId) ?? []), row.rankedinId]);
   }
 
+  const dismissedRows = await database
+    .select({ a: dismissedDuplicatePairs.playerAId, b: dismissedDuplicatePairs.playerBId })
+    .from(dismissedDuplicatePairs);
+  const dismissed = new Set(dismissedRows.map((row) => pairKey(row.a, row.b)));
+
   const activity = await loadPlayerActivity(database);
   const enriched: DuplicatePlayer[] = rows.map((row) => {
     const stats = activity.get(row.id);
@@ -121,11 +127,34 @@ export async function listDuplicateGroups(database: Database = defaultDb): Promi
     };
   });
 
-  return groupDuplicateCandidates(enriched).map((group) => ({
+  return groupDuplicateCandidates(enriched, 2, dismissed).map((group) => ({
     key: group.key,
     kind: group.kind,
     members: [...group.members].sort(byRecency),
   }));
+}
+
+/**
+ * Record a wrongly-flagged group as "not the same people". Every pair among the
+ * members is stored, so the group is torn apart and cannot re-form on the next
+ * scan, even after new stages are imported.
+ */
+export async function dismissDuplicateGroup(
+  playerIds: number[],
+  database: Database = defaultDb,
+): Promise<{ ok: true; dismissed: number } | { ok: false; error: string }> {
+  const ids = [...new Set(playerIds)].filter((id) => Number.isInteger(id) && id > 0);
+  if (ids.length < 2) return { ok: false, error: "Нужно минимум два игрока" };
+
+  const values: { playerAId: number; playerBId: number }[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const [a, b] = ids[i] < ids[j] ? [ids[i], ids[j]] : [ids[j], ids[i]];
+      values.push({ playerAId: a, playerBId: b });
+    }
+  }
+  await database.insert(dismissedDuplicatePairs).values(values).onConflictDoNothing();
+  return { ok: true, dismissed: values.length };
 }
 
 export type MergeResult =

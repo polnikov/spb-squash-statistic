@@ -120,6 +120,13 @@
 			"when": 1784044800000,
 			"tag": "0016_strength_rating",
 			"breakpoints": true
+		},
+		{
+			"idx": 17,
+			"version": "7",
+			"when": 1784044900000,
+			"tag": "0017_dismissed_duplicate_pairs",
+			"breakpoints": true
 		}
 	]
 }

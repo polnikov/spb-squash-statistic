@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupDuplicateCandidates, levenshtein, nameKey } from "@/lib/players/duplicates";
+import { groupDuplicateCandidates, levenshtein, nameKey, pairKey } from "@/lib/players/duplicates";
 
 const player = (id: number, name: string, rankedinName = name, adminName: string | null = null) => ({
   id,
@@ -69,5 +69,24 @@ describe("groupDuplicateCandidates", () => {
       player(3, "Сергей Кузнецов"),
     ]);
     expect(groups).toEqual([]);
+  });
+
+  it("drops a dismissed pair so the group no longer forms", () => {
+    const roster = [player(1, "Konstantin Balabushko"), player(2, "Константин Балабушко")];
+    expect(groupDuplicateCandidates(roster)).toHaveLength(1);
+    const dismissed = new Set([pairKey(2, 1)]);
+    expect(groupDuplicateCandidates(roster, 2, dismissed)).toEqual([]);
+  });
+
+  it("dismissing every pair of a trio clears the whole group", () => {
+    const roster = [player(1, "Иван Петров"), player(2, "Иван Петров"), player(3, "Иван Петров")];
+    const dismissed = new Set([pairKey(1, 2), pairKey(1, 3), pairKey(2, 3)]);
+    expect(groupDuplicateCandidates(roster, 2, dismissed)).toEqual([]);
+  });
+});
+
+describe("pairKey", () => {
+  it("is order-independent", () => {
+    expect(pairKey(2, 9)).toBe(pairKey(9, 2));
   });
 });

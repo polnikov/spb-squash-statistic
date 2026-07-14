@@ -24,3 +24,12 @@ export function isDeletedRankedinProfile(rankedinId: string) {
   const id = rankedinId.trim();
   return Boolean(id) && !isLiveRankedinId(id) && !isFakeRankedinId(id);
 }
+
+/**
+ * RankedIn profile page for an id. Only live ids (R…) resolve to a real page;
+ * deleted (D…) and fake (F…) ids have no profile, so callers that only want a
+ * working link should guard with isLiveRankedinId first.
+ */
+export function rankedinPlayerUrl(rankedinId: string) {
+  return `https://rankedin.com/ru/player/${encodeURIComponent(rankedinId.trim())}`;
+}

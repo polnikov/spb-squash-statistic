@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Edit3,
+  ExternalLink,
   Info,
   Merge,
   Plus,
@@ -14,6 +15,7 @@ import {
   TableProperties,
   Upload,
   Users,
+  X,
 } from "lucide-react";
 import {
   getPlayersOverview,
@@ -23,6 +25,7 @@ import {
   createPlayerAction,
   deleteImportedStageAction,
   deletePointsTableAction,
+  dismissDuplicateGroupAction,
   importStageAction,
   listDuplicateGroupsAction,
   listImportedStagesAction,
@@ -41,7 +44,7 @@ import {
   type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
 import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel } from "@/lib/format";
-import { isDeletedRankedinProfile, isFakeRankedinId } from "@/lib/rankedin-id";
+import { isDeletedRankedinProfile, isFakeRankedinId, isLiveRankedinId, rankedinPlayerUrl } from "@/lib/rankedin-id";
 import { cn } from "@/lib/utils";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
@@ -119,6 +122,26 @@ function Field({
         className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 font-mono text-[13px] tabular text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
       />
     </label>
+  );
+}
+
+/**
+ * A RankedIn id rendered as a link to its profile page. Only live ids (R…) get a
+ * link, since deleted/fake ids have no page to open; the rest stay plain text.
+ */
+function RankedinIdLink({ rankedinId, className }: { rankedinId: string | null | undefined; className?: string }) {
+  const base = cn("font-mono text-[11px] tabular", className);
+  if (!rankedinId) return <span className={cn(base, "text-on-surface-variant")}>без ID</span>;
+  if (!isLiveRankedinId(rankedinId)) return <span className={cn(base, "text-on-surface-variant")}>{rankedinId}</span>;
+  return (
+    <a
+      href={rankedinPlayerUrl(rankedinId)}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(base, "text-on-surface-variant underline-offset-2 hover:text-primary hover:underline")}
+    >
+      {rankedinId}
+    </a>
   );
 }
 
@@ -539,7 +562,7 @@ function PlayersManager({ league }: { league: League }) {
                         {adminName.trim() ? displayName : "Не задано"}
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular text-on-surface-variant">{rankedinId}</td>
+                    <td className="px-3 py-3 text-center"><RankedinIdLink rankedinId={rankedinId} className="text-[12.5px]" /></td>
                     <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{fmtNum(pointsByRid.get(player.rid) ?? 0)}</td>
                     <td className="px-5 py-3 text-center">
                       <button
@@ -1202,12 +1225,24 @@ function UploadManager() {
           ) : null}
           <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
             <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
                 <div className="mt-1 text-xs text-on-surface-variant">
                   Сезон {preview.season} · дивизион {preview.division} · этап {preview.stage}{preview.selectedSubTournament ? ` · ${preview.selectedSubTournament.name}` : ""}{preview.date ? ` · ${fmtDateFull(preview.date)}` : ""} · {playersLabel(preview.players.filter((p) => !p.excludedFromImport).length)} · {matchesLabel(preview.matches.length)}
                   {recomputing ? <span className="ml-2 text-primary">пересчёт…</span> : null}
                 </div>
+                {/* Raw RankedIn title, verbatim and clickable, so the admin can
+                    match this preview against the tournament page it came from. */}
+                <a
+                  href={preview.resultsPageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex min-w-0 items-center gap-1 text-[11px] text-on-surface-variant underline-offset-2 hover:text-primary hover:underline"
+                >
+                  <span className="text-muted-foreground">Оригинал RankedIn:</span>
+                  <span className="min-w-0 break-words font-medium">{preview.tournamentName}</span>
+                  <ExternalLink className="size-3 shrink-0" />
+                </a>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -1323,8 +1358,20 @@ function UploadManager() {
               </table>
             </div>
           </div>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setStep("input")} className="h-11 rounded-[12px] border border-outline-variant px-5 text-[13.5px] font-semibold text-on-surface-variant">
+          <div className="flex items-center justify-end gap-3">
+            {/* Writing the stage recomputes every aggregate and the global Elo, so
+                it takes a while: show the same sweep the parse step uses. */}
+            {importing ? (
+              <div className="mr-auto flex w-full max-w-[280px] flex-col gap-1.5">
+                <span className="text-xs text-on-surface-variant">Запись в базу и пересчёт статистики…</span>
+                <LoadingProgressBar />
+              </div>
+            ) : null}
+            <button
+              onClick={() => setStep("input")}
+              disabled={importing}
+              className="h-11 rounded-[12px] border border-outline-variant px-5 text-[13.5px] font-semibold text-on-surface-variant disabled:opacity-55"
+            >
               Отклонить
             </button>
             <button
@@ -1601,6 +1648,7 @@ function DuplicatesManager() {
   const [groups, setGroups] = React.useState<DuplicateGroupView[] | null>(null);
   const [selected, setSelected] = React.useState<Record<string, number[]>>({});
   const [merging, setMerging] = React.useState<string | null>(null);
+  const [dismissing, setDismissing] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState<string | null>(null);
 
@@ -1643,6 +1691,22 @@ function DuplicatesManager() {
     setSelected({});
     await refresh();
     router.refresh();
+  }
+
+  // Rejects the whole group as different people. Dismissing all its pairs, not the
+  // picked subset, so a partial selection cannot leave a stray pair behind.
+  async function dismiss(group: DuplicateGroupView) {
+    setDismissing(group.key);
+    setError(null);
+    setDone(null);
+    const res = await dismissDuplicateGroupAction({ playerIds: group.members.map((m) => m.id) });
+    setDismissing(null);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setDone(`Отклонено: «${group.members[0].name}» больше не считается дубликатом.`);
+    await refresh();
   }
 
   return (
@@ -1689,14 +1753,32 @@ function DuplicatesManager() {
                     {group.kind === "exact" ? "имена совпадают" : "похожие имена - проверьте"}
                   </span>
                 </div>
-                <button
-                  onClick={() => merge(group)}
-                  disabled={merging !== null || picked.length < 2}
-                  className={cn(PRIMARY_BTN, "inline-flex h-10 items-center gap-2 px-4 text-[13px] disabled:opacity-55")}
-                >
-                  <Merge className="size-4" />
-                  {merging === group.key ? "Объединяем…" : "Объединить"}
-                </button>
+                <div className="flex items-center gap-3">
+                  {/* The merge moves rows and then reruns a full backfill, so it is
+                      not instant: mirror the parse/import progress sweep. */}
+                  {merging === group.key ? (
+                    <div className="flex w-[200px] flex-col gap-1.5">
+                      <span className="text-[11px] text-on-surface-variant">Переносим и пересчитываем…</span>
+                      <LoadingProgressBar />
+                    </div>
+                  ) : null}
+                  <button
+                    onClick={() => dismiss(group)}
+                    disabled={merging !== null || dismissing === group.key}
+                    className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-outline-variant px-4 text-[13px] font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-55"
+                  >
+                    <X className="size-4" />
+                    {dismissing === group.key ? "Отклоняем…" : "Отклонить"}
+                  </button>
+                  <button
+                    onClick={() => merge(group)}
+                    disabled={merging !== null || dismissing !== null || picked.length < 2}
+                    className={cn(PRIMARY_BTN, "inline-flex h-10 items-center gap-2 px-4 text-[13px] disabled:opacity-55")}
+                  >
+                    <Merge className="size-4" />
+                    {merging === group.key ? "Объединяем…" : "Объединить"}
+                  </button>
+                </div>
               </div>
               <table className="w-full border-collapse">
                 <thead>
@@ -1730,11 +1812,19 @@ function DuplicatesManager() {
                           />
                         </td>
                         <td className="px-3 py-3 text-left text-[13px] font-[550]">{member.name}</td>
-                        <td className="px-3 py-3 text-center font-mono text-[11px] tabular text-on-surface-variant">
-                          {member.rankedinId ?? "x"}
+                        <td className="px-3 py-3 text-center">
+                          <RankedinIdLink rankedinId={member.rankedinId} />
                         </td>
-                        <td className="px-3 py-3 text-center font-mono text-[11px] tabular text-on-surface-variant">
-                          {member.aliases.length ? member.aliases.join(", ") : "-"}
+                        <td className="px-3 py-3 text-center">
+                          {member.aliases.length ? (
+                            <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5">
+                              {member.aliases.map((alias) => (
+                                <RankedinIdLink key={alias} rankedinId={alias} />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="font-mono text-[11px] tabular text-on-surface-variant">-</span>
+                          )}
                         </td>
                         <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{member.matches}</td>
                         <td className="px-3 py-3 text-center text-[12px] text-on-surface-variant">

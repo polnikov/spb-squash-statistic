@@ -124,6 +124,32 @@ export const playerRankedinAliases = pgTable(
   (t) => [index("player_rankedin_aliases_player_idx").on(t.playerId)],
 );
 
+/**
+ * Pairs the admin marked as "not the same person" in the duplicate finder. The
+ * detector groups by name similarity, which sometimes flags two real people with
+ * the same name; a dismissed pair drops that edge so the group never re-forms.
+ * Stored with playerA < playerB so a pair has one row; a merge cascades the rows
+ * away, which is fine since the id then never returns.
+ */
+export const dismissedDuplicatePairs = pgTable(
+  "dismissed_duplicate_pairs",
+  {
+    id: serial("id").primaryKey(),
+    playerAId: integer("player_a_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    playerBId: integer("player_b_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("dismissed_duplicate_pairs_uq").on(t.playerAId, t.playerBId),
+    index("dismissed_duplicate_pairs_a_idx").on(t.playerAId),
+    index("dismissed_duplicate_pairs_b_idx").on(t.playerBId),
+  ],
+);
+
 export const stages = pgTable(
   "stages",
   {
