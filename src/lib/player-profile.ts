@@ -254,6 +254,8 @@ export type PlayerProfileModel = {
   careerPlaces: PlayerProfilePlaces;
   /** Current-season standing place per division the player plays. */
   divisionPlaces: PlayerProfileDivisionPlace[];
+  /** Per season: the divisions played that season and the place taken in each. */
+  divisionPlacesBySeason: Record<string, PlayerProfileDivisionPlace[]>;
   /** Whether the player took part in the current season. */
   active: boolean;
   /** Other players (excl. current), surname-sorted, for the quick switcher. */
@@ -943,6 +945,23 @@ export function currentDivisionPlaces(
   }));
 }
 
+/** Divisions the player played in each season, with his standing place there. */
+export function divisionPlacesBySeason(
+  leagues: Record<string, League>,
+  rid: string,
+): Record<string, PlayerProfileDivisionPlace[]> {
+  const out: Record<string, PlayerProfileDivisionPlace[]> = {};
+  for (const [seasonId, league] of Object.entries(leagues)) {
+    const player = league.players.find((p) => p.rid === rid);
+    if (!player) continue;
+    out[seasonId] = player.divisions.map((div) => ({
+      div,
+      place: getRatingRows(league, div as 1 | 2 | 3).find((r) => r.rid === rid)?.place ?? null,
+    }));
+  }
+  return out;
+}
+
 /** All players (excl. `excludeRid`), unique by rid, sorted by surname. */
 export function buildRoster(leagues: Record<string, League>, excludeRid: string): { rid: string; name: string }[] {
   const surname = (n: string) => n.trim().split(/\s+/).at(-1) ?? n;
@@ -1081,6 +1100,7 @@ export function buildPlayerProfileModel(
     careerStats,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
+    divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),
     active: currentSeason != null && seasons.includes(currentSeason),
     roster: buildRoster(leagues, rid),
     filters: {

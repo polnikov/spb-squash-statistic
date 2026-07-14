@@ -797,9 +797,16 @@ function PlayerSwitcher({ roster }: { roster: { rid: string; name: string }[] })
   );
 }
 
-function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
+function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; seasonId: string }) {
   const avatar = usePlayerAvatar(model.player.rid);
   const stats = model.careerStats;
+  // With no season picked the header spans the career, and a place would be
+  // meaningless: list the divisions the player has ever played instead. Pick a
+  // season and the chips narrow to that season's divisions and places.
+  const divisionChips =
+    seasonId === "all"
+      ? model.player.divisions.map((div) => ({ div, place: null }))
+      : model.divisionPlacesBySeason[seasonId] ?? [];
   return (
     <div className="grid gap-2 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-stretch md:gap-5">
       {/* hero — stretches to the right column's height */}
@@ -831,7 +838,7 @@ function PlayerCareerHeader({ model }: { model: PlayerProfileModel }) {
             <MetaItem label="Матчей" value={stats.matchesPlayed} />
           </div>
           <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
-            {model.divisionPlaces.map((d) => (
+            {divisionChips.map((d) => (
               <Chip key={d.div}>Дивизион {d.div}{d.place ? ` · #${d.place}` : ""}</Chip>
             ))}
             <a href={model.player.rankedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1.5 font-mono text-xs text-primary">
@@ -2061,7 +2068,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
         <PlayerSwitcher roster={model.roster} />
       </div>
 
-      <PlayerCareerHeader model={model} />
+      <PlayerCareerHeader model={model} seasonId={filter.seasonId} />
       <Filters model={model} value={filter} onChange={applyFilter} />
 
       <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} className="hidden md:grid" />

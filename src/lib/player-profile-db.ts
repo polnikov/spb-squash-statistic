@@ -25,6 +25,7 @@ import {
   collectPlayerData,
   contextKey,
   currentDivisionPlaces,
+  divisionPlacesBySeason,
   emptyStats,
   filterMatches,
   makeContext,
@@ -387,6 +388,7 @@ export async function buildPlayerProfileModelFromDb(
     careerStats,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
+    divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),
     active: currentSeason != null && seasonsList.includes(currentSeason),
     roster: buildRoster(leagues, rid),
     filters: {
