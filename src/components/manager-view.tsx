@@ -51,8 +51,8 @@ import { cn } from "@/lib/utils";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
   avatarBackgroundStyle,
-  fileToDataUrl,
-  type PlayerAvatarMedia,
+  fileToAvatarDataUrl,
+  type PlayerAvatarDraft,
 } from "@/lib/player-avatar-store";
 
 type ManagerTab = "players" | "upload" | "points" | "duplicates";
@@ -200,7 +200,7 @@ function PlayersManager({ league }: { league: League }) {
   const [newLinkPlayerId, setNewLinkPlayerId] = React.useState("");
   const [createSaving, setCreateSaving] = React.useState(false);
   const [createError, setCreateError] = React.useState<string | null>(null);
-  const [avatars, setAvatars] = React.useState<Record<string, PlayerAvatarMedia>>({});
+  const [avatars, setAvatars] = React.useState<Record<string, PlayerAvatarDraft>>({});
   const [linkOptions, setLinkOptions] = React.useState<PlayerLinkOption[]>([]);
   const [playerEdits, setPlayerEdits] = React.useState<Record<string, { rankedinId: string; adminName: string }>>(() =>
     Object.fromEntries(
@@ -268,15 +268,22 @@ function PlayersManager({ league }: { league: League }) {
   // Avatar upload and the crop sliders only touch local state; the photo is
   // written to the DB when the admin clicks "Сохранить" (see savePlayer), so the
   // large data URL is not re-sent on every slider tick.
+  /** Downscale and re-encode before anything leaves the browser: a raw phone photo
+   *  overruns the Server Action body limit and the save dies in the server render. */
   async function setAvatar(rid: string, file: File) {
-    const dataUrl = await fileToDataUrl(file);
-    setAvatars((current) => ({
-      ...current,
-      [rid]: { dataUrl, fileName: file.name, scale: 120, x: 0, y: 0 },
-    }));
+    setSaveError(null);
+    try {
+      const dataUrl = await fileToAvatarDataUrl(file);
+      setAvatars((current) => ({
+        ...current,
+        [rid]: { url: current[rid]?.url ?? "", dataUrl, fileName: file.name, scale: 120, x: 0, y: 0 },
+      }));
+    } catch {
+      setSaveError("Не удалось прочитать изображение");
+    }
   }
 
-  function patchAvatar(rid: string, patch: Partial<PlayerAvatarMedia>) {
+  function patchAvatar(rid: string, patch: Partial<PlayerAvatarDraft>) {
     setAvatars((current) => {
       const existing = current[rid];
       if (!existing) return current;
@@ -312,6 +319,9 @@ function PlayersManager({ league }: { league: League }) {
     }
     setSaving(false);
     setEditingRid(null);
+    // Re-read the avatars so the local draft (which still holds the uploaded data
+    // URL) is replaced by the served, versioned URL.
+    void listPlayerAvatarsAction().then(setAvatars);
     router.refresh();
   }
 

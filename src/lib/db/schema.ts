@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  customType,
   date,
   index,
   integer,
@@ -125,15 +126,17 @@ export const playerRankedinAliases = pgTable(
 );
 
 /**
- * Player photo used as an avatar. One row per player; the image is a base64
- * data URL plus the crop the admin set (scale and offset). Kept server-side so
- * avatars are shared across devices instead of living in one browser's storage.
+ * Player photo used as an avatar. One row per player: the encoded image bytes
+ * (WebP, downscaled in the browser before upload) plus the crop the admin set.
+ * Kept server-side so avatars are shared across devices, and served as bytes by
+ * /api/player-avatar rather than inlined as base64 into every page.
  */
 export const playerAvatars = pgTable("player_avatars", {
   playerId: integer("player_id")
     .primaryKey()
     .references(() => players.id, { onDelete: "cascade" }),
-  dataUrl: text("data_url").notNull(),
+  image: customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" })("image").notNull(),
+  mime: text("mime").notNull().default("image/webp"),
   fileName: text("file_name"),
   scale: smallint("scale").notNull().default(120),
   offsetX: smallint("offset_x").notNull().default(0),

@@ -7,7 +7,7 @@ import { players, pointsTable } from "@/lib/db/schema";
 import { attachRankedinIdToPlayer, findPlayerByRankedinId } from "@/lib/db/player-identity";
 import { dismissDuplicateGroup, listDuplicateGroups, mergePlayers, type DuplicateGroupView, type MergeResult } from "@/lib/db/player-merge";
 import { deletePlayerAvatar, getPlayerAvatarsByRid, savePlayerAvatar } from "@/lib/db/player-avatar-db";
-import type { PlayerAvatarMedia } from "@/lib/player-avatar-store";
+import type { PlayerAvatarDraft, PlayerAvatarMedia } from "@/lib/player-avatar-store";
 import { login, logout, requireAdmin } from "@/lib/auth";
 import {
   deleteImportedStage,
@@ -338,7 +338,7 @@ export async function listPlayerAvatarsAction(): Promise<Record<string, PlayerAv
 
 export async function savePlayerAvatarAction(input: {
   rid: string;
-  media: PlayerAvatarMedia;
+  media: PlayerAvatarDraft;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   requireAdmin();
   try {
