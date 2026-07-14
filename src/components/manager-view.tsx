@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Edit3,
   Info,
+  Merge,
   Plus,
   Search,
   TableProperties,
@@ -23,13 +24,16 @@ import {
   deleteImportedStageAction,
   deletePointsTableAction,
   importStageAction,
+  listDuplicateGroupsAction,
   listImportedStagesAction,
   listPlayerLinkOptionsAction,
   listPointsTablesAction,
   logoutAction,
+  mergePlayersAction,
   previewStageImportAction,
   savePointsTableAction,
   updatePlayerAction,
+  type DuplicateGroupView,
   type ImportedStage,
   type PlayerLinkOption,
   type PointsTableGroup,
@@ -48,13 +52,14 @@ import {
   type PlayerAvatarMedia,
 } from "@/lib/player-avatar-store";
 
-type ManagerTab = "players" | "upload" | "points";
+type ManagerTab = "players" | "upload" | "points" | "duplicates";
 type UploadStep = "input" | "preview" | "done";
 
 const MANAGER_TABS: { key: ManagerTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: "players", label: "Игроки", icon: Users },
   { key: "upload", label: "Загрузка этапа", icon: Upload },
   { key: "points", label: "Таблицы очков", icon: TableProperties },
+  { key: "duplicates", label: "Дубликаты", icon: Merge },
 ];
 
 const DIVISIONS = [1, 2, 3] as const;
@@ -1585,6 +1590,178 @@ function PointsManager() {
   );
 }
 
+function fmtSpan(from: string | null, to: string | null) {
+  if (!from && !to) return "нет результатов";
+  if (from === to || !to) return fmtDate(from ?? "");
+  return `${fmtDate(from ?? "")} - ${fmtDate(to)}`;
+}
+
+function DuplicatesManager() {
+  const router = useRouter();
+  const [groups, setGroups] = React.useState<DuplicateGroupView[] | null>(null);
+  const [selected, setSelected] = React.useState<Record<string, number[]>>({});
+  const [merging, setMerging] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [done, setDone] = React.useState<string | null>(null);
+
+  const refresh = React.useCallback(async () => {
+    setGroups(await listDuplicateGroupsAction());
+  }, []);
+  React.useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  function toggle(groupKey: string, playerId: number, members: DuplicateGroupView["members"]) {
+    setSelected((current) => {
+      const picked = current[groupKey] ?? members.map((m) => m.id);
+      const next = picked.includes(playerId) ? picked.filter((id) => id !== playerId) : [...picked, playerId];
+      return { ...current, [groupKey]: next };
+    });
+  }
+
+  async function merge(group: DuplicateGroupView) {
+    const picked = selected[group.key] ?? group.members.map((m) => m.id);
+    if (picked.length < 2) {
+      setError("Отметьте хотя бы двух игроков");
+      return;
+    }
+    setMerging(group.key);
+    setError(null);
+    setDone(null);
+    // The survivor is the newest of the picked rows, i.e. the head of the group
+    // once the untouched ones are dropped.
+    const survivor = group.members.find((m) => picked.includes(m.id));
+    const res = await mergePlayersAction({ playerIds: picked, survivorId: survivor?.id });
+    setMerging(null);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setDone(
+      `Объединено: ${res.mergedIds.length + 1} профиля в одного (ID ${res.survivorRankedinId ?? res.survivorId}), перенесено матчей ${res.movedMatches}, результатов ${res.movedResults}. Статистика и рейтинг пересчитаны.`,
+    );
+    setSelected({});
+    await refresh();
+    router.refresh();
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start gap-3 rounded-[14px] bg-surface-container-high px-4 py-3 text-on-surface-variant">
+        <Info className="mt-0.5 size-4 shrink-0" />
+        <span className="text-[13px]">
+          Один человек мог попасть в базу несколько раз: RankedIn выдаёт новый ID после удаления профиля, а незалинкованная загрузка заводит нового игрока. Слияние оставляет профиль с самым свежим этапом, переносит на него матчи и результаты, старые ID становятся алиасами и будут подхватываться при следующих загрузках.
+        </span>
+      </div>
+
+      {error ? (
+        <div className="rounded-[12px] bg-error-container px-3.5 py-2.5 text-xs font-medium text-on-error-container">{error}</div>
+      ) : null}
+      {done ? (
+        <div className="rounded-[12px] bg-secondary-container px-3.5 py-2.5 text-xs font-medium text-on-secondary-container">{done}</div>
+      ) : null}
+
+      {groups === null ? (
+        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
+          Ищем дубликаты…
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
+          Дубликатов не найдено.
+        </div>
+      ) : (
+        groups.map((group) => {
+          const picked = selected[group.key] ?? group.members.map((m) => m.id);
+          const survivor = group.members.find((m) => picked.includes(m.id));
+          return (
+            <div key={group.key} className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
+              <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-semibold tracking-tight">{group.members[0].name}</h2>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                      group.kind === "exact"
+                        ? "bg-secondary-container text-on-secondary-container"
+                        : "bg-tertiary-container text-on-tertiary-container",
+                    )}
+                  >
+                    {group.kind === "exact" ? "имена совпадают" : "похожие имена - проверьте"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => merge(group)}
+                  disabled={merging !== null || picked.length < 2}
+                  className={cn(PRIMARY_BTN, "inline-flex h-10 items-center gap-2 px-4 text-[13px] disabled:opacity-55")}
+                >
+                  <Merge className="size-4" />
+                  {merging === group.key ? "Объединяем…" : "Объединить"}
+                </button>
+              </div>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
+                    <th className="w-px whitespace-nowrap px-4 py-3 font-medium">Сливать</th>
+                    <th className="px-3 py-3 text-left font-medium">Игрок</th>
+                    <th className="px-3 py-3 font-medium">ID</th>
+                    <th className="px-3 py-3 font-medium">Алиасы</th>
+                    <th className="px-3 py-3 font-medium">Матчи</th>
+                    <th className="px-3 py-3 font-medium">Период</th>
+                    <th className="w-px whitespace-nowrap px-5 py-3 font-medium">Итог</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.members.map((member) => {
+                    const keep = survivor?.id === member.id;
+                    const merged = picked.includes(member.id) && !keep;
+                    return (
+                      <tr
+                        key={member.id}
+                        className={cn("border-t border-outline-variant", keep && "bg-secondary-container/40")}
+                      >
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={picked.includes(member.id)}
+                            disabled={merging !== null}
+                            onChange={() => toggle(group.key, member.id, group.members)}
+                            aria-label={`Сливать ${member.name}`}
+                            className="size-4 accent-primary disabled:opacity-40"
+                          />
+                        </td>
+                        <td className="px-3 py-3 text-left text-[13px] font-[550]">{member.name}</td>
+                        <td className="px-3 py-3 text-center font-mono text-[11px] tabular text-on-surface-variant">
+                          {member.rankedinId ?? "x"}
+                        </td>
+                        <td className="px-3 py-3 text-center font-mono text-[11px] tabular text-on-surface-variant">
+                          {member.aliases.length ? member.aliases.join(", ") : "-"}
+                        </td>
+                        <td className="px-3 py-3 text-center font-mono text-[12.5px] tabular">{member.matches}</td>
+                        <td className="px-3 py-3 text-center text-[12px] text-on-surface-variant">
+                          {fmtSpan(member.firstStageDate, member.lastStageDate)}
+                        </td>
+                        <td className="w-px whitespace-nowrap px-5 py-3 text-right">
+                          {keep ? (
+                            <span className="rounded-full bg-[#16a34a]/15 px-2.5 py-1 text-[11px] font-semibold text-[#86efac]">остаётся</span>
+                          ) : merged ? (
+                            <span className="rounded-full bg-error-container px-2.5 py-1 text-[11px] font-semibold text-on-error-container">вливается</span>
+                          ) : (
+                            <span className="text-[11px] text-on-surface-variant">не трогаем</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 export function ManagerView({ league }: { league: League }) {
   const [tab, setTab] = React.useState<ManagerTab>("players");
 
@@ -1606,6 +1783,7 @@ export function ManagerView({ league }: { league: League }) {
         {tab === "players" ? <PlayersManager league={league} /> : null}
         {tab === "upload" ? <UploadManager /> : null}
         {tab === "points" ? <PointsManager /> : null}
+        {tab === "duplicates" ? <DuplicatesManager /> : null}
       </div>
     </>
   );

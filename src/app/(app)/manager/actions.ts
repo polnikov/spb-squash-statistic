@@ -5,6 +5,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { players, pointsTable } from "@/lib/db/schema";
 import { attachRankedinIdToPlayer, findPlayerByRankedinId } from "@/lib/db/player-identity";
+import { listDuplicateGroups, mergePlayers, type DuplicateGroupView, type MergeResult } from "@/lib/db/player-merge";
 import { login, logout, requireAdmin } from "@/lib/auth";
 import {
   deleteImportedStage,
@@ -18,6 +19,7 @@ import {
 } from "@/lib/parsing/rankedin";
 
 export type { ImportedStage, StageImportInput, StageImportPreview, StageImportSubTournamentSelection } from "@/lib/parsing/rankedin";
+export type { DuplicateGroupView, DuplicatePlayer, MergeResult } from "@/lib/db/player-merge";
 
 export type LoginState = { error?: string };
 
@@ -282,6 +284,33 @@ export async function importStageAction(
     };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Ошибка загрузки этапа" };
+  }
+}
+
+// --- duplicate players ---
+
+export async function listDuplicateGroupsAction(): Promise<DuplicateGroupView[]> {
+  requireAdmin();
+  return listDuplicateGroups();
+}
+
+/**
+ * Fold duplicate rows into one player. The survivor defaults to the id with the
+ * newest stage result; the rest hand over their matches and results and their
+ * RankedIn ids stay as aliases. Everything derived is rebuilt afterwards, so this
+ * takes as long as a full backfill.
+ */
+export async function mergePlayersAction(input: {
+  playerIds: number[];
+  survivorId?: number;
+}): Promise<MergeResult> {
+  requireAdmin();
+  try {
+    const res = await mergePlayers(input);
+    if (res.ok) revalidateRatings();
+    return res;
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Не удалось объединить игроков" };
   }
 }
 
