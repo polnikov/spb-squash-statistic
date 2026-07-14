@@ -530,10 +530,12 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub: str
   );
 }
 
-function MetricRow({ label, value, sign, noBorder = false }: { label: string; value: React.ReactNode; sign?: number | null; noBorder?: boolean }) {
+function MetricRow({ label, value, sign, noBorder = false, noBorderDesktop = false }: { label: string; value: React.ReactNode; sign?: number | null; noBorder?: boolean; noBorderDesktop?: boolean }) {
   const tone = sign == null ? "" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "";
   return (
-    <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant py-2.5 first:border-t-0", noBorder && "border-t-0")}>
+    // `noBorderDesktop`: keep the divider in the single mobile column, drop it for
+    // the top-right cell of the two-column desktop grid.
+    <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant py-2.5 first:border-t-0", noBorder && "border-t-0", noBorderDesktop && "md:border-t-0")}>
 
       <span className="text-[12px] text-on-surface-variant">{label}</span>
       <span className={cn("text-right font-mono text-[13px] font-semibold tabular text-on-surface", tone)}><NumberPop>{value}</NumberPop></span>
@@ -1204,7 +1206,7 @@ function GameAdvantageCard({ stats }: { stats: PlayerProfileStats }) {
       <h2 className="text-base font-semibold tracking-tight">Преимущество в игре</h2>
       <div className="mt-3 grid gap-x-6 md:grid-cols-2">
         <MetricRow label="Баланс геймов" value={formatSignedNumber(stats.gameBalance)} sign={stats.gameBalance} />
-        <MetricRow label="Баланс розыгрышей" value={formatSignedNumber(stats.rallyBalance)} sign={stats.rallyBalance} noBorder />
+        <MetricRow label="Баланс розыгрышей" value={formatSignedNumber(stats.rallyBalance)} sign={stats.rallyBalance} noBorderDesktop />
         <MetricRow label="Баланс геймов за матч" value={formatSignedNumber(stats.gameBalancePerMatch, 2)} sign={stats.gameBalancePerMatch} />
         <MetricRow label="Баланс розыгрышей за матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 2)} sign={stats.rallyBalancePerMatch} />
         <MetricRow label="Средний счёт по геймам" value={`${stats.avgMatchGamesWon?.toFixed(2) ?? "x"} - ${stats.avgMatchGamesLost?.toFixed(2) ?? "x"}`} />
