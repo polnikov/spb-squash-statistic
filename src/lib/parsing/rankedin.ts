@@ -10,6 +10,7 @@ import {
   stages,
 } from "@/lib/db/schema";
 import { attachRankedinIdToPlayer, findPlayersByRankedinIds } from "@/lib/db/player-identity";
+import { isFakeRankedinId } from "@/lib/rankedin-id";
 import { matchComebackFlags } from "@/lib/stats/compute";
 import { recalcPlayer, recalcStageDivision } from "@/lib/stats/recalc";
 
@@ -620,15 +621,16 @@ function collectExclusions(
   const manual = new Set((input.excludedRankedinIds ?? []).map((id) => id.trim()).filter(Boolean));
   const out: StageImportExclusion[] = [];
   const seen = new Set<string>();
-  for (const id of getRetiredOnlyPlaceZeroPlayerIds(playersRows, matchRows)) {
-    out.push({ rankedinId: id, reason: "Retired во всех матчах" });
+  const add = (id: string, reason: string) => {
+    if (!id || seen.has(id)) return;
+    out.push({ rankedinId: id, reason });
     seen.add(id);
+  };
+  for (const player of playersRows) {
+    if (isFakeRankedinId(player.rankedinId)) add(player.rankedinId, "Фейковый профиль (ID F…)");
   }
-  for (const id of manual) {
-    if (seen.has(id)) continue;
-    out.push({ rankedinId: id, reason: "Исключён вручную" });
-    seen.add(id);
-  }
+  for (const id of getRetiredOnlyPlaceZeroPlayerIds(playersRows, matchRows)) add(id, "Retired во всех матчах");
+  for (const id of manual) add(id, "Исключён вручную");
   return out;
 }
 

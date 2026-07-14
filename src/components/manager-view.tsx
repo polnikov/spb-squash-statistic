@@ -37,6 +37,7 @@ import {
   type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
 import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel } from "@/lib/format";
+import { isDeletedRankedinProfile, isFakeRankedinId } from "@/lib/rankedin-id";
 import { cn } from "@/lib/utils";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
@@ -632,12 +633,6 @@ function previewValue(value: number | string | null | undefined) {
   return value === null || value === undefined || value === "" ? "x" : value;
 }
 
-/** A live RankedIn profile has an id like "R000027113". A player who deleted his
- * profile comes back as "D105361_76068": the stage still counts, but if he later
- * signs up again it will be under a new id, and the admin has to link the two. */
-function isDeletedRankedinProfile(rankedinId: string) {
-  return Boolean(rankedinId) && !/^R\d+$/i.test(rankedinId.trim());
-}
 
 function PreviewStatus({ row }: { row: StageImportPreview["players"][number] }) {
   if (row.excludedFromImport) {
@@ -660,7 +655,9 @@ function PreviewStatus({ row }: { row: StageImportPreview["players"][number] }) 
     return (
       <div className="flex flex-col items-center gap-1 text-center">
         <span className="rounded-full bg-[#2563eb]/15 px-2.5 py-1 text-[11px] font-semibold text-[#93c5fd]">новый ID</span>
-        {row.possibleMatches?.length ? <span className="text-[10.5px] text-on-surface-variant">есть совпадение по имени</span> : null}
+        {row.possibleMatches?.length ? (
+          <span className="text-[10.5px] font-semibold text-on-secondary-container">есть совпадение по имени</span>
+        ) : null}
       </div>
     );
   }
@@ -1151,6 +1148,32 @@ function UploadManager() {
             </div>
           ) : null}
           {(() => {
+            const matched = preview.players.filter(
+              (p) => !p.excludedFromImport && p.status === "new" && p.possibleMatches?.length,
+            );
+            if (!matched.length) return null;
+            return (
+              <div className="flex items-start gap-3 rounded-[14px] bg-secondary-container px-4 py-3 text-on-secondary-container">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <span className="text-[13px] font-medium">
+                  Новый ID, но имя совпадает с игроком в базе: {matched.map((p) => p.name).join(", ")}. Свяжите строку с существующим игроком, иначе он заведётся заново и статистика разъедется.
+                </span>
+              </div>
+            );
+          })()}
+          {(() => {
+            const fakes = preview.players.filter((p) => isFakeRankedinId(p.rankedinId));
+            if (!fakes.length) return null;
+            return (
+              <div className="flex items-start gap-3 rounded-[14px] bg-error-container px-4 py-3 text-on-error-container">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <span className="text-[13px] font-medium">
+                  Фейковый ID (F…) у {fakes.length === 1 ? "игрока" : "игроков"}: {fakes.map((p) => p.name).join(", ")}. Такие записи исключены из загрузки: их матчи не идут в статистику соперников, места пересчитаны.
+                </span>
+              </div>
+            );
+          })()}
+          {(() => {
             const deleted = preview.players.filter((p) => isDeletedRankedinProfile(p.rankedinId));
             if (!deleted.length) return null;
             return (
@@ -1212,11 +1235,17 @@ function UploadManager() {
                     const otherOptions = linkOptions
                       .filter((player) => player.rankedinId !== row.rankedinId && !possibleIds.has(player.playerId));
                     const deletedProfile = isDeletedRankedinProfile(row.rankedinId);
+                    const fakeProfile = isFakeRankedinId(row.rankedinId);
+                    // An unknown id that matches an existing player by name is the
+                    // one row the admin has to act on (link it, or let a duplicate
+                    // player be created), so it gets its own tint.
+                    const nameMatch = !excludedRow && row.status === "new" && Boolean(row.possibleMatches?.length);
                     return (
                       <tr
                         key={`${row.rankedinId}-${row.place}`}
                         className={cn(
                           "border-t border-outline-variant",
+                          nameMatch && "bg-secondary-container/70",
                           deletedProfile && "bg-tertiary-container/70",
                           conflict && "bg-error-container/45",
                           excludedRow && "bg-error-container/15",
@@ -1252,6 +1281,14 @@ function UploadManager() {
                                 className="rounded-full bg-tertiary-container px-2 py-0.5 text-[10px] font-semibold text-on-tertiary-container"
                               >
                                 профиль удалён
+                              </span>
+                            ) : null}
+                            {fakeProfile ? (
+                              <span
+                                title="ID вида F000000000: фейковый профиль RankedIn. Исключён из загрузки, связывать не с кем."
+                                className="rounded-full bg-error-container px-2 py-0.5 text-[10px] font-semibold text-on-error-container"
+                              >
+                                фейковый ID
                               </span>
                             ) : null}
                           </div>
