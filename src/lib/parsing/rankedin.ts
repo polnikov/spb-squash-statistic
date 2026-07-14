@@ -35,6 +35,10 @@ export type StageImportInput = {
    * fake profile. They override the automatic fake exclusion and import as a
    * normal new player (linked by hand or created under the fake id). */
   includedRankedinIds?: string[];
+  /** Places set by hand for players RankedIn left unranked (a fake profile gets no
+   * standing). The player takes the given place and everyone from there down
+   * shifts one position back, so the ladder stays 1..N. */
+  manualPlaces?: { rankedinId: string; place: number }[];
 };
 
 export type ParsedStagePlayer = {
@@ -582,6 +586,8 @@ async function parseRankedinTournament(input: StageImportInput): Promise<ParseRa
     matchRows = fullMatches.filter((m) => !excludedIds.has(m.playerAId) && !excludedIds.has(m.playerBId));
   }
 
+  playersRows = applyManualPlaces(playersRows, input.manualPlaces ?? [], excludedIds);
+
   const inferred = inferTournamentMeta(tournamentName, matchRows);
 
   const season = input.season?.trim() || inferred.season;
@@ -641,6 +647,43 @@ function collectExclusions(
   for (const id of getRetiredOnlyPlaceZeroPlayerIds(playersRows, matchRows)) add(id, "Retired во всех матчах");
   for (const id of manual) add(id, "Исключён вручную");
   return out;
+}
+
+/**
+ * Slot players the admin ranked by hand into the ladder.
+ *
+ * RankedIn gives no standing to a fake profile, so a player kept from behind one
+ * arrives with place 0: no points, no entry in the places chart. The admin reads
+ * the real table and types the place; whoever stood there and below moves one
+ * position back, so the ladder stays a contiguous 1..N.
+ */
+function applyManualPlaces(
+  rows: ParsedStagePlayer[],
+  manualPlaces: { rankedinId: string; place: number }[],
+  excludedIds: ReadonlySet<string>,
+): ParsedStagePlayer[] {
+  const wanted = manualPlaces
+    .map((entry) => ({ rankedinId: entry.rankedinId.trim(), place: Math.trunc(entry.place) }))
+    .filter((entry) => entry.rankedinId && entry.place > 0 && !excludedIds.has(entry.rankedinId))
+    .sort((a, b) => a.place - b.place);
+  if (!wanted.length) return rows;
+
+  const places = new Map(rows.map((row) => [row.rankedinId, row.place]));
+  for (const entry of wanted) {
+    if (!places.has(entry.rankedinId)) continue;
+    for (const [rankedinId, place] of places) {
+      if (rankedinId === entry.rankedinId) continue;
+      if (place >= entry.place) places.set(rankedinId, place + 1);
+    }
+    places.set(entry.rankedinId, entry.place);
+  }
+
+  return rows
+    .map((row) => ({ ...row, place: places.get(row.rankedinId) ?? row.place }))
+    .sort((a, b) => {
+      if (a.place && b.place) return a.place - b.place;
+      return a.place ? -1 : b.place ? 1 : 0;
+    });
 }
 
 /** Renumber places into 1..N: a removed player must not leave a hole that the

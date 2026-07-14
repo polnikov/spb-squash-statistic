@@ -908,6 +908,9 @@ function UploadManager() {
   // Fake ids (F…) the admin re-activated: a real player was behind the profile,
   // so it should import instead of being auto-excluded.
   const [includedFakes, setIncludedFakes] = React.useState<string[]>([]);
+  // Places typed by hand for players RankedIn left unranked. Kept as text so the
+  // field can be empty while editing.
+  const [manualPlaces, setManualPlaces] = React.useState<Record<string, string>>({});
   const [recomputing, setRecomputing] = React.useState(false);
 
   const refreshImported = React.useCallback(async () => {
@@ -969,6 +972,7 @@ function UploadManager() {
     setPlayerLinks({});
     setExcluded([]);
     setIncludedFakes([]);
+    setManualPlaces({});
     setSeason(res.preview.season);
     setDivision(String(res.preview.division));
     setStage(String(res.preview.stage));
@@ -976,10 +980,21 @@ function UploadManager() {
     setStep("preview");
   }
 
-  /** Re-parse with new exclude/include sets: dropping or keeping a player changes
-   *  his opponents' stats and everyone's place, so the preview comes back from the
-   *  server. */
-  async function reparse(nextExcluded: string[], nextIncluded: string[]) {
+  /** Places as the server wants them: numbers only, empty fields dropped. */
+  function manualPlaceEntries(source: Record<string, string>) {
+    return Object.entries(source)
+      .map(([rankedinId, value]) => ({ rankedinId, place: Number(value) }))
+      .filter((entry) => Number.isInteger(entry.place) && entry.place > 0);
+  }
+
+  /** Re-parse with new exclude/include/place sets: dropping, keeping or ranking a
+   *  player changes his opponents' stats and everyone's place, so the preview comes
+   *  back from the server. */
+  async function reparse(
+    nextExcluded: string[],
+    nextIncluded: string[],
+    nextPlaces: Record<string, string> = manualPlaces,
+  ) {
     setExcluded(nextExcluded);
     setIncludedFakes(nextIncluded);
     if (!preview) return;
@@ -990,6 +1005,7 @@ function UploadManager() {
       classId: selectedClassId ?? preview.selectedSubTournament?.id,
       excludedRankedinIds: nextExcluded,
       includedRankedinIds: nextIncluded,
+      manualPlaces: manualPlaceEntries(nextPlaces),
     });
     setRecomputing(false);
     if (!res.ok) {
@@ -1007,13 +1023,26 @@ function UploadManager() {
       const next = includedFakes.includes(rankedinId)
         ? includedFakes.filter((id) => id !== rankedinId)
         : [...includedFakes, rankedinId];
-      void reparse(excluded, next);
+      // Dropping a fake back out takes its hand-typed place with it.
+      const places = { ...manualPlaces };
+      if (!next.includes(rankedinId)) delete places[rankedinId];
+      setManualPlaces(places);
+      void reparse(excluded, next, places);
       return;
     }
     const next = excluded.includes(rankedinId)
       ? excluded.filter((id) => id !== rankedinId)
       : [...excluded, rankedinId];
     void reparse(next, includedFakes);
+  }
+
+  /** Commit a hand-typed place: the ladder below it shifts, so the server re-parses. */
+  function applyManualPlace(rankedinId: string, value: string) {
+    const next = { ...manualPlaces };
+    if (value.trim()) next[rankedinId] = value.trim();
+    else delete next[rankedinId];
+    setManualPlaces(next);
+    void reparse(excluded, includedFakes, next);
   }
 
   async function commitImport() {
@@ -1029,6 +1058,7 @@ function UploadManager() {
       date: preview.date || undefined,
       excludedRankedinIds: excluded,
       includedRankedinIds: includedFakes,
+      manualPlaces: manualPlaceEntries(manualPlaces),
       playerLinks: Object.entries(playerLinks)
         .map(([rankedinId, playerId]) => ({ rankedinId, playerId: Number(playerId) }))
         .filter((link) => Number.isInteger(link.playerId) && link.playerId > 0),
@@ -1219,6 +1249,18 @@ function UploadManager() {
             </div>
           ) : null}
           {(() => {
+            const unranked = preview.players.filter((p) => !p.excludedFromImport && p.place === 0);
+            if (!unranked.length) return null;
+            return (
+              <div className="flex items-start gap-3 rounded-[14px] bg-tertiary-container px-4 py-3 text-on-tertiary-container">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <span className="text-[13px] font-medium">
+                  Без места в таблице RankedIn: {unranked.map((p) => p.name).join(", ")}. Впишите место в колонке «Место» - игроки с этого места и ниже сдвинутся на одну позицию. Без места очки по таблице очков не начислятся.
+                </span>
+              </div>
+            );
+          })()}
+          {(() => {
             const matched = preview.players.filter(
               (p) => !p.excludedFromImport && p.status === "new" && p.possibleMatches?.length,
             );
@@ -1324,6 +1366,10 @@ function UploadManager() {
                     // one row the admin has to act on (link it, or let a duplicate
                     // player be created), so it gets its own tint.
                     const nameMatch = !excludedRow && row.status === "new" && Boolean(row.possibleMatches?.length);
+                    // RankedIn ranks no fake profile, so a row kept from behind one
+                    // lands with place 0: without a place it earns no points and
+                    // misses the places chart. The admin types it in.
+                    const needsPlace = !excludedRow && row.place === 0;
                     return (
                       <tr
                         key={`${row.rankedinId}-${row.place}`}
@@ -1345,7 +1391,29 @@ function UploadManager() {
                             className="size-4 accent-primary disabled:opacity-40"
                           />
                         </td>
-                        <td className={cn("border-l-4 px-5 py-3 font-mono text-[13px] font-semibold tabular", excludedRow ? "border-error" : "border-transparent")}>{row.place}</td>
+                        <td className={cn("border-l-4 px-5 py-3 font-mono text-[13px] font-semibold tabular", excludedRow ? "border-error" : "border-transparent")}>
+                          {needsPlace ? (
+                            <input
+                              type="number"
+                              min={1}
+                              defaultValue={manualPlaces[row.rankedinId] ?? ""}
+                              disabled={recomputing || importing}
+                              placeholder="-"
+                              title="RankedIn не дал этому игроку место. Впишите его: игроки с этого места и ниже сдвинутся на одну позицию."
+                              onBlur={(e) => {
+                                if ((e.target.value.trim() || "") !== (manualPlaces[row.rankedinId] ?? "")) {
+                                  applyManualPlace(row.rankedinId, e.target.value);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") e.currentTarget.blur();
+                              }}
+                              className="h-8 w-16 rounded-[8px] border border-tertiary bg-surface-container-high px-2 text-center font-mono text-[13px] tabular text-on-surface disabled:opacity-50"
+                            />
+                          ) : (
+                            row.place
+                          )}
+                        </td>
                         <td className="px-3 py-3 text-left">
                           <div className="text-[13px] font-[550]">{row.name}</div>
                         </td>
