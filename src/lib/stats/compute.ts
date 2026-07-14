@@ -490,7 +490,7 @@ export const STRENGTH_BANDS: StrengthBand[] = [
   { min: 1600, max: 1799, labelRu: "Уверенный", descriptionRu: "Стабильно обыгрывает игроков ниже и борется с равными." },
   { min: 1800, max: 1999, labelRu: "Сильный", descriptionRu: "Превосходит большинство соперников по силе игры." },
   { min: 2000, max: 2199, labelRu: "Очень сильный", descriptionRu: "Один из сильнейших, редко проигрывает по силе." },
-  { min: 2200, max: Infinity, labelRu: "Элита", descriptionRu: "Топ лиги — доминирует над полем." },
+  { min: 2200, max: Infinity, labelRu: "Элита", descriptionRu: "Топ лиги - доминирующий игрок." },
 ];
 
 export function getStrengthBand(rating?: number | null): StrengthBand | null {
