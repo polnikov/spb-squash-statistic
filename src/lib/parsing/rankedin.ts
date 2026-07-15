@@ -623,7 +623,7 @@ async function parseRankedinTournament(input: StageImportInput): Promise<ParseRa
 export type StageImportExclusion = { rankedinId: string; reason: string };
 
 /** Players kept out of the import: retired in every match (auto) or picked by the admin. */
-function collectExclusions(
+export function collectExclusions(
   input: StageImportInput,
   playersRows: ParsedStagePlayer[],
   matchRows: ParsedStageMatch[],
@@ -657,7 +657,7 @@ function collectExclusions(
  * the real table and types the place; whoever stood there and below moves one
  * position back, so the ladder stays a contiguous 1..N.
  */
-function applyManualPlaces(
+export function applyManualPlaces(
   rows: ParsedStagePlayer[],
   manualPlaces: { rankedinId: string; place: number }[],
   excludedIds: ReadonlySet<string>,
