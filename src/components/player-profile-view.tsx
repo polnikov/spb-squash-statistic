@@ -917,7 +917,9 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
           <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
         </div>
         <ResultsTimeline matches={model.contexts.career.matches} />
-        <StrengthHistoryCard stats={stats} history={model.strengthHistory} />
+        {/* Mobile only: on desktop this card lives at the top of the left content
+            column (next to Графики), not in the header. */}
+        <StrengthHistoryCard stats={stats} history={model.strengthHistory} className="md:hidden" />
       </div>
     </div>
   );
@@ -2020,14 +2022,25 @@ function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
   );
 }
 
-/** Strength Rating (Elo) curve. Same footprint as the Форма card and sits right
- *  after it. Career-wide, so it ignores the season filter. */
-function StrengthHistoryCard({ stats, history }: { stats: PlayerProfileStats; history: PlayerProfileStrengthPoint[] }) {
+/** Strength Rating (Elo) curve. Career-wide, so it ignores the season filter.
+ *  `chartHeight` lets the mobile card stay compact while the desktop copy fills a
+ *  full content card next to the Графики block. */
+function StrengthHistoryCard({
+  stats,
+  history,
+  chartHeight = 128,
+  className,
+}: {
+  stats: PlayerProfileStats;
+  history: PlayerProfileStrengthPoint[];
+  chartHeight?: number;
+  className?: string;
+}) {
   const rating = stats.strengthRating;
   if (rating === null || history.length < 2) return null;
   const peak = Math.max(...history.map((p) => p.rating));
   return (
-    <div className="min-w-0">
+    <div className={cn("min-w-0", className)}>
       <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
@@ -2039,7 +2052,7 @@ function StrengthHistoryCard({ stats, history }: { stats: PlayerProfileStats; hi
             <span className="tabular">пик {peak}</span>
           </span>
         </div>
-        <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height={64} />
+        <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height={chartHeight} />
       </div>
     </div>
   );
@@ -2162,6 +2175,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       <div className="hidden grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-5 md:grid">
         <div className="flex min-w-0 flex-col gap-5">
           <EmptyContext stats={active.scopedStats} />
+          <StrengthHistoryCard stats={model.careerStats} history={model.strengthHistory} chartHeight={300} />
           <GameAdvantageCard stats={active.scopedStats} />
           <ChartPanel active={active} chartType={chartType} setChartType={setChartType} />
           <ScoreDistributionCard stats={active.scopedStats} />
