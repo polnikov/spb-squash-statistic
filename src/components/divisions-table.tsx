@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { SortHeaderButton } from "@/components/ui/sort-header";
+import { Th } from "@/components/ui/table-header";
 import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/league";
 import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
 
 const DIVS = [1, 2, 3] as const;
+/** Shared class for the numeric division columns (narrow on mobile, roomy on md). */
+const COL_TH = "w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4";
 const SORTABLE_DEFAULT_DIR = {
   place: "asc",
   points: "desc",
@@ -322,34 +324,22 @@ export function DivisionsTable({
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>
             <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
-              <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
-                <SortHeaderButton label="#" active={sort.key === "place"} direction={sort.dir} onClick={() => setSortKey("place")} className="inline-flex w-full" arrowAbsolute />
-              </th>
-              <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Очки" active={sort.key === "points"} direction={sort.dir} onClick={() => setSortKey("points")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">Этапов</th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Матчи" active={sort.key === "matches"} direction={sort.dir} onClick={() => setSortKey("matches")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Match WR" active={sort.key === "matchWr"} direction={sort.dir} onClick={() => setSortKey("matchWr")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">Геймы</th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Game WR" active={sort.key === "gameWr"} direction={sort.dir} onClick={() => setSortKey("gameWr")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium md:w-auto md:px-4">Розыгрыши</th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Rally WR" active={sort.key === "rallyWr"} direction={sort.dir} onClick={() => setSortKey("rallyWr")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Время" active={sort.key === "court"} direction={sort.dir} onClick={() => setSortKey("court")} className="inline-flex w-full" />
-              </th>
-              <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium md:w-auto md:px-4">
-                <SortHeaderButton label="Форма" active={sort.key === "form"} direction={sort.dir} onClick={() => setSortKey("form")} className="inline-flex w-full" />
-              </th>
+              <Th
+                className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent"
+                sort={{ label: "#", active: sort.key === "place", direction: sort.dir, onSort: () => setSortKey("place") }}
+                arrowAbsolute
+              >#</Th>
+              <Th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</Th>
+              <Th className={COL_TH} sort={{ label: "Очки", active: sort.key === "points", direction: sort.dir, onSort: () => setSortKey("points") }}>Очки</Th>
+              <Th className={COL_TH}>Этапов</Th>
+              <Th className={COL_TH} sort={{ label: "Матчи", active: sort.key === "matches", direction: sort.dir, onSort: () => setSortKey("matches") }}>Матчи</Th>
+              <Th className={COL_TH} sort={{ label: "Match WR", active: sort.key === "matchWr", direction: sort.dir, onSort: () => setSortKey("matchWr") }}>Match WR</Th>
+              <Th className={COL_TH}>Геймы</Th>
+              <Th className={COL_TH} sort={{ label: "Game WR", active: sort.key === "gameWr", direction: sort.dir, onSort: () => setSortKey("gameWr") }}>Game WR</Th>
+              <Th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium md:w-auto md:px-4">Розыгрыши</Th>
+              <Th className={COL_TH} sort={{ label: "Rally WR", active: sort.key === "rallyWr", direction: sort.dir, onSort: () => setSortKey("rallyWr") }}>Rally WR</Th>
+              <Th className={COL_TH} sort={{ label: "Время", active: sort.key === "court", direction: sort.dir, onSort: () => setSortKey("court") }}>Время</Th>
+              <Th className={COL_TH} sort={{ label: "Форма", active: sort.key === "form", direction: sort.dir, onSort: () => setSortKey("form") }}>Форма</Th>
             </tr>
           </thead>
           <tbody>

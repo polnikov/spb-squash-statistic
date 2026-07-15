@@ -15,6 +15,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
+import { Th } from "@/components/ui/table-header";
 
 const SCOPES: { key: DivisionScope; label: string }[] = [
   { key: 1, label: "Див 1" },
@@ -292,16 +293,14 @@ export function StageSummary({ league }: { league: League }) {
               <table className="w-max min-w-full table-auto border-collapse">
                 <thead>
                   <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
-                    <th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 font-medium md:static md:z-auto md:bg-transparent">#</th>
-                    <th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:bg-transparent">Игрок</th>
-                    <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Матчи</th>
-                    <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Геймы</th>
-                    <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Мячи</th>
-                    <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Время</th>
-                    <th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Очки</th>
-                    <th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium">
-                      Форма
-                    </th>
+                    <Th className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 font-medium md:static md:z-auto md:bg-transparent">#</Th>
+                    <Th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:bg-transparent">Игрок</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Матчи</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Геймы</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Мячи</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Время</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Очки</Th>
+                    <Th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium">Форма</Th>
                   </tr>
                 </thead>
                 <tbody>

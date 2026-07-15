@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { SortHeaderButton } from "@/components/ui/sort-header";
+import { Th } from "@/components/ui/table-header";
 import {
   getIronManLongMatches,
   getIronManRows,
@@ -312,22 +312,23 @@ export function IronManView({ league }: { league: League }) {
                 <thead>
                   <tr className="bg-surface-container-high/60 text-center text-xs text-on-surface-variant">
                     {TABLE_COLUMNS.map((column) => (
-                      <th
+                      <Th
                         key={column.label}
                         className={cn("px-4 py-3 text-center font-medium", column.className)}
+                        buttonClassName="inline-flex"
+                        sort={
+                          column.sortKey
+                            ? {
+                                label: column.label,
+                                active: sort.key === column.sortKey,
+                                direction: sort.direction,
+                                onSort: () => toggleSort(column.sortKey!),
+                              }
+                            : undefined
+                        }
                       >
-                        {column.sortKey ? (
-                          <SortHeaderButton
-                            label={column.label}
-                            active={sort.key === column.sortKey}
-                            direction={sort.direction}
-                            onClick={() => toggleSort(column.sortKey!)}
-                            className="inline-flex"
-                          />
-                        ) : (
-                          column.label
-                        )}
-                      </th>
+                        {column.label}
+                      </Th>
                     ))}
                   </tr>
                 </thead>

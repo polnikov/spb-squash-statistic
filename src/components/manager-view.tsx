@@ -47,6 +47,7 @@ import {
 } from "@/app/(app)/manager/actions";
 import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel } from "@/lib/format";
 import { isDeletedRankedinProfile, isFakeRankedinId, isLiveRankedinId, rankedinPlayerUrl } from "@/lib/rankedin-id";
+import { Th } from "@/components/ui/table-header";
 import { cn } from "@/lib/utils";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import {
@@ -564,11 +565,11 @@ function PlayersManager({ league }: { league: League }) {
           <table className="w-full min-w-[820px] border-collapse">
             <thead>
               <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
-                <th className="px-3 py-3 font-medium">Имя RankedIn</th>
-                <th className="px-3 py-3 font-medium">Имя в приложении</th>
-                <th className="px-3 py-3 font-medium">ID</th>
-                <th className="px-3 py-3 font-medium">Очки</th>
-                <th className="px-5 py-3 font-medium">Действия</th>
+                <Th className="px-3 py-3 font-medium">Имя RankedIn</Th>
+                <Th className="px-3 py-3 font-medium">Имя в приложении</Th>
+                <Th className="px-3 py-3 font-medium">ID</Th>
+                <Th className="px-3 py-3 font-medium">Очки</Th>
+                <Th className="px-5 py-3 font-medium">Действия</Th>
               </tr>
             </thead>
             <tbody>
@@ -1344,16 +1345,16 @@ function UploadManager() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
-                    <th className="w-px whitespace-nowrap px-4 py-3 font-medium">Грузить</th>
-                    <th className="px-5 py-3 font-medium">Место</th>
-                    <th className="px-3 py-3 font-medium">Игрок</th>
-                    <th className="px-3 py-3 font-medium">ID</th>
-                    <th className="px-3 py-3 font-medium">Skill</th>
-                    <th className="px-3 py-3 font-medium">Матчи</th>
-                    <th className="px-3 py-3 font-medium">Геймы</th>
-                    <th className="px-3 py-3 font-medium">Мячи</th>
-                    <th className="px-3 py-3 font-medium">Время на корте</th>
-                    <th className="w-px whitespace-nowrap px-5 py-3 font-medium">Статус / связка</th>
+                    <Th className="w-px whitespace-nowrap px-4 py-3 font-medium">Грузить</Th>
+                    <Th className="px-5 py-3 font-medium">Место</Th>
+                    <Th className="px-3 py-3 font-medium">Игрок</Th>
+                    <Th className="px-3 py-3 font-medium">ID</Th>
+                    <Th className="px-3 py-3 font-medium">Skill</Th>
+                    <Th className="px-3 py-3 font-medium">Матчи</Th>
+                    <Th className="px-3 py-3 font-medium">Геймы</Th>
+                    <Th className="px-3 py-3 font-medium">Мячи</Th>
+                    <Th className="px-3 py-3 font-medium">Время на корте</Th>
+                    <Th className="w-px whitespace-nowrap px-5 py-3 font-medium">Статус / связка</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1915,13 +1916,13 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-brand-surface-2/60 text-center text-[11px] text-muted-foreground">
-                    <th className="w-px whitespace-nowrap px-4 py-3 font-medium">Сливать</th>
-                    <th className="px-3 py-3 text-left font-medium">Игрок</th>
-                    <th className="px-3 py-3 font-medium">ID</th>
-                    <th className="px-3 py-3 font-medium">Алиасы</th>
-                    <th className="px-3 py-3 font-medium">Матчи</th>
-                    <th className="px-3 py-3 font-medium">Период</th>
-                    <th className="w-px whitespace-nowrap px-5 py-3 font-medium">Итог</th>
+                    <Th className="w-px whitespace-nowrap px-4 py-3 font-medium">Сливать</Th>
+                    <Th className="px-3 py-3 text-left font-medium">Игрок</Th>
+                    <Th className="px-3 py-3 font-medium">ID</Th>
+                    <Th className="px-3 py-3 font-medium">Алиасы</Th>
+                    <Th className="px-3 py-3 font-medium">Матчи</Th>
+                    <Th className="px-3 py-3 font-medium">Период</Th>
+                    <Th className="w-px whitespace-nowrap px-5 py-3 font-medium">Итог</Th>
                   </tr>
                 </thead>
                 <tbody>
