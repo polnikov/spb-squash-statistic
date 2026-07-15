@@ -167,6 +167,15 @@ export type PlayerProfilePlacePoint = {
   date?: string;
 };
 
+/** One point of the Strength Rating (Elo) curve: the rating after a single match,
+ *  in chronological order. */
+export type PlayerProfileStrengthPoint = {
+  orderIndex: number;
+  label: string;
+  rating: number;
+  delta: number;
+};
+
 export type PlayerOpponentStats = {
   opponentRid: string;
   opponentName: string;
@@ -252,6 +261,8 @@ export type PlayerProfileModel = {
   careerStats: PlayerProfileStats;
   /** Place on the Players leaderboard (by Strength Rating desc). Null if unrated. */
   strengthRatingRank: number | null;
+  /** Strength Rating (Elo) after each match, oldest first. Empty for the pure model. */
+  strengthHistory: PlayerProfileStrengthPoint[];
   /** Career place distribution over all stage results (unfiltered). */
   careerPlaces: PlayerProfilePlaces;
   /** Current-season standing place per division the player plays. */
@@ -1101,8 +1112,10 @@ export function buildPlayerProfileModel(
     player,
     careerStats,
     // Elo is global (needs cross-player history the pure builder does not have),
-    // so the DB-backed loader fills the leaderboard place; here it is unknown.
+    // so the DB-backed loader fills the leaderboard place and history; here they
+    // are unknown.
     strengthRatingRank: null,
+    strengthHistory: [],
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
     divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),

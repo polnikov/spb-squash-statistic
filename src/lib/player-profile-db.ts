@@ -9,8 +9,10 @@
 import { eq } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
+  matches,
   players,
   playerOpponentStats,
+  playerRatingHistory,
   playerStatsAggregate,
   seasons,
   stages,
@@ -40,6 +42,7 @@ import {
   type PlayerProfilePlacePoint,
   type PlayerProfileSeriesPoint,
   type PlayerProfileStats,
+  type PlayerProfileStrengthPoint,
   type SampleSizeLevel,
 } from "@/lib/player-profile";
 
@@ -216,9 +219,9 @@ export async function buildPlayerProfileModelFromDb(
     .sort((a, b) => seasonStart(b) - seasonStart(a));
   const divisionsBySeason = buildDivisionsBySeason(data.results);
 
-  // The five reads below are independent of each other — one parallel wave
-  // instead of five sequential round trips.
-  const [seasonRows, stageRows, playerRows, aggRows, oppRows] = await Promise.all([
+  // The reads below are independent of each other — one parallel wave instead of
+  // sequential round trips.
+  const [seasonRows, stageRows, playerRows, aggRows, oppRows, ratingRows] = await Promise.all([
     database.select({ id: seasons.id, label: seasons.label }).from(seasons),
     database.select({ id: stages.id, number: stages.number }).from(stages),
     database
@@ -231,7 +234,38 @@ export async function buildPlayerProfileModelFromDb(
       .from(players),
     database.select().from(playerStatsAggregate).where(eq(playerStatsAggregate.playerId, playerId)),
     database.select().from(playerOpponentStats).where(eq(playerOpponentStats.playerId, playerId)),
+    // Elo audit trail: one row per match. Joined to stages/seasons so it can be
+    // put back in the same chronological order the rating engine used.
+    database
+      .select({
+        matchId: playerRatingHistory.matchId,
+        ratingAfter: playerRatingHistory.ratingAfter,
+        delta: playerRatingHistory.delta,
+        stageNumber: stages.number,
+        seasonLabel: seasons.label,
+      })
+      .from(playerRatingHistory)
+      .innerJoin(matches, eq(matches.id, playerRatingHistory.matchId))
+      .innerJoin(stages, eq(stages.id, matches.stageId))
+      .innerJoin(seasons, eq(seasons.id, stages.seasonId))
+      .where(eq(playerRatingHistory.playerId, playerId)),
   ]);
+
+  // Same canonical order as the rating engine: season year → stage number →
+  // match id. Each point is the rating after that match.
+  const strengthHistory: PlayerProfileStrengthPoint[] = [...ratingRows]
+    .sort(
+      (a, b) =>
+        seasonStart(a.seasonLabel) - seasonStart(b.seasonLabel) ||
+        a.stageNumber - b.stageNumber ||
+        a.matchId - b.matchId,
+    )
+    .map((r, index) => ({
+      orderIndex: index + 1,
+      label: `${r.seasonLabel} · Э${r.stageNumber}`,
+      rating: r.ratingAfter,
+      delta: r.delta,
+    }));
 
   // Strength Rating (Elo) lives on `players` — index every player's rating/games
   // by DB id so opponents and the profile owner can both be filled in.
@@ -394,6 +428,7 @@ export async function buildPlayerProfileModelFromDb(
     player,
     careerStats,
     strengthRatingRank,
+    strengthHistory,
     careerPlaces: placeDistribution(data.results),
     divisionPlaces: currentDivisionPlaces(leagues, rid, player.divisions),
     divisionPlacesBySeason: divisionPlacesBySeason(leagues, rid),

@@ -17,6 +17,7 @@ import type {
   PlayerProfileSeriesPoint,
   PlayerProfileStats,
   PlayerProfileStatsScope,
+  PlayerProfileStrengthPoint,
 } from "@/lib/player-profile";
 import {
   formatDuration,
@@ -57,7 +58,8 @@ export type PlayerProfileChartType =
   | "h2hTimeline"
   | "matchesBySeason"
   | "formBySeason"
-  | "places";
+  | "places"
+  | "strengthHistory";
 
 export type PlayerProfileChartProps = {
   type: PlayerProfileChartType;
@@ -77,6 +79,8 @@ const CHART_COLORS = {
   error: "#ff6b63",
   /** Wins. Paired with `error` wherever a chart splits a result into won/lost. */
   success: "#22c55e",
+  /** Strength Rating (Elo) curve. Matches the lime rating badge. */
+  strength: "#dff7a5",
   text: "#b6b6b6",
   grid: "rgba(255,255,255,0.09)",
 };
@@ -152,6 +156,9 @@ function cumulative(points: PlayerProfileSeriesPoint[], field: "gameBalance" | "
 
 /** Stages visible at once in the places chart before the zoom slider appears. */
 const PLACES_WINDOW = 10;
+
+/** Matches visible at once in the strength chart before the zoom slider appears. */
+const STRENGTH_WINDOW = 30;
 
 const PLACES_ZOOM_SLIDER = {
   height: 16,
@@ -232,6 +239,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
     careerBySeason?: PlayerProfileSeriesPoint[];
     stages?: PlayerProfileSeriesPoint[];
     places?: PlayerProfilePlacePoint[];
+    strengthHistory?: PlayerProfileStrengthPoint[];
   };
   const stats = payload.stats;
   const career = payload.careerBySeason ?? [];
@@ -304,6 +312,55 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
             },
           },
           data: bars,
+        },
+      ],
+    };
+  }
+
+  if (type === "strengthHistory") {
+    const history = payload.strengthHistory ?? [];
+    // Need a curve, not a dot: a single match makes no trend.
+    if (history.length < 2) return null;
+    // One point per match, so a career runs to hundreds. Drop the x labels (the
+    // tooltip carries the stage) and window to the latest matches with a slider.
+    const zoomed = history.length > STRENGTH_WINDOW;
+    const startValue = Math.max(0, history.length - STRENGTH_WINDOW);
+    const endValue = history.length - 1;
+    return {
+      ...option,
+      legend: { show: false },
+      grid: { left: 42, right: 12, top: 8, bottom: zoomed ? 26 : 6 },
+      tooltip: {
+        ...option.tooltip,
+        formatter: (params: unknown) => {
+          const first = Array.isArray(params) ? params[0] : params;
+          const dataIndex = typeof first === "object" && first !== null && "dataIndex" in first ? Number(first.dataIndex) : -1;
+          const point = history[dataIndex];
+          if (!point) return "";
+          const sign = point.delta > 0 ? "+" : "";
+          return `${point.label}<br/>Рейтинг: ${point.rating}<br/>Изменение: ${sign}${point.delta}`;
+        },
+      },
+      dataZoom: zoomed
+        ? [
+            { type: "slider", startValue, endValue, ...PLACES_ZOOM_SLIDER },
+            { type: "inside", startValue, endValue, preventDefaultMouseMove: false },
+          ]
+        : undefined,
+      xAxis: { ...option.xAxis, data: history.map((p) => p.label), axisLabel: { show: false } },
+      // Elo sits well above zero, so let the axis frame the data range instead of
+      // starting at 0 and flattening the whole curve into a thin band.
+      yAxis: { ...option.yAxis, scale: true, splitNumber: 3, axisLabel: { color: CHART_COLORS.text, fontSize: 10 } },
+      series: [
+        {
+          name: "Strength Rating",
+          type: "line",
+          smooth: true,
+          showSymbol: false,
+          lineStyle: { color: CHART_COLORS.strength, width: 2 },
+          itemStyle: { color: CHART_COLORS.strength },
+          areaStyle: { color: `${CHART_COLORS.strength}1f` },
+          data: history.map((p) => p.rating),
         },
       ],
     };
@@ -860,6 +917,7 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
           <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
         </div>
         <ResultsTimeline matches={model.contexts.career.matches} />
+        <StrengthHistoryCard stats={stats} history={model.strengthHistory} />
       </div>
     </div>
   );
@@ -1957,6 +2015,31 @@ function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Strength Rating (Elo) curve. Same footprint as the Форма card and sits right
+ *  after it. Career-wide, so it ignores the season filter. */
+function StrengthHistoryCard({ stats, history }: { stats: PlayerProfileStats; history: PlayerProfileStrengthPoint[] }) {
+  const rating = stats.strengthRating;
+  if (rating === null || history.length < 2) return null;
+  const peak = Math.max(...history.map((p) => p.rating));
+  return (
+    <div className="min-w-0">
+      <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
+        <div className="mb-1 flex items-baseline justify-between gap-3">
+          <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
+            <Snail className="size-3.5 text-[color:var(--rating-badge-hue)]" />
+            Strength Rating
+          </h2>
+          <span className="inline-flex shrink-0 items-baseline gap-2 font-mono text-[11px] text-on-surface-variant">
+            <span className="font-semibold tabular text-on-surface">{rating}</span>
+            <span className="tabular">пик {peak}</span>
+          </span>
+        </div>
+        <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height={64} />
       </div>
     </div>
   );
