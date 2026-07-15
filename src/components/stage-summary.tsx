@@ -307,7 +307,7 @@ export function StageSummary({ league }: { league: League }) {
                   {visibleRows.map((r) => {
                     const name = splitPlayerName(r.name);
                     return (
-                    <tr key={`${r.div}-${r.playerIdx}`} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:hover:bg-surface-container-high/40">
+                    <tr key={`${r.div}-${r.playerIdx}`} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:h-[60px] md:hover:bg-surface-container-high/40">
                       <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center transition-colors group-hover:bg-brand-surface-2/40 md:static md:z-auto md:bg-transparent md:group-hover:bg-transparent">
                         <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                       </td>

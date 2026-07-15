@@ -254,7 +254,7 @@ export function RatingTable({
               <tr
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
-                className="group border-t border-border transition-colors hover:bg-brand-surface-2/40"
+                className="group border-t border-border transition-colors hover:bg-brand-surface-2/40 md:h-[60px]"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

@@ -351,7 +351,7 @@ export function DivisionsTable({
               const gameWr = pctText(r.gamesWon, r.games);
               const rallyWr = pctText(r.ballsWon, r.balls);
               return (
-              <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40">
+              <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:h-[60px]">
                 <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                 </td>
