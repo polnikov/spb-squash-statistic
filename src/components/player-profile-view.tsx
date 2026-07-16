@@ -588,6 +588,35 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   );
 }
 
+/** Neutral chip with the hover/focus tooltip used by the rating stage selector's
+ *  final-stage hint (same design and animation). Anchored to the left since the
+ *  badge sits near the card's left edge. */
+function HintChip({ children, hint }: { children: React.ReactNode; hint: string }) {
+  return (
+    <span className="group/hint relative inline-flex">
+      <span
+        tabIndex={0}
+        aria-label={hint}
+        className="inline-flex cursor-help items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant outline-none"
+      >
+        {children}
+      </span>
+      <span
+        role="tooltip"
+        className={cn(
+          "pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[190px] origin-top-left translate-y-1 scale-95 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-popover-foreground opacity-0 shadow-lg shadow-black/25",
+          "transition-[opacity,transform] duration-75 ease-m3-standard",
+          "group-hover/hint:translate-y-0 group-hover/hint:scale-100 group-hover/hint:opacity-100 group-hover/hint:delay-150",
+          "group-focus-within/hint:translate-y-0 group-focus-within/hint:scale-100 group-focus-within/hint:opacity-100 group-focus-within/hint:delay-150",
+        )}
+      >
+        <span className="absolute left-3 top-[-4px] size-2 rotate-45 border-l border-t border-border bg-popover" />
+        {hint}
+      </span>
+    </span>
+  );
+}
+
 function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
@@ -929,7 +958,7 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
           <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} />
           <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
         </div>
-        <ResultsTimeline matches={model.contexts.career.matches} />
+        <ResultsTimeline matches={model.contexts.career.matches} longestWinStreak={stats.longestWinStreak} />
         {/* Mobile only: on desktop this card lives at the top of the left content
             column (next to Графики), not in the header. */}
         <StrengthHistoryCard stats={stats} history={model.strengthHistory} className="md:hidden" />
@@ -2005,14 +2034,18 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
  * Desktop W/L history timeline: wins on the top track (green W), losses on the
  * bottom track (red L). Newest match on the left, older scroll off to the right.
  */
-function ResultsTimeline({ matches }: { matches: MatchListItem[] }) {
+function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem[]; longestWinStreak: number }) {
   if (matches.length === 0) return null;
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-semibold";
   return (
     <div className="min-w-0">
       <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">
-          <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
+            {/* One win is not a streak, so the badge only appears from two up. */}
+            {longestWinStreak >= 2 ? <HintChip hint="Лучшая серия побед">{longestWinStreak}</HintChip> : null}
+          </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] text-on-surface-variant">
             последние
             <ArrowRight className="size-3" />
