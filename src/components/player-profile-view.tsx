@@ -355,7 +355,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
         {
           name: "Strength Rating",
           type: "line",
-          smooth: true,
+          smooth: false,
           showSymbol: false,
           lineStyle: { color: CHART_COLORS.strength, width: 2 },
           itemStyle: { color: CHART_COLORS.strength },
