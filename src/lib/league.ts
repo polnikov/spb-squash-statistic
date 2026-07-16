@@ -273,7 +273,9 @@ function getRatingRowsAtStage(
         ballsWon: a.wonB,
         court: a.court,
         points: a.points,
-        stages: playerStagesParticipated(league, p.idx, division, maxStage),
+        // Actual stages played, final (9th) included. Only points/standings stop
+        // at RATING_MAX_STAGE; the count reflects real participation.
+        stages: playerStagesParticipated(league, p.idx, division, TOTAL_STAGES),
         best: a.best,
         fiveGameMatches: a.fiveGameMatches,
       };
