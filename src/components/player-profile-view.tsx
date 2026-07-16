@@ -160,20 +160,24 @@ const PLACES_WINDOW = 10;
 /** Matches visible at once in the strength chart before the zoom slider appears. */
 const STRENGTH_WINDOW = 30;
 
-const PLACES_ZOOM_SLIDER = {
-  height: 16,
-  bottom: 4,
-  borderColor: "transparent",
-  backgroundColor: "rgba(255,255,255,0.04)",
-  fillerColor: "rgba(244,114,182,0.16)",
-  handleStyle: { color: CHART_COLORS.primary, borderColor: CHART_COLORS.primary },
-  moveHandleSize: 3,
-  handleSize: "120%",
-  brushSelect: false,
-  showDetail: false,
-  showDataShadow: false,
-  zoomLock: false,
-} as const;
+/** Zoom-slider look. On mobile the handles and drag bar are enlarged so a finger
+ *  can grab them; the thin desktop handles are hard to hit on a touchscreen. */
+function zoomSlider(isMobile: boolean) {
+  return {
+    height: isMobile ? 28 : 16,
+    bottom: isMobile ? 6 : 4,
+    borderColor: "transparent",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    fillerColor: "rgba(244,114,182,0.16)",
+    handleStyle: { color: CHART_COLORS.primary, borderColor: CHART_COLORS.primary },
+    moveHandleSize: isMobile ? 20 : 3,
+    handleSize: isMobile ? "150%" : "120%",
+    brushSelect: false,
+    showDetail: false,
+    showDataShadow: false,
+    zoomLock: false,
+  } as const;
+}
 
 function baseChartOption(): EChartsOption {
   return {
@@ -233,7 +237,7 @@ function barSeries(name: string, data: (number | null)[], color?: string, stack?
   };
 }
 
-function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption | null {
+function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = false): EChartsOption | null {
   const payload = data as {
     stats?: PlayerProfileStats;
     careerBySeason?: PlayerProfileSeriesPoint[];
@@ -262,7 +266,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
     return {
       ...option,
       legend: { show: false },
-      grid: { ...option.grid, top: 24, bottom: zoomed ? 40 : 12 },
+      grid: { ...option.grid, top: 24, bottom: zoomed ? (isMobile ? 52 : 40) : 12 },
       tooltip: {
         ...option.tooltip,
         formatter: (params: unknown) => {
@@ -274,7 +278,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
       },
       dataZoom: zoomed
         ? [
-            { type: "slider", startValue, endValue, ...PLACES_ZOOM_SLIDER },
+            { type: "slider", startValue, endValue, ...zoomSlider(isMobile) },
             // `preventDefaultMouseMove: false` leaves the vertical page scroll to
             // the page: the chart only claims horizontal drags.
             { type: "inside", startValue, endValue, preventDefaultMouseMove: false },
@@ -329,7 +333,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
     return {
       ...option,
       legend: { show: false },
-      grid: { left: 42, right: 12, top: 8, bottom: zoomed ? 26 : 6 },
+      grid: { left: 42, right: 12, top: 8, bottom: zoomed ? (isMobile ? 44 : 26) : 6 },
       tooltip: {
         ...option.tooltip,
         formatter: (params: unknown) => {
@@ -343,7 +347,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
       },
       dataZoom: zoomed
         ? [
-            { type: "slider", startValue, endValue, ...PLACES_ZOOM_SLIDER },
+            { type: "slider", startValue, endValue, ...zoomSlider(isMobile) },
             { type: "inside", startValue, endValue, preventDefaultMouseMove: false },
           ]
         : undefined,
@@ -516,7 +520,16 @@ function chartOption(type: PlayerProfileChartType, data: unknown): EChartsOption
 }
 
 export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileChartProps) {
-  const option = React.useMemo(() => chartOption(type, data), [type, data]);
+  // Enlarge the zoom-slider handles on touch layouts (hard to grab otherwise).
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  const option = React.useMemo(() => chartOption(type, data, isMobile), [type, data, isMobile]);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const [canRender, setCanRender] = React.useState(false);
 
