@@ -19,6 +19,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
+import { SearchBox } from "@/components/ui/search-box";
 
 const ROW_LIMIT = 15;
 
@@ -196,20 +197,27 @@ export function IronManView({ league }: { league: League }) {
   const [open, setOpen] = React.useState<Record<number, boolean>>({});
   const [expanded, setExpanded] = React.useState(false);
   const [sort, setSort] = React.useState<IronSort>({ key: "court", direction: "desc" });
+  const [query, setQuery] = React.useState("");
+  const q = query.trim().toLowerCase();
 
   const rows = React.useMemo(() => getIronManRows(league, half, scope), [league, half, scope]);
   const summary = React.useMemo(() => getIronManSummary(league, half, scope), [league, half, scope]);
   const longMatches = React.useMemo(() => getIronManLongMatches(league, half, scope), [league, half, scope]);
+  // Search filters the player list only; the summary tiles stay on the full set.
+  const nameFiltered = React.useMemo(
+    () => (q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows),
+    [rows, q],
+  );
   const sortedRows = React.useMemo(() => {
     const dir = sort.direction === "asc" ? 1 : -1;
-    return [...rows]
+    return [...nameFiltered]
       .sort((a, b) => {
         const byMetric = (ironSortValue(a, sort.key) - ironSortValue(b, sort.key)) * dir;
         if (byMetric !== 0) return byMetric;
         return a.name.localeCompare(b.name, "ru");
       })
       .map((row, index) => ({ ...row, pos: index + 1 }));
-  }, [rows, sort]);
+  }, [nameFiltered, sort]);
   const max = Math.max(1, ...rows.map((r) => r.court));
   const visibleRows = expanded ? sortedRows : sortedRows.slice(0, ROW_LIMIT);
   const moreCount = Math.max(0, sortedRows.length - visibleRows.length);
@@ -239,6 +247,9 @@ export function IronManView({ league }: { league: League }) {
       <div className="flex flex-col gap-2.5 md:flex-row md:items-start md:gap-3">
         <DivisionTabs scope={scope} setScope={setScope} />
         <PartTabs half={half} setHalf={setHalf} />
+        {rows.length > 0 ? (
+          <SearchBox value={query} onChange={setQuery} className="w-full md:ml-auto md:w-[240px]" />
+        ) : null}
       </div>
 
       {rows.length === 0 ? (
@@ -265,7 +276,7 @@ export function IronManView({ league }: { league: League }) {
 
           {/* mobile: expandable cards */}
           <div className="flex flex-col gap-2 md:hidden">
-            {rows.map((r) => {
+            {nameFiltered.map((r) => {
               const isOpen = !!open[r.playerIdx];
               return (
                 <div key={r.playerIdx} className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">

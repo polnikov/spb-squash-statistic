@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
+import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
@@ -57,8 +58,11 @@ export function RatingMobile({
   const selectedStage = selectedStageByDivision[div];
   const list = rowsByDivisionStage[div]?.[selectedStage] ?? listByDivision[div] ?? [];
   const hasDivisionData = (listByDivision[div]?.length ?? 0) > 0;
+  const [query, setQuery] = React.useState("");
+  const q = query.trim().toLowerCase();
+  const visibleList = q ? list.filter((r) => r.name.toLowerCase().includes(q)) : list;
   const flip = useFlipList();
-  const orderKey = list.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
+  const orderKey = visibleList.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
 
   const { setRef, ind } = useTabSlider(String(div));
 
@@ -114,13 +118,16 @@ export function RatingMobile({
             itemClassName="aspect-square flex-1"
           />
 
+          {/* search: after the stage element, full width */}
+          <SearchBox value={query} onChange={setQuery} className="mb-4 w-full" />
+
           {/* player cards */}
           <div className="flex flex-col gap-2">
-            {list.length === 0 ? (
+            {visibleList.length === 0 ? (
               <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
-                Данных пока нет
+                {q ? "Ничего не найдено" : "Данных пока нет"}
               </div>
-            ) : list.map((r) => (
+            ) : visibleList.map((r) => (
               <Link
                 key={r.rid}
                 ref={flip.setNode(r.rid)}

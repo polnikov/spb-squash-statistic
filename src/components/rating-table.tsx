@@ -17,6 +17,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
+import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { useFlipList } from "@/components/ui/use-flip-list";
@@ -153,12 +154,18 @@ export function RatingTable({
   }));
   const selectedStage = selectedStageByDivision[scope];
 
+  const [query, setQuery] = React.useState("");
+  const q = query.trim().toLowerCase();
+
   const data = rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope] ?? [];
+  // Filter the rows by name; the leaderboard bar scale still keys off the full
+  // set so a search does not rescale the remaining bars.
+  const visibleData = q ? data.filter((r) => r.name.toLowerCase().includes(q)) : data;
   const hasScopeData = (rowsByScope[scope]?.length ?? 0) > 0;
   const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
   const columns = React.useMemo(() => makeColumns(leaderPoints, totalStages), [leaderPoints, totalStages]);
   const table = useReactTable({
-    data,
+    data: visibleData,
     columns,
     enableSorting: false,
     state: { sorting },
@@ -170,7 +177,7 @@ export function RatingTable({
 
   const { setRef, ind } = useTabSlider(String(scope));
   const flip = useFlipList();
-  const orderKey = data.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
+  const orderKey = visibleData.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
 
   React.useLayoutEffect(() => {
     flip.play();
@@ -184,6 +191,12 @@ export function RatingTable({
 
   return (
     <div className="flex flex-col gap-4">
+      {hasScopeData ? (
+        <div className="hidden justify-end md:flex">
+          <SearchBox value={query} onChange={setQuery} className="w-[280px]" />
+        </div>
+      ) : null}
+
       <div className="flex items-end gap-4">
         <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
           <TabSliderPill ind={ind} className="bg-brand-surface-2" />
