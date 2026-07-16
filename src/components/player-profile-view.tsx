@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { matchesLabel, pluralRu } from "@/lib/format";
+import { fmtDate, matchesLabel, pluralRu } from "@/lib/format";
 import type { EChartsOption } from "echarts";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
@@ -1487,7 +1487,7 @@ function MobileOppTile({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MobileOpponentCard({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (rid: string) => void }) {
+function MobileOpponentCard({ o, onOpen, lastMet }: { o: PlayerOpponentStats; onOpen: (rid: string) => void; lastMet?: string }) {
   return (
     <button
       type="button"
@@ -1496,10 +1496,15 @@ function MobileOpponentCard({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (ri
     >
       <div className="flex items-center gap-3">
         <WinRing pct={o.h2hMatchWinRatePct} color={ringColor(o)} small />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="line-clamp-2 text-[14px] font-semibold leading-tight">{o.opponentName}</div>
           <div className="mt-0.5 font-mono text-[11.5px] tabular text-on-surface-variant">{o.meetingsPlayed} · {o.h2hMatchesWon} - {o.h2hMatchesLost}</div>
         </div>
+        {lastMet ? (
+          <span className="shrink-0 self-start rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
+            {fmtDate(lastMet)}
+          </span>
+        ) : null}
       </div>
       <div className="mt-3 grid grid-cols-4 gap-2">
         <MobileOppTile label="MWR" value={formatPercent(o.h2hMatchWinRatePct)} />
@@ -1566,7 +1571,7 @@ const OPPONENTS_INFO: InfoItem[] = [
   { label: "Статус", desc: "Оценка удобства соперника по совокупности матчей, геймов и розыгрышей.", scale: [] },
 ];
 
-function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false }: { active: PlayerProfileContextData; onOpen: (rid: string) => void; mobile?: boolean; hideModeTabs?: boolean }) {
+function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideModeTabs = false }: { active: PlayerProfileContextData; onOpen: (rid: string) => void; lastMetByRid?: Map<string, string>; mobile?: boolean; hideModeTabs?: boolean }) {
   const [mode, setMode] = React.useState<H2hMode>("career");
   const [sort, setSort] = React.useState<H2hSort>("meetings");
   const [open, setOpen] = React.useState(false);
@@ -1620,7 +1625,7 @@ function OpponentsSection({ active, onOpen, mobile = false, hideModeTabs = false
           <div className="py-8 text-center text-sm text-on-surface-variant">Нет соперников в выбранном контексте</div>
         ) : (
           <div className="mt-3 flex flex-col gap-2">
-            {list.map((o) => <MobileOpponentCard key={o.opponentRid} o={o} onOpen={onOpen} />)}
+            {list.map((o) => <MobileOpponentCard key={o.opponentRid} o={o} onOpen={onOpen} lastMet={lastMetByRid?.get(o.opponentRid)} />)}
           </div>
         )}
       </div>
@@ -2113,6 +2118,16 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
   // H2H detail: opponentId in the URL opens the right modal (desktop) / full
   // screen (mobile). All meetings + stats are derived from the career context.
   const careerCtx = model.contexts.career;
+  // Last meeting date per opponent, from all career matches (playedAt is an ISO
+  // date, so it sorts lexicographically). Shown on the opponent cards.
+  const lastMetByRid = React.useMemo(() => {
+    const map = new Map<string, string>();
+    for (const m of careerCtx.matches) {
+      const cur = map.get(m.opponentRid);
+      if (!cur || m.playedAt > cur) map.set(m.opponentRid, m.playedAt);
+    }
+    return map;
+  }, [careerCtx]);
   // No season/division choice (one season, one division) → "За карьеру" and
   // "Текущий фильтр" are identical, so hide those H2H mode tabs.
   const singleContext =
@@ -2180,7 +2195,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
           <ChartPanel active={active} chartType={chartType} setChartType={setChartType} />
           <ScoreDistributionCard stats={active.scopedStats} />
           <MatchHistorySection active={active} />
-          <OpponentsSection active={active} onOpen={openH2h} hideModeTabs={singleContext} />
+          <OpponentsSection active={active} onOpen={openH2h} lastMetByRid={lastMetByRid} hideModeTabs={singleContext} />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           <DecisionMomentsCard stats={active.scopedStats} />
@@ -2208,7 +2223,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
               </div>
             </div>
           ) : null}
-          {mobileTab === "opponents" ? <OpponentsSection active={active} onOpen={openH2h} mobile hideModeTabs={singleContext} /> : null}
+          {mobileTab === "opponents" ? <OpponentsSection active={active} onOpen={openH2h} lastMetByRid={lastMetByRid} mobile hideModeTabs={singleContext} /> : null}
           {mobileTab === "matches" ? <MatchHistorySection active={active} mobile /> : null}
         </TabTransition>
       </div>

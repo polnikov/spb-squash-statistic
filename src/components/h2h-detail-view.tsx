@@ -13,6 +13,7 @@ import type {
   PlayerProfileStats,
 } from "@/lib/player-profile";
 import { h2hStatsFromMatches } from "@/lib/player-profile";
+import { fmtDate } from "@/lib/format";
 import {
   formatDuration,
   formatMatchupStatus,
@@ -460,7 +461,7 @@ function StrengthCorner({ value, side }: { value: number | null | undefined; sid
   );
 }
 
-function Hero({ player, opponent, stats, playerStrengthRating, onClose, bigScore = false, mobile = false }: { player: PlayerProfilePlayer; opponent: PlayerOpponentStats; stats: PlayerProfileStats; playerStrengthRating?: number | null; onClose?: () => void; bigScore?: boolean; mobile?: boolean }) {
+function Hero({ player, opponent, stats, playerStrengthRating, lastMetAt, onClose, bigScore = false, mobile = false }: { player: PlayerProfilePlayer; opponent: PlayerOpponentStats; stats: PlayerProfileStats; playerStrengthRating?: number | null; lastMetAt?: string; onClose?: () => void; bigScore?: boolean; mobile?: boolean }) {
   const status = opponent.matchupStatus;
   const leftColor = stats.matchesWon > stats.matchesLost ? "text-win" : stats.matchesWon < stats.matchesLost ? "text-loss" : "text-on-surface";
   return (
@@ -517,6 +518,7 @@ function Hero({ player, opponent, stats, playerStrengthRating, onClose, bigScore
           <Chip tone={statusTone(status)}>{formatMatchupStatus(status)}</Chip>
         )}
         {stats.matchesPlayed < 3 ? <Chip tone="error">Мало встреч для вывода</Chip> : <Chip>{formatSampleSizeLevel(stats.sampleSizeLevel)}</Chip>}
+        {lastMetAt ? <Chip>Последняя встреча: {fmtDate(lastMetAt)}</Chip> : null}
       </div>
       <p className="mt-3 text-center text-[12.5px] leading-snug text-on-surface-variant">{h2hInsight(stats, status)}</p>
     </div>
@@ -838,6 +840,11 @@ export function H2hDetailView({
   onClose: () => void;
 }) {
   const stats = React.useMemo(() => h2hStatsFromMatches(matches), [matches]);
+  // Newest meeting date; playedAt is an ISO date, so it sorts lexicographically.
+  const lastMetAt = React.useMemo(
+    () => matches.reduce((acc, m) => (m.playedAt && m.playedAt > acc ? m.playedAt : acc), ""),
+    [matches],
+  );
   const meetings = React.useMemo<Meeting[]>(
     () =>
       [...matches]
@@ -926,7 +933,7 @@ export function H2hDetailView({
         >
           {/* scrollable content */}
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain p-5">
-            <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} onClose={requestClose} bigScore />
+            <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} lastMetAt={lastMetAt} onClose={requestClose} bigScore />
             <div className="grid items-stretch gap-5 lg:grid-cols-2">
               <KpiGrid stats={stats} />
               <CharacterCard stats={stats} compact />
@@ -949,7 +956,7 @@ export function H2hDetailView({
       {/* Mobile: full-screen page — Panel reveal (transitions.dev): slides in from the right. */}
       <div className={cn("app-bg-blend fixed inset-0 z-[80] flex flex-col transition-transform duration-500 ease-m3-emphasized-decel md:hidden", shown ? "translate-x-0" : "translate-x-full")}>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
-          <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} mobile />
+          <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} lastMetAt={lastMetAt} mobile />
           <Segmented items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} className="shrink-0" equal />
           <TabTransition tabKey={mobileTab} className="flex flex-col gap-4">
             {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overview}</div> : null}
