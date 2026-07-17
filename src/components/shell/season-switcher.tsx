@@ -61,7 +61,7 @@ export function SeasonSwitcher({
         className={cn(
           "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 transition-colors duration-200 ease-m3-standard",
           variant === "header"
-            ? "border border-outline-variant bg-surface-container-highest shadow-e2 hover:bg-surface-bright"
+            ? "border border-outline-variant bg-surface-container-highest hover:bg-surface-bright"
             : "bg-brand-surface shadow-sm",
         )}
       >
