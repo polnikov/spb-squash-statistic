@@ -1083,7 +1083,7 @@ function InfoPopover({
       className={cn(
         "block",
         inline ? "relative inline-block align-middle" : "absolute right-3 top-3",
-        open ? "z-30 md:z-50" : "z-10 md:z-30",
+        open ? "z-[70] md:z-50" : "z-10 md:z-30",
       )}
     >
       <button
@@ -2256,7 +2256,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
       <div className="flex flex-col gap-4 md:hidden">
         <SegmentedControl items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} equal />
-        <TabTransition tabKey={mobileTab} className="flex flex-col gap-4">
+        <TabTransition tabKey={mobileTab} rise={false} className="flex flex-col gap-4">
           {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overviewBlocks}</div> : null}
           {mobileTab === "charts" ? (
             <div className="flex flex-col gap-4">
