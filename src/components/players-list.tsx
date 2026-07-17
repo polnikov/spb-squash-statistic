@@ -739,8 +739,11 @@ export function PlayersList({
                 </div>
                 {mobileRest.length > 0 ? (
                   <>
-                    {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr) */}
-                    <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                    {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr).
+                        When collapsed the 0-height wrapper still sits between the cards
+                        and the button; -mt-2 cancels its extra flex gap so the button
+                        stays 8px from the cards, matching the Iron Man page. */}
+                    <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr] -mt-2")}>
                       <div className="min-h-0 overflow-hidden">
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           {mobileRest.map((p) => (
@@ -751,7 +754,7 @@ export function PlayersList({
                     </div>
                     <button
                       onClick={() => setExpanded((v) => !v)}
-                      className="mt-3 w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                      className="w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                     >
                       {expanded ? "Свернуть" : `Показать еще ${mobileRest.length}`}
                     </button>
@@ -769,7 +772,7 @@ export function PlayersList({
             animate="center"
             exit="exit"
             transition={SLIDESHOW_TRANSITION}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
           >
             <MobileLeaderboardSort value={leaderboardSort} direction={leaderboardDirection} onChange={changeLeaderboardSort} />
             <div className="flex flex-col gap-2">
@@ -783,7 +786,7 @@ export function PlayersList({
             </div>
             {leaderboardRest.length > 0 ? (
               <>
-                <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr] -mt-2")}>
                   <div className="min-h-0 overflow-hidden">
                     <div className="flex flex-col gap-2 pt-2">
                       {leaderboardRest.map((p) => (
