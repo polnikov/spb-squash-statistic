@@ -1146,12 +1146,6 @@ function InfoPopover({
 
 const GAME_ADVANTAGE_INFO: InfoItem[] = [
   {
-    label: "Баланс геймов / розыгрышей",
-    desc: "Разница выигранных и проигранных геймов (очков) за период.",
-    scale: ["> 0 - перевес над соперниками", "= 0 - игра на равных", "< 0 - отставание"],
-    match: (s) => (s.gameBalance > 0 ? 0 : s.gameBalance < 0 ? 2 : 1),
-  },
-  {
     label: "Баланс за матч",
     desc: "Средний перевес геймов/очков на один матч.",
     scale: ["≥ +0.5 геймов - доминирование", "0…+0.5 - небольшой перевес", "< 0 - чаще уступает"],
@@ -1310,10 +1304,8 @@ function GameAdvantageCard({ stats }: { stats: PlayerProfileStats }) {
       <InfoPopover items={GAME_ADVANTAGE_INFO} stats={stats} />
       <h2 className="text-base font-semibold tracking-tight">Преимущество в игре</h2>
       <div className="mt-3 grid gap-x-6 md:grid-cols-2">
-        <MetricRow label="Баланс геймов" value={formatSignedNumber(stats.gameBalance)} sign={stats.gameBalance} />
-        <MetricRow label="Баланс розыгрышей" value={formatSignedNumber(stats.rallyBalance)} sign={stats.rallyBalance} noBorderDesktop />
         <MetricRow label="Баланс геймов за матч" value={formatSignedNumber(stats.gameBalancePerMatch, 2)} sign={stats.gameBalancePerMatch} />
-        <MetricRow label="Баланс розыгрышей за матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 2)} sign={stats.rallyBalancePerMatch} />
+        <MetricRow label="Баланс розыгрышей за матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 2)} sign={stats.rallyBalancePerMatch} noBorderDesktop />
         <MetricRow label="Средний счёт по геймам" value={`${stats.avgMatchGamesWon?.toFixed(2) ?? "x"} - ${stats.avgMatchGamesLost?.toFixed(2) ?? "x"}`} />
         <MetricRow label="Средний margin за гейм" value={formatSignedNumber(stats.avgRallyMarginPerGame, 2)} sign={stats.avgRallyMarginPerGame} />
       </div>
