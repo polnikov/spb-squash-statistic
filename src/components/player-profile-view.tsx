@@ -357,7 +357,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       yAxis: { ...option.yAxis, scale: true, splitNumber: 3, axisLabel: { color: CHART_COLORS.text, fontSize: 10 } },
       series: [
         {
-          name: "Strength Rating",
+          name: "Рейтинг силы",
           type: "line",
           step: "end",
           showSymbol: true,
@@ -775,7 +775,7 @@ function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank:
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Описание Strength Rating"
+        aria-label="Описание Рейтинга силы"
         className="inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md"
       >
         <Snail className="size-3 shrink-0" />
@@ -788,7 +788,7 @@ function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank:
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
         )}
       >
-        <div className="text-[13px] font-semibold">Strength Rating</div>
+        <div className="text-[13px] font-semibold">Рейтинг силы</div>
         <div className="mt-1 text-[12px] leading-snug text-on-surface-variant">
           Рейтинг силы (Elo): обновляется после каждого матча с учётом силы соперника и разгромности счёта.
         </div>
@@ -2098,7 +2098,7 @@ function StrengthHistoryCard({
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
             <Snail className="size-3.5 text-[color:var(--rating-badge-hue)]" />
-            Strength Rating
+            Рейтинг силы
           </h2>
           <span className="inline-flex shrink-0 items-baseline gap-2 font-mono text-[11px] text-on-surface-variant">
             <span className="font-semibold tabular text-on-surface">{rating}</span>
@@ -2231,6 +2231,10 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       </div>
 
       <PlayerCareerHeader model={model} seasonId={filter.seasonId} />
+
+      {/* Career-wide Strength Rating: full-width, above the filter tabs on desktop. */}
+      <StrengthHistoryCard stats={model.careerStats} history={model.strengthHistory} chartHeight={300} className="hidden md:block" />
+
       <Filters model={model} value={filter} onChange={applyFilter} />
 
       <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} className="hidden md:grid" />
@@ -2238,7 +2242,6 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       <div className="hidden grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-5 md:grid">
         <div className="flex min-w-0 flex-col gap-5">
           <EmptyContext stats={active.scopedStats} />
-          <StrengthHistoryCard stats={model.careerStats} history={model.strengthHistory} chartHeight={300} />
           <GameAdvantageCard stats={active.scopedStats} />
           <ChartPanel active={active} chartType={chartType} setChartType={setChartType} />
           <ScoreDistributionCard stats={active.scopedStats} />
