@@ -326,8 +326,6 @@ export function DivisionsTable({
             <tr className="bg-brand-surface-2 text-center text-xs text-muted-foreground md:bg-[var(--m3-surface-container-high)]">
               <Th
                 className="sticky left-0 z-20 w-8 min-w-8 max-w-8 whitespace-nowrap bg-brand-surface-2 px-2 py-3 text-center font-medium md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent"
-                sort={{ label: "#", active: sort.key === "place", direction: sort.dir, onSort: () => setSortKey("place") }}
-                arrowAbsolute
               >#</Th>
               <Th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:w-auto md:bg-transparent md:text-center">Игрок</Th>
               <Th className={COL_TH} sort={{ label: "Очки", active: sort.key === "points", direction: sort.dir, onSort: () => setSortKey("points") }}>Очки</Th>
