@@ -41,6 +41,7 @@ const C = {
   primary: "#f472b6",
   tertiary: "#ffa52a",
   secondary: "#7eeaf5",
+  success: "#22c55e",
   error: "#ff6b63",
   text: "#b6b6b6",
   grid: "rgba(255,255,255,0.09)",
@@ -294,14 +295,30 @@ function chartOptionFor(tab: ChartKey, meetings: Meeting[], stats: PlayerProfile
       grid: { ...chartBase().grid, top: 16 },
       tooltip: { ...chartBase().tooltip, trigger: "item" },
       xAxis: { ...chartBase().xAxis, data: ["3:0", "3:1", "3:2", "2:3", "1:3", "0:3"] },
-      series: [bar("Матчи", [stats.wins3_0, stats.wins3_1, stats.wins3_2, stats.losses2_3, stats.losses1_3, stats.losses0_3], C.primary)],
+      series: [
+        {
+          name: "Матчи",
+          type: "bar" as const,
+          barMaxWidth: 22,
+          itemStyle: { borderRadius: [5, 5, 0, 0] as [number, number, number, number] },
+          // wins green, losses red
+          data: [
+            { value: stats.wins3_0, itemStyle: { color: C.success } },
+            { value: stats.wins3_1, itemStyle: { color: C.success } },
+            { value: stats.wins3_2, itemStyle: { color: C.success } },
+            { value: stats.losses2_3, itemStyle: { color: C.error } },
+            { value: stats.losses1_3, itemStyle: { color: C.error } },
+            { value: stats.losses0_3, itemStyle: { color: C.error } },
+          ],
+        },
+      ],
     };
   }
   if (tab === "density") {
     return {
       ...chartBase(),
       xAxis: { ...chartBase().xAxis, data: ["Плотные", "Овертайм"] },
-      series: [bar("Выиграно", [stats.closeGamesWon, stats.overtimeGamesWon], C.primary), bar("Проиграно", [stats.closeGamesLost, stats.overtimeGamesLost], C.error)],
+      series: [bar("Выиграно", [stats.closeGamesWon, stats.overtimeGamesWon], C.success), bar("Проиграно", [stats.closeGamesLost, stats.overtimeGamesLost], C.error)],
     };
   }
   return null;
@@ -410,7 +427,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors",
+          "inline-flex items-center rounded-full border border-outline-variant px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors",
           tone === "primary" ? "bg-win/18 text-win" : tone === "error" ? "bg-loss/18 text-loss-soft" : "bg-surface-container-high text-on-surface-variant",
         )}
       >
