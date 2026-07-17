@@ -230,7 +230,7 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player
           </div>
           <div className="mt-0.5 text-[11px] text-on-surface-variant">
             Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
-              {`${player.matches} · ${player.matchesWon} - ${player.matchesLost}`}
+              {`${player.matches} | ${player.matchesWon} - ${player.matchesLost}`}
             </span>
           </div>
         </div>

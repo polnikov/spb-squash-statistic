@@ -1534,7 +1534,7 @@ function MobileOpponentCard({ o, onOpen, lastMet }: { o: PlayerOpponentStats; on
         <WinRing pct={o.h2hMatchWinRatePct} color={ringColor(o)} small />
         <div className="min-w-0 flex-1">
           <div className="line-clamp-2 text-[14px] font-semibold leading-tight">{o.opponentName}</div>
-          <div className="mt-0.5 font-mono text-[11.5px] tabular text-on-surface-variant">{o.meetingsPlayed} · {o.h2hMatchesWon} - {o.h2hMatchesLost}</div>
+          <div className="mt-0.5 font-mono text-[11.5px] tabular text-on-surface-variant">{o.meetingsPlayed} | {o.h2hMatchesWon} - {o.h2hMatchesLost}</div>
         </div>
         {lastMet ? (
           <span className="shrink-0 self-start rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
@@ -1569,7 +1569,7 @@ function OpponentRow({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (rid: stri
       <td className="truncate px-2 py-2 text-left">
         <span className="text-[13px] font-semibold text-on-surface transition-colors group-hover:text-primary">{o.opponentName}</span>
       </td>
-      <td className="whitespace-nowrap px-2 py-2 text-center font-mono text-[12px] tabular text-on-surface-variant">{o.meetingsPlayed} · {o.h2hMatchesWon} - {o.h2hMatchesLost}</td>
+      <td className="whitespace-nowrap px-2 py-2 text-center font-mono text-[12px] tabular text-on-surface-variant">{o.meetingsPlayed} | {o.h2hMatchesWon} - {o.h2hMatchesLost}</td>
       <td className="px-2 py-2 text-center font-mono text-[12.5px] font-semibold tabular">{formatPercent(o.h2hMatchWinRatePct)}</td>
       <td className="px-2 py-2 text-center font-mono text-[12.5px] tabular">{formatPercent(o.h2hGameWinRatePct)}</td>
       <td className="px-2 py-2 text-center font-mono text-[12.5px] tabular">{formatPercent(o.h2hRallyWinRatePct)}</td>
