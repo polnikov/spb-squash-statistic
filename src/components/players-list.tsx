@@ -29,7 +29,7 @@ const MOBILE_VIEW_TABS: { key: MobilePlayersView; label: string }[] = [
 ];
 
 const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
-  { key: "strength", label: "Strength" },
+  { key: "strength", label: "Рейтинг силы" },
   { key: "matches", label: "Матчи" },
   { key: "matchWr", label: "Match WR" },
   { key: "gameWr", label: "Game WR" },
@@ -42,7 +42,7 @@ const LEADERBOARD_SORTS: { key: LeaderboardSortKey; label: string }[] = [
  * every card. `sort` omitted => the header renders as a plain label.
  */
 const DESKTOP_LEADERBOARD_COLUMNS: { label: string; width: string; sort?: LeaderboardSortKey }[] = [
-  { sort: "strength", label: "Strength", width: "104px" },
+  { sort: "strength", label: "Рейтинг силы", width: "104px" },
   { sort: "matches", label: "Матчи", width: "104px" },
   { sort: "matchWr", label: "Match WR", width: "92px" },
   { sort: "gameWr", label: "Game WR", width: "92px" },
