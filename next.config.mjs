@@ -17,6 +17,8 @@ const makeConfig = (phase) => ({
         ignored: [
           "**/.specstory/**",
           "**/.claude/**",
+          "**/.playwright-mcp/**",
+          "**/.impeccable/**",
           "**/mockups/**",
           "**/BBR design/**",
           "**/node_modules/**",
