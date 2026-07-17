@@ -359,8 +359,10 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
         {
           name: "Strength Rating",
           type: "line",
-          smooth: false,
-          showSymbol: false,
+          step: "end",
+          showSymbol: true,
+          symbol: "circle",
+          symbolSize: 5,
           lineStyle: { color: CHART_COLORS.strength, width: 2 },
           itemStyle: { color: CHART_COLORS.strength },
           areaStyle: { color: `${CHART_COLORS.strength}1f` },
