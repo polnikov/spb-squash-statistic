@@ -22,6 +22,7 @@ import { NumberPop } from "@/components/ui/number-pop";
 import { SearchBox } from "@/components/ui/search-box";
 
 const ROW_LIMIT = 15;
+const MOBILE_ROW_LIMIT = 10;
 
 const SCOPES: { key: DivisionScope; label: string }[] = [
   { key: "all", label: "Все" },
@@ -221,6 +222,10 @@ export function IronManView({ league }: { league: League }) {
   const max = Math.max(1, ...rows.map((r) => r.court));
   const visibleRows = expanded ? sortedRows : sortedRows.slice(0, ROW_LIMIT);
   const moreCount = Math.max(0, sortedRows.length - visibleRows.length);
+  // Mobile cards use the unsorted list and a tighter cap; the same `expanded`
+  // flag drives both, so tapping either "показать ещё" reveals everything.
+  const visibleMobileRows = expanded ? nameFiltered : nameFiltered.slice(0, MOBILE_ROW_LIMIT);
+  const mobileMoreCount = Math.max(0, nameFiltered.length - visibleMobileRows.length);
 
   React.useEffect(() => {
     setOpen({});
@@ -276,7 +281,7 @@ export function IronManView({ league }: { league: League }) {
 
           {/* mobile: expandable cards */}
           <div className="flex flex-col gap-2 md:hidden">
-            {nameFiltered.map((r) => {
+            {visibleMobileRows.map((r) => {
               const isOpen = !!open[r.playerIdx];
               return (
                 <div key={r.playerIdx} className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
@@ -313,6 +318,14 @@ export function IronManView({ league }: { league: League }) {
                 </div>
               );
             })}
+            {mobileMoreCount > 0 ? (
+              <button
+                onClick={() => setExpanded(true)}
+                className="rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+              >
+                Показать ещё {mobileMoreCount}
+              </button>
+            ) : null}
           </div>
 
           {/* desktop: table */}
