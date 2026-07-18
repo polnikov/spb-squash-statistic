@@ -14,12 +14,15 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { RatingPinButton } from "@/components/rating-pin-button";
+import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
 import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
+import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
 type RatingDivision = 1 | 2 | 3;
@@ -30,8 +33,28 @@ const SCOPES: { key: RatingDivision; label: string }[] = [
   { key: 3, label: "Дивизион 3" },
 ];
 
-function makeColumns(leaderPoints: number, totalStages: number): ColumnDef<RatingRow>[] {
+function makeColumns(
+  leaderPoints: number,
+  totalStages: number,
+  pinnedRid: string | null,
+  onTogglePin: (rid: string) => void,
+): ColumnDef<RatingRow>[] {
   return [
+    {
+      id: "pin",
+      header: () => <span className="sr-only">Закрепить</span>,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <RatingPinButton
+          pinned={pinnedRid === row.original.rid}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePin(row.original.rid);
+          }}
+        />
+      ),
+    },
     {
       accessorKey: "place",
       header: () => <span>#</span>,
@@ -163,7 +186,14 @@ export function RatingTable({
   const visibleData = q ? data.filter((r) => r.name.toLowerCase().includes(q)) : data;
   const hasScopeData = (rowsByScope[scope]?.length ?? 0) > 0;
   const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
-  const columns = React.useMemo(() => makeColumns(leaderPoints, totalStages), [leaderPoints, totalStages]);
+
+  const { pinnedRid, toggle } = usePinnedPlayer();
+  // Look the pinned row up in the unfiltered set so the tracker survives search.
+  const pinnedRow = pinnedRid ? data.find((r) => r.rid === pinnedRid) : undefined;
+  const columns = React.useMemo(
+    () => makeColumns(leaderPoints, totalStages, pinnedRid, toggle),
+    [leaderPoints, totalStages, pinnedRid, toggle],
+  );
   const table = useReactTable({
     data: visibleData,
     columns,
@@ -267,6 +297,7 @@ export function RatingTable({
               <tr
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
+                data-rating-rid={row.original.rid}
                 className="group border-t border-border transition-colors hover:bg-brand-surface-2/40 md:h-[60px]"
               >
                 {row.getVisibleCells().map((cell) => (
@@ -288,6 +319,23 @@ export function RatingTable({
       </div>
       </TabTransition>
       )}
+
+      {pinnedRow ? (
+        <RatingPinnedBar
+          row={pinnedRow}
+          onUnpin={() => toggle(pinnedRow.rid)}
+          onJump={(node) => {
+            if (q) {
+              setQuery("");
+              requestAnimationFrame(() => {
+                findRowNode(pinnedRow.rid)?.scrollIntoView({ behavior: "smooth", block: "center" });
+              });
+            } else {
+              node?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }

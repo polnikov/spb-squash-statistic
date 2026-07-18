@@ -5,11 +5,14 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
+import { RatingPinButton } from "@/components/rating-pin-button";
+import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
 import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
 export type DivTopCard = {
@@ -63,6 +66,11 @@ export function RatingMobile({
   const visibleList = q ? list.filter((r) => r.name.toLowerCase().includes(q)) : list;
   const flip = useFlipList();
   const orderKey = visibleList.map((r) => `${r.rid}:${r.place}:${r.points}:${r.matches}:${r.stages}`).join("|");
+
+  const { pinnedRid, isPinned, toggle } = usePinnedPlayer();
+  // The pinned row is looked up in the unfiltered stage list so the tracker bar
+  // survives an active search that hides the row.
+  const pinnedRow = pinnedRid ? list.find((r) => r.rid === pinnedRid) : undefined;
 
   const { setRef, ind } = useTabSlider(String(div));
 
@@ -131,6 +139,7 @@ export function RatingMobile({
               <Link
                 key={r.rid}
                 ref={flip.setNode(r.rid)}
+                data-rating-rid={r.rid}
                 href={`/players/${encodeURIComponent(r.rid)}`}
                 className="flex flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-4 py-3"
               >
@@ -145,6 +154,14 @@ export function RatingMobile({
                   <span className="shrink-0 font-mono text-[17px] font-semibold tabular">
                     <NumberPop>{r.points}</NumberPop>
                   </span>
+                  <RatingPinButton
+                    pinned={isPinned(r.rid)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggle(r.rid);
+                    }}
+                  />
                 </div>
                 <div className="flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pt-1 text-[11.5px] text-on-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <span className="inline-flex shrink-0 items-center gap-1">
@@ -164,6 +181,25 @@ export function RatingMobile({
           </div>
         </>
       )}
+
+      {pinnedRow ? (
+        <RatingPinnedBar
+          row={pinnedRow}
+          onUnpin={() => toggle(pinnedRow.rid)}
+          onJump={(node) => {
+            // An active search may hide the row; clear it, then scroll once the
+            // full list has re-rendered.
+            if (q) {
+              setQuery("");
+              requestAnimationFrame(() => {
+                findRowNode(pinnedRow.rid)?.scrollIntoView({ behavior: "smooth", block: "center" });
+              });
+            } else {
+              node?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }
