@@ -15,6 +15,18 @@ export type PinnedBarRow = {
   positionDelta?: number;
 };
 
+// Shrink the observer viewport by the sticky header and fixed tab bar so the row
+// counts as "off-screen" the moment it slips under either chrome edge, not only
+// when it clears the physical screen. Both are md:hidden, so on desktop they have
+// zero height and the margin is a no-op.
+function chromeRootMargin(): string {
+  const header = document.querySelector<HTMLElement>("[data-app-header]");
+  const tabbar = document.querySelector<HTMLElement>("[data-app-tabbar]");
+  const top = header ? Math.round(header.getBoundingClientRect().height) : 0;
+  const bottom = tabbar ? Math.round(tabbar.getBoundingClientRect().height) : 0;
+  return `-${top}px 0px -${bottom}px 0px`;
+}
+
 // Both breakpoint variants (mobile cards + desktop table) carry the same
 // data-rating-rid, but only one is displayed. Pick the rendered one: the hidden
 // variant has no client rects.
@@ -67,7 +79,7 @@ export function RatingPinnedBar({
       }
       observer = new IntersectionObserver(
         ([entry]) => setRowVisible(entry.isIntersecting),
-        { threshold: 0 },
+        { threshold: 0, rootMargin: chromeRootMargin() },
       );
       observer.observe(node);
     }
