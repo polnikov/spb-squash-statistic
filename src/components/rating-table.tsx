@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Star } from "lucide-react";
 import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -19,6 +19,7 @@ import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
 import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
+import { PageHeader } from "@/components/page-header";
 import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
@@ -228,11 +229,11 @@ export function RatingTable({
 
   return (
     <div className="flex flex-col gap-4">
-      {hasScopeData ? (
-        <div className="hidden justify-end md:flex">
-          <SearchBox value={query} onChange={setQuery} className="w-[280px]" />
-        </div>
-      ) : null}
+      <PageHeader
+        title="Рейтинг сезона"
+        icon={Star}
+        action={hasScopeData ? <SearchBox value={query} onChange={setQuery} className="w-[280px]" /> : undefined}
+      />
 
       <div className="flex items-end gap-4">
         <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">

@@ -1,9 +1,7 @@
-import { Star } from "lucide-react";
 import { RATING_MAX_STAGE, getRatingRows, getRatingRowsThroughStage, type RatingRow } from "@/lib/league";
 import { loadLeague, resolveSeason } from "@/lib/db/league";
 import { RatingTable } from "@/components/rating-table";
 import { RatingMobile } from "@/components/mobile/rating-mobile";
-import { PageHeader } from "@/components/page-header";
 
 type RatingRowsByDivisionStage = Record<1 | 2 | 3, Record<number, RatingRow[]>>;
 
@@ -52,7 +50,6 @@ export default async function RatingPage({ searchParams }: { searchParams?: { se
 
       {/* desktop */}
       <div className="hidden flex-col gap-8 md:flex">
-        <PageHeader title="Рейтинг сезона" icon={Star} />
         <RatingTable
           rowsByScope={listByDivision}
           rowsByDivisionStage={rowsByDivisionStage}
