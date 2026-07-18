@@ -154,27 +154,30 @@ export function RatingMobile({
                   <span className="shrink-0 font-mono text-[17px] font-semibold tabular">
                     <NumberPop>{r.points}</NumberPop>
                   </span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-x-2 overflow-x-auto whitespace-nowrap text-[11.5px] text-on-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <span className="inline-flex shrink-0 items-center gap-1">
+                      Этапы<Badge>{`${r.stages}/${totalStages}`}</Badge>
+                    </span>
+                    <span className="shrink-0">·</span>
+                    <span className="inline-flex shrink-0 items-center gap-1">
+                      Матчи<Badge>{r.matches}</Badge>
+                    </span>
+                    <span className="shrink-0">·</span>
+                    <span className="inline-flex shrink-0 items-center gap-1">
+                      Последний этап<Badge>{r.lastStagePoints > 0 ? `+${r.lastStagePoints}` : "x"}</Badge>
+                    </span>
+                  </div>
                   <RatingPinButton
                     pinned={isPinned(r.rid)}
+                    className="shrink-0"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       toggle(r.rid);
                     }}
                   />
-                </div>
-                <div className="flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pt-1 text-[11.5px] text-on-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <span className="inline-flex shrink-0 items-center gap-1">
-                    Этапы<Badge>{`${r.stages}/${totalStages}`}</Badge>
-                  </span>
-                  <span className="shrink-0">·</span>
-                  <span className="inline-flex shrink-0 items-center gap-1">
-                    Матчи<Badge>{r.matches}</Badge>
-                  </span>
-                  <span className="shrink-0">·</span>
-                  <span className="inline-flex shrink-0 items-center gap-1">
-                    Последний этап<Badge>{r.lastStagePoints > 0 ? `+${r.lastStagePoints}` : "x"}</Badge>
-                  </span>
                 </div>
               </Link>
             ))}

@@ -41,21 +41,6 @@ function makeColumns(
 ): ColumnDef<RatingRow>[] {
   return [
     {
-      id: "pin",
-      header: () => <span className="sr-only">Закрепить</span>,
-      enableSorting: false,
-      cell: ({ row }) => (
-        <RatingPinButton
-          pinned={pinnedRid === row.original.rid}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onTogglePin(row.original.rid);
-          }}
-        />
-      ),
-    },
-    {
       accessorKey: "place",
       header: () => <span>#</span>,
       cell: ({ row }) => (
@@ -147,6 +132,21 @@ function makeColumns(
           <span className="font-mono tabular text-on-surface-variant"><NumberPop>x</NumberPop></span>
         );
       },
+    },
+    {
+      id: "pin",
+      header: () => <span className="sr-only">Закрепить</span>,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <RatingPinButton
+          pinned={pinnedRid === row.original.rid}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePin(row.original.rid);
+          }}
+        />
+      ),
     },
   ];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Pin } from "lucide-react";
+import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Toggle that marks a rating row as "mine". Filled lime when pinned, muted
@@ -29,7 +29,7 @@ export function RatingPinButton({
         className,
       )}
     >
-      <Pin className={cn("size-3.5", pinned && "fill-current")} strokeWidth={2.25} />
+      <Heart className={cn("size-3.5", pinned && "fill-current")} strokeWidth={2.25} />
     </button>
   );
 }
