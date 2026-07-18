@@ -570,6 +570,11 @@ export type PlayerOverview = {
    */
   strengthRating: number | null;
   strengthRatingGames: number;
+  /**
+   * Career longest win streak. Needs match-by-match history the pure builder
+   * lacks, so it stays 0 here and is filled from `player_stats_aggregate`.
+   */
+  longestWinStreak: number;
 };
 
 export function getPlayersOverview(league: League): PlayerOverview[] {
@@ -631,6 +636,7 @@ export function getPlayersOverview(league: League): PlayerOverview[] {
         careerSkillIndex: skillIndex,
         strengthRating: null,
         strengthRatingGames: 0,
+        longestWinStreak: 0,
       };
     })
     .sort((a, b) => b.points - a.points);

@@ -1,6 +1,7 @@
 import { currentSeasonOf, getPlayersOverview, seasonStart, type PlayerOverview } from "@/lib/league";
 import { loadAllLeagues } from "@/lib/db/league";
 import { loadCareerStrengthRatingsByRid } from "@/lib/db/strength-rating";
+import { loadCareerLongestWinStreakByRid } from "@/lib/db/player-aggregate";
 import { PlayersList } from "@/components/players-list";
 import { PlayerAvatarProvider } from "@/components/player-avatar";
 import { getPlayerAvatarsByRid } from "@/lib/db/player-avatar-db";
@@ -69,6 +70,7 @@ function mergePlayersByRid(lists: PlayerOverview[][]): PlayerOverview[] {
         careerSkillIndex: skillIndex,
         strengthRating: null,
         strengthRatingGames: 0,
+        longestWinStreak: 0,
       });
     }
   }
@@ -106,6 +108,11 @@ function applyStoredStrengthRatings(
   });
 }
 
+/** Attach each player's career longest win streak from `player_stats_aggregate`. */
+function applyLongestWinStreaks(players: PlayerOverview[], streaks: Map<string, number>): PlayerOverview[] {
+  return players.map((player) => ({ ...player, longestWinStreak: streaks.get(player.rid) ?? 0 }));
+}
+
 export default async function PlayersPage() {
   const leagues = await loadAllLeagues();
   const bySeasonAsc = Object.entries(leagues)
@@ -115,8 +122,12 @@ export default async function PlayersPage() {
   const currentOverview = currentSeason ? getPlayersOverview(leagues[currentSeason]) : undefined;
 
   const merged = applyCurrentSeasonPlaces(mergePlayersByRid(bySeasonAsc), currentOverview);
-  const stored = await loadCareerStrengthRatingsByRid(merged.map((p) => p.rid));
-  const players = applyStoredStrengthRatings(merged, stored);
+  const rids = merged.map((p) => p.rid);
+  const [stored, streaks] = await Promise.all([
+    loadCareerStrengthRatingsByRid(rids),
+    loadCareerLongestWinStreakByRid(rids),
+  ]);
+  const players = applyLongestWinStreaks(applyStoredStrengthRatings(merged, stored), streaks);
   const avatars = await getPlayerAvatarsByRid();
 
   return (

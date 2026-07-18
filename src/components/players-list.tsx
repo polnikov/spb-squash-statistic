@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Rocket, Search, Snail, Users, X } from "lucide-react";
+import { Heart, Rocket, Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
-import { getStrengthReliabilityLabelRu, strengthRatingReliability } from "@/lib/stats/compute";
 import { cn } from "@/lib/utils";
 import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
+import { RatingPinButton } from "@/components/rating-pin-button";
+import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
 import { TabTransition } from "@/components/ui/tab-transition";
@@ -48,11 +49,12 @@ const DESKTOP_LEADERBOARD_COLUMNS: { label: string; width: string; sort?: Leader
   { sort: "gameWr", label: "Game WR", width: "92px" },
   { sort: "rallyWr", label: "Rally WR", width: "92px" },
   { sort: "rallyBalance", label: "+/- очков/матч", width: "104px" },
-  { label: "Надёжность", width: "132px" },
+  { label: "Лучшая серия побед", width: "132px" },
 ];
 
+// Trailing 44px track holds the favourite (heart) toggle at the row's right edge.
 const DESKTOP_LEADERBOARD_GRID = {
-  gridTemplateColumns: `44px 52px minmax(0, 1fr) ${DESKTOP_LEADERBOARD_COLUMNS.map((c) => c.width).join(" ")}`,
+  gridTemplateColumns: `44px 52px minmax(0, 1fr) ${DESKTOP_LEADERBOARD_COLUMNS.map((c) => c.width).join(" ")} 44px`,
 } as const;
 
 const SLIDESHOW_TRANSITION = { duration: 0.42, ease: [0.2, 0, 0, 1] } as const;
@@ -445,6 +447,10 @@ function DesktopLeaderboardHeader({
           </button>
         );
       })}
+      {/* header cell over the favourite (heart) column */}
+      <div aria-hidden className="flex items-center justify-center text-on-surface-variant">
+        <Heart className="size-3.5" />
+      </div>
     </div>
   );
 }
@@ -484,12 +490,15 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
   player,
   position,
   animationKey,
+  pinned,
+  onToggle,
 }: {
   player: PlayerOverview;
   position: number;
   animationKey: string;
+  pinned: boolean;
+  onToggle: (rid: string) => void;
 }) {
-  const reliability = getStrengthReliabilityLabelRu(strengthRatingReliability(player.strengthRatingGames)) ?? "x";
   return (
     <div
       className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
@@ -508,8 +517,11 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
       <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
       <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
       <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
-      <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center text-[11.5px] font-semibold text-on-surface">
-        {reliability}
+      <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[13px] font-semibold tabular text-on-surface">
+        {player.longestWinStreak > 0 ? player.longestWinStreak : "x"}
+      </div>
+      <div className="flex items-center justify-center">
+        <RatingPinButton pinned={pinned} onClick={() => onToggle(player.rid)} />
       </div>
     </div>
   );
@@ -572,6 +584,7 @@ export function PlayersList({
   const [leaderboardSort, setLeaderboardSort] = React.useState<LeaderboardSortKey>("strength");
   const [leaderboardDirection, setLeaderboardDirection] = React.useState<SortDirection>("desc");
   const [expanded, setExpanded] = React.useState(false);
+  const { pinnedRid, toggle } = usePinnedPlayer();
   const { setRef, ind } = useTabSlider(String(scope));
   const q = query.trim().toLowerCase();
   const sorted = React.useMemo(
@@ -833,6 +846,8 @@ export function PlayersList({
                   player={p}
                   position={desktopLeaderboardRanks.get(p.rid) ?? 0}
                   animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                  pinned={pinnedRid === p.rid}
+                  onToggle={toggle}
                 />
               ))}
             </div>
@@ -848,6 +863,8 @@ export function PlayersList({
                           player={p}
                           position={desktopLeaderboardRanks.get(p.rid) ?? 0}
                           animationKey={`${leaderboardAnimationKey}-${p.rid}`}
+                          pinned={pinnedRid === p.rid}
+                          onToggle={toggle}
                         />
                       ))}
                     </div>
