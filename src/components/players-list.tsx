@@ -217,7 +217,17 @@ function LeaderboardTile({ label, value, valueClassName }: { label: string; valu
   );
 }
 
-const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player, position }: { player: PlayerOverview; position: number }) {
+const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({
+  player,
+  position,
+  pinned,
+  onToggle,
+}: {
+  player: PlayerOverview;
+  position: number;
+  pinned: boolean;
+  onToggle: (rid: string) => void;
+}) {
   return (
     <Link
       href={playerHref(player.rid)}
@@ -234,10 +244,21 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player
             <div className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{player.name}</div>
             <StrengthInlineBadge value={player.strengthRating} />
           </div>
-          <div className="mt-0.5 text-[11px] text-on-surface-variant">
-            Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
-              {`${player.matches} | ${player.matchesWon} - ${player.matchesLost}`}
+          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-on-surface-variant">
+            <span className="min-w-0">
+              Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
+                {`${player.matches} | ${player.matchesWon} - ${player.matchesLost}`}
+              </span>
             </span>
+            <RatingPinButton
+              pinned={pinned}
+              className="ml-auto"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggle(player.rid);
+              }}
+            />
           </div>
         </div>
       </div>
@@ -825,6 +846,8 @@ export function PlayersList({
                   key={p.rid}
                   player={p}
                   position={leaderboardRanks.get(p.rid) ?? 0}
+                  pinned={pinnedRid === p.rid}
+                  onToggle={toggle}
                 />
               ))}
             </div>
@@ -838,6 +861,8 @@ export function PlayersList({
                           key={p.rid}
                           player={p}
                           position={leaderboardRanks.get(p.rid) ?? 0}
+                          pinned={pinnedRid === p.rid}
+                          onToggle={toggle}
                         />
                       ))}
                     </div>
