@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { RatingPinButton } from "@/components/rating-pin-button";
+import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
 import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { NumberPop } from "@/components/ui/number-pop";
@@ -220,6 +221,7 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({ player
   return (
     <Link
       href={playerHref(player.rid)}
+      data-rating-rid={player.rid}
       className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel active:scale-[0.99]"
     >
       <div className="flex items-center gap-3">
@@ -501,6 +503,7 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
 }) {
   return (
     <div
+      data-rating-rid={player.rid}
       className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
       style={DESKTOP_LEADERBOARD_GRID}
     >
@@ -656,8 +659,36 @@ export function PlayersList({
     setScope(next);
   };
 
+  // Floating tracker for the favourite player, mirroring the rating page. Points
+  // echoes the Strength Rating (the leaderboard's lead metric); no season delta.
+  const pinnedPlayer = pinnedRid ? players.find((p) => p.rid === pinnedRid) : undefined;
+  const pinnedBarRow = pinnedPlayer
+    ? {
+        rid: pinnedPlayer.rid,
+        place: desktopLeaderboardRanks.get(pinnedPlayer.rid) ?? leaderboardRanks.get(pinnedPlayer.rid) ?? 0,
+        name: pinnedPlayer.name,
+        points: pinnedPlayer.strengthRating ?? 0,
+      }
+    : undefined;
+
   return (
     <div className="flex flex-col gap-5">
+      {pinnedBarRow ? (
+        <RatingPinnedBar
+          row={pinnedBarRow}
+          onUnpin={() => toggle(pinnedBarRow.rid)}
+          onJump={(node) => {
+            if (q) {
+              setQuery("");
+              requestAnimationFrame(() => {
+                findRowNode(pinnedBarRow.rid)?.scrollIntoView({ behavior: "smooth", block: "center" });
+              });
+            } else {
+              node?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }}
+        />
+      ) : null}
       {title ? <PageHeader title={title} subtitle={playersLabel(filtered.length)} icon={Users} /> : null}
 
       <div className="flex h-[46px] w-full items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:hidden">

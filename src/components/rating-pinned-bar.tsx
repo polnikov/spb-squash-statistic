@@ -2,9 +2,18 @@
 
 import * as React from "react";
 import { ChevronsDown, X } from "lucide-react";
-import type { RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { RatingPositionDelta } from "@/components/rating-position-delta";
+
+// Minimal shape the bar needs. A RatingRow satisfies it directly; the players
+// leaderboard builds one without a positionDelta (it has no season movement).
+export type PinnedBarRow = {
+  rid: string;
+  place: number;
+  name: string;
+  points: number;
+  positionDelta?: number;
+};
 
 // Both breakpoint variants (mobile cards + desktop table) carry the same
 // data-rating-rid, but only one is displayed. Pick the rendered one: the hidden
@@ -25,7 +34,7 @@ export function RatingPinnedBar({
   onJump,
   onUnpin,
 }: {
-  row: RatingRow | undefined;
+  row: PinnedBarRow | undefined;
   onJump: (node: HTMLElement | null) => void;
   onUnpin: () => void;
 }) {
@@ -105,7 +114,7 @@ export function RatingPinnedBar({
           <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-on-surface">
             {row.place}
           </span>
-          <RatingPositionDelta delta={row.positionDelta} className="shrink-0" />
+          {row.positionDelta !== undefined ? <RatingPositionDelta delta={row.positionDelta} className="shrink-0" /> : null}
           <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">{row.name}</span>
           <span className="shrink-0 font-mono text-[15px] font-semibold tabular text-white">{row.points}</span>
           <ChevronsDown className="size-4 shrink-0 text-muted-foreground" />
