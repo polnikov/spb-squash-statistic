@@ -180,10 +180,17 @@ export function RatingTable({
   const [query, setQuery] = React.useState("");
   const q = query.trim().toLowerCase();
 
-  const data = rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope] ?? [];
+  const data = React.useMemo(
+    () => rowsByDivisionStage[scope]?.[selectedStage] ?? rowsByScope[scope] ?? [],
+    [rowsByDivisionStage, rowsByScope, scope, selectedStage],
+  );
   // Filter the rows by name; the leaderboard bar scale still keys off the full
-  // set so a search does not rescale the remaining bars.
-  const visibleData = q ? data.filter((r) => r.name.toLowerCase().includes(q)) : data;
+  // set so a search does not rescale the remaining bars. Memoised so react-table
+  // is not handed a fresh array identity on unrelated re-renders.
+  const visibleData = React.useMemo(
+    () => (q ? data.filter((r) => r.name.toLowerCase().includes(q)) : data),
+    [data, q],
+  );
   const hasScopeData = (rowsByScope[scope]?.length ?? 0) > 0;
   const leaderPoints = data.reduce((max, r) => Math.max(max, r.points), 0);
 
