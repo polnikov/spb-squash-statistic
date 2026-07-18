@@ -31,6 +31,14 @@ export function RatingPinnedBar({
 }) {
   const rid = row?.rid;
   const [rowVisible, setRowVisible] = React.useState(true);
+  // Start hidden and flip on the next frame so the first appearance plays the
+  // enter transition instead of snapping in at its final position.
+  const [entered, setEntered] = React.useState(false);
+
+  React.useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   React.useEffect(() => {
     if (!rid) return;
@@ -67,7 +75,10 @@ export function RatingPinnedBar({
     };
   }, [rid]);
 
-  if (!row || rowVisible) return null;
+  // Keep the bar mounted while a row is pinned so it can animate out when the
+  // row scrolls back into view; visibility is driven by classes, not unmount.
+  if (!row) return null;
+  const shown = entered && !rowVisible;
 
   function jump() {
     if (!rid) return;
@@ -76,7 +87,15 @@ export function RatingPinnedBar({
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6">
-      <div className="pointer-events-auto flex w-full max-w-[420px] items-center gap-2.5 rounded-full border border-border bg-[rgba(22,22,22,0.96)] py-2 pl-2.5 pr-2 shadow-[0_6px_24px_rgba(0,0,0,0.5)] backdrop-blur-[6px]">
+      <div
+        className={cn(
+          "flex w-full max-w-[420px] items-center gap-2.5 rounded-full border-2 border-[#f472b6] bg-[rgba(22,22,22,0.96)] py-2 pl-2.5 pr-2 shadow-[0_6px_28px_rgba(0,0,0,0.5),0_0_0_4px_rgba(244,114,182,0.12)] backdrop-blur-[6px]",
+          "transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[opacity,transform]",
+          shown
+            ? "translate-y-0 scale-100 opacity-100 pointer-events-auto"
+            : "translate-y-3 scale-95 opacity-0 pointer-events-none",
+        )}
+      >
         <button
           type="button"
           onClick={jump}
