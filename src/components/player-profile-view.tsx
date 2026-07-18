@@ -2029,6 +2029,21 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
  * bottom track (red L). Newest match on the left, older scroll off to the right.
  */
 function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem[]; longestWinStreak: number }) {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  // Desktop: translate a vertical wheel into horizontal scroll while the cursor is
+  // over the timeline, so the mouse wheel walks the results row.
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      if (el!.scrollWidth <= el!.clientWidth) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      el!.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
   if (matches.length === 0) return null;
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-semibold";
   return (
@@ -2047,7 +2062,7 @@ function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem
           </span>
         </div>
         {/* older results fade out toward the right edge */}
-        <div className="max-w-full overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_90%,transparent)] [&::-webkit-scrollbar]:hidden">
+        <div ref={scrollRef} className="max-w-full overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_90%,transparent)] [&::-webkit-scrollbar]:hidden">
           <div className="inline-flex min-w-full flex-col gap-2">
             <div className="flex gap-1.5">
               {matches.map((m) => (
