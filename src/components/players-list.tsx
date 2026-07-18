@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, Rocket, Search, Snail, Users, X } from "lucide-react";
+import { Rocket, Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ const MOBILE_PAGE_SIZE = 16;
 const DESKTOP_LEADERBOARD_PAGE_SIZE = 15;
 
 type MobilePlayersView = "leaderboard" | "profiles";
-type LeaderboardSortKey = "strength" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance";
+type LeaderboardSortKey = "strength" | "matches" | "matchWr" | "gameWr" | "rallyWr" | "rallyBalance" | "streak";
 type SortDirection = "asc" | "desc";
 type SlideDirection = -1 | 1;
 
@@ -49,7 +49,7 @@ const DESKTOP_LEADERBOARD_COLUMNS: { label: string; width: string; sort?: Leader
   { sort: "gameWr", label: "Game WR", width: "92px" },
   { sort: "rallyWr", label: "Rally WR", width: "92px" },
   { sort: "rallyBalance", label: "+/- очков/матч", width: "104px" },
-  { label: "Лучшая серия побед", width: "132px" },
+  { sort: "streak", label: "Лучшая серия побед", width: "132px" },
 ];
 
 // Trailing 44px track holds the favourite (heart) toggle at the row's right edge.
@@ -93,6 +93,8 @@ function leaderboardSortValue(player: PlayerOverview, key: LeaderboardSortKey) {
       return player.rallyWinRatePct ?? -1;
     case "rallyBalance":
       return player.rallyBalancePerMatch ?? -999;
+    case "streak":
+      return player.longestWinStreak;
   }
 }
 
@@ -447,10 +449,8 @@ function DesktopLeaderboardHeader({
           </button>
         );
       })}
-      {/* header cell over the favourite (heart) column */}
-      <div aria-hidden className="flex items-center justify-center text-on-surface-variant">
-        <Heart className="size-3.5" />
-      </div>
+      {/* empty header cell over the favourite (heart) column */}
+      <div aria-hidden />
     </div>
   );
 }
