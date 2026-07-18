@@ -208,7 +208,7 @@ function chartBase(): EChartsOption {
   return {
     color: [C.primary, C.tertiary, C.secondary, C.error],
     backgroundColor: "transparent",
-    textStyle: { color: C.text, fontFamily: "Inter, sans-serif" },
+    textStyle: { color: C.text, fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
     tooltip: {
       trigger: "axis",
       // Without `confine` the box is placed beside the pointer and leaves the
@@ -219,7 +219,7 @@ function chartBase(): EChartsOption {
       backgroundColor: "#1e1e1f",
       borderColor: C.grid,
       borderRadius: 12,
-      textStyle: { color: "#ededed", fontFamily: "Inter, sans-serif" },
+      textStyle: { color: "#ededed", fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
       extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: C.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },

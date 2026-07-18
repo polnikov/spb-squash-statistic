@@ -183,7 +183,7 @@ function baseChartOption(): EChartsOption {
   return {
     color: [CHART_COLORS.primary, CHART_COLORS.tertiary, CHART_COLORS.secondary, CHART_COLORS.error],
     backgroundColor: "transparent",
-    textStyle: { color: CHART_COLORS.text, fontFamily: "Inter, sans-serif" },
+    textStyle: { color: CHART_COLORS.text, fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
     tooltip: {
       trigger: "axis",
       // Keep the box inside the canvas: the surrounding card clips anything that
@@ -193,7 +193,7 @@ function baseChartOption(): EChartsOption {
       backgroundColor: "#1e1e1f",
       borderColor: CHART_COLORS.grid,
       borderRadius: 12,
-      textStyle: { color: "#ededed", fontFamily: "Inter, sans-serif" },
+      textStyle: { color: "#ededed", fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
       extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: CHART_COLORS.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
