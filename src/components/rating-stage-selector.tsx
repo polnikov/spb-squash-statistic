@@ -53,14 +53,14 @@ export function RatingStageSelector({
                 if (selectable) onSelect(n);
               }}
               className={cn(
-                "grid size-full place-items-center rounded-[12px] font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
+                "grid size-full place-items-center rounded-[12px] border font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
+                // Data-bearing stages read in the accent colour; the selected one
+                // is marked by a pink border instead of a fill.
                 active
-                  ? "bg-primary text-on-primary ring-2 ring-primary/35"
-                  : selectable
-                    ? "bg-primary/60 text-on-primary hover:bg-primary"
-                    : passed
-                      ? "bg-primary/60 text-on-primary"
-                      : "bg-surface-container-high text-on-surface-variant/55",
+                  ? "border-primary text-primary"
+                  : passed
+                    ? cn("border-transparent text-primary", selectable && "hover:border-primary/40")
+                    : "border-transparent text-on-surface-variant/55",
                 selectable ? "cursor-pointer" : "cursor-default",
               )}
             >
