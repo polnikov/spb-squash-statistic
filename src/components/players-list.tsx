@@ -387,25 +387,77 @@ function DesktopPlayersCarousel({ players }: { players: PlayerOverview[] }) {
       node.scrollLeft += event.deltaY;
     };
 
+    // Click-and-drag to scroll (grab cursor). `scroll-smooth` is disabled during
+    // a drag so the row tracks the pointer 1:1, and a drag past the threshold
+    // suppresses the card's click so a swipe never opens a profile.
+    let down = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || node.scrollWidth <= node.clientWidth) return;
+      down = true;
+      moved = false;
+      startX = event.clientX;
+      startScroll = node.scrollLeft;
+      node.style.scrollBehavior = "auto";
+      node.setPointerCapture(event.pointerId);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!down) return;
+      const dx = event.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      node.scrollLeft = startScroll - dx;
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      if (!down) return;
+      down = false;
+      node.style.scrollBehavior = "";
+      try {
+        node.releasePointerCapture(event.pointerId);
+      } catch {}
+    };
+    const onClickCapture = (event: MouseEvent) => {
+      if (moved) {
+        event.preventDefault();
+        event.stopPropagation();
+        moved = false;
+      }
+    };
+
     syncEdges();
     node.addEventListener("wheel", onWheel, { passive: false });
     node.addEventListener("scroll", syncEdges, { passive: true });
+    node.addEventListener("pointerdown", onPointerDown);
+    node.addEventListener("pointermove", onPointerMove);
+    node.addEventListener("pointerup", onPointerUp);
+    node.addEventListener("pointercancel", onPointerUp);
+    node.addEventListener("click", onClickCapture, true);
     const observer = new ResizeObserver(syncEdges);
     observer.observe(node);
     return () => {
       node.removeEventListener("wheel", onWheel);
       node.removeEventListener("scroll", syncEdges);
+      node.removeEventListener("pointerdown", onPointerDown);
+      node.removeEventListener("pointermove", onPointerMove);
+      node.removeEventListener("pointerup", onPointerUp);
+      node.removeEventListener("pointercancel", onPointerUp);
+      node.removeEventListener("click", onClickCapture, true);
       observer.disconnect();
     };
   }, [players.length]);
 
   const mask = carouselMask(edges.atStart, edges.atEnd);
+  const scrollable = !(edges.atStart && edges.atEnd);
 
   return (
     <div
       ref={ref}
       style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
-      className="hidden overflow-x-auto overscroll-x-contain scroll-smooth pb-1 [scrollbar-width:none] md:block [&::-webkit-scrollbar]:hidden"
+      className={cn(
+        "hidden overflow-x-auto overscroll-x-contain scroll-smooth pb-1 [scrollbar-width:none] md:block [&::-webkit-scrollbar]:hidden",
+        scrollable && "cursor-grab active:cursor-grabbing",
+      )}
     >
       <div className="flex gap-3">
         {players.map((p) => (
