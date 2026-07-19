@@ -12,7 +12,6 @@ import { RatingPinButton } from "@/components/rating-pin-button";
 import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
 import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
-import { NumberPop } from "@/components/ui/number-pop";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { PageHeader } from "@/components/page-header";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
@@ -532,14 +531,10 @@ function DesktopLeaderboardHeader({
 
 function DesktopMetric({
   value,
-  animationKey,
-  animate = true,
   fill,
   valueClassName,
 }: {
   value: string;
-  animationKey: string;
-  animate?: boolean;
   /** 0..1 proportion; draws a left-to-right accent bar behind the value. */
   fill?: number | null;
   valueClassName?: string;
@@ -550,13 +545,11 @@ function DesktopMetric({
       {pct != null && (
         <span
           aria-hidden
-          className="absolute inset-y-0 left-0 bg-[#f9a8d4]/30 transition-[width] duration-500 ease-m3-emphasized-decel"
+          className="absolute inset-y-0 left-0 bg-[#f9a8d4]/30"
           style={{ width: `${pct}%` }}
         />
       )}
-      <span className={cn("relative z-10 block truncate", valueClassName)}>
-        {animate ? <NumberPop key={animationKey}>{value}</NumberPop> : value}
-      </span>
+      <span className={cn("relative z-10 block truncate", valueClassName)}>{value}</span>
     </div>
   );
 }
@@ -564,35 +557,31 @@ function DesktopMetric({
 const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
   player,
   position,
-  animationKey,
   pinned,
   onToggle,
 }: {
   player: PlayerOverview;
   position: number;
-  animationKey: string;
   pinned: boolean;
   onToggle: (rid: string) => void;
 }) {
   return (
     <div
       data-rating-rid={player.rid}
-      className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+      className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3"
       style={DESKTOP_LEADERBOARD_GRID}
     >
-      <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">
-        <NumberPop key={`${animationKey}-position`}>{String(position)}</NumberPop>
-      </span>
+      <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">{position}</span>
       <Link href={playerHref(player.rid)} aria-label={player.name}>
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
       </Link>
       <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
-      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} animationKey={`${animationKey}-skill`} fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200} />
-      <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} animationKey={`${animationKey}-matches`} />
-      <DesktopMetric value={formatPct(player.winPct)} animationKey={`${animationKey}-match-wr`} fill={player.winPct == null ? null : player.winPct / 100} />
-      <DesktopMetric value={formatPct(player.gameWinRatePct)} animationKey={`${animationKey}-game-wr`} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
-      <DesktopMetric value={formatPct(player.rallyWinRatePct)} animationKey={`${animationKey}-rally-wr`} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
-      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} animationKey={`${animationKey}-rally-balance`} />
+      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200} />
+      <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} />
+      <DesktopMetric value={formatPct(player.winPct)} fill={player.winPct == null ? null : player.winPct / 100} />
+      <DesktopMetric value={formatPct(player.gameWinRatePct)} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
+      <DesktopMetric value={formatPct(player.rallyWinRatePct)} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
+      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} />
       <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[13px] font-semibold tabular text-on-surface">
         {player.longestWinStreak > 0 ? player.longestWinStreak : "x"}
       </div>
@@ -690,7 +679,6 @@ export function PlayersList({
   const leaderboard = q ? leaderboardAll.filter((p) => p.name.toLowerCase().includes(q)) : leaderboardAll;
   const leaderboardFirst = leaderboard.slice(0, MOBILE_PAGE_SIZE);
   const leaderboardRest = leaderboard.slice(MOBILE_PAGE_SIZE);
-  const leaderboardAnimationKey = `${leaderboardSort}-${leaderboardDirection}`;
   // Desktop leaderboard honours the division tabs, so its places are ranked
   // within the selected division rather than across the whole roster.
   const desktopLeaderboardAll = React.useMemo(
@@ -749,6 +737,7 @@ export function PlayersList({
       {pinnedBarRow ? (
         <RatingPinnedBar
           row={pinnedBarRow}
+          revision={`${scope}-${leaderboardSort}-${leaderboardDirection}-${expanded}-${q}`}
           onUnpin={() => toggle(pinnedBarRow.rid)}
           onJump={(node) => {
             if (q) {
@@ -953,39 +942,39 @@ export function PlayersList({
                   key={p.rid}
                   player={p}
                   position={desktopLeaderboardRanks.get(p.rid) ?? 0}
-                  animationKey={`${leaderboardAnimationKey}-${p.rid}`}
                   pinned={pinnedRid === p.rid}
                   onToggle={toggle}
                 />
               ))}
-            </div>
-            {desktopLeaderboardRest.length > 0 ? (
-              <>
-                {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr) */}
-                <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-                  <div className="min-h-0 overflow-hidden">
-                    <div className="flex flex-col gap-2 pt-2">
-                      {desktopLeaderboardRest.map((p) => (
-                        <DesktopLeaderboardCard
-                          key={p.rid}
-                          player={p}
-                          position={desktopLeaderboardRanks.get(p.rid) ?? 0}
-                          animationKey={`${leaderboardAnimationKey}-${p.rid}`}
-                          pinned={pinnedRid === p.rid}
-                          onToggle={toggle}
-                        />
-                      ))}
+              {desktopLeaderboardRest.length > 0 ? (
+                <>
+                  {/* extra cards reveal via accordion expand (grid-rows 0fr -> 1fr).
+                      -mt-2 cancels the collapsed wrapper's flex gap so the button sits
+                      one row-gap (8px) from the rows, matching the row spacing. */}
+                  <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr] -mt-2")}>
+                    <div className="min-h-0 overflow-hidden">
+                      <div className="flex flex-col gap-2 pt-2">
+                        {desktopLeaderboardRest.map((p) => (
+                          <DesktopLeaderboardCard
+                            key={p.rid}
+                            player={p}
+                            position={desktopLeaderboardRanks.get(p.rid) ?? 0}
+                            pinned={pinnedRid === p.rid}
+                            onToggle={toggle}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => setExpanded((v) => !v)}
-                  className="w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
-                >
-                  {expanded ? "Свернуть" : `Показать еще ${desktopLeaderboardRest.length}`}
-                </button>
-              </>
-            ) : null}
+                  <button
+                    onClick={() => setExpanded((v) => !v)}
+                    className="w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                  >
+                    {expanded ? "Свернуть" : `Показать еще ${desktopLeaderboardRest.length}`}
+                  </button>
+                </>
+              ) : null}
+            </div>
           </TabTransition>
         ) : null}
       </div>
