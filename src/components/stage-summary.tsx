@@ -362,24 +362,27 @@ export function StageSummary({ league }: { league: League }) {
       </div>
 
       {rows.length > 0 ? (
-        <div className="flex h-[46px] w-full items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:max-w-md">
-          <Search className="size-4 text-muted-foreground" />
-          <input
-            value={nameQuery}
-            onChange={(e) => setNameQuery(e.target.value)}
-            placeholder="Поиск..."
-            className="h-full w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
-          />
-          {nameQuery ? (
-            <button
-              type="button"
-              onClick={() => setNameQuery("")}
-              aria-label="Очистить поиск"
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-m3-standard hover:bg-surface-container-high hover:text-on-surface"
-            >
-              <X className="size-4" />
-            </button>
-          ) : null}
+        <div className="flex items-center gap-3">
+          <h2 className="shrink-0 text-base font-semibold tracking-tight">Матчи этапа</h2>
+          <div className="flex h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:ml-auto md:w-[320px] md:flex-none">
+            <Search className="size-4 text-muted-foreground" />
+            <input
+              value={nameQuery}
+              onChange={(e) => setNameQuery(e.target.value)}
+              placeholder="Поиск..."
+              className="h-full w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+            />
+            {nameQuery ? (
+              <button
+                type="button"
+                onClick={() => setNameQuery("")}
+                aria-label="Очистить поиск"
+                className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-m3-standard hover:bg-surface-container-high hover:text-on-surface"
+              >
+                <X className="size-4" />
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
