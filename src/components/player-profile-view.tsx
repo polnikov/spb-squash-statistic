@@ -681,7 +681,7 @@ function MetricRow({ label, value, sign, noBorder = false, noBorderDesktop = fal
   );
 }
 
-function ProgressMetric({ label, record, percent }: { label: string; record: string; percent: number | null }) {
+function ProgressMetric({ label, record, percent, tone = "accent" }: { label: string; record: string; percent: number | null; tone?: "win" | "loss" | "accent" }) {
   const width = Math.max(0, Math.min(100, percent ?? 0));
   return (
     <div className="py-2.5">
@@ -690,7 +690,7 @@ function ProgressMetric({ label, record, percent }: { label: string; record: str
         <span className="font-mono text-[12.5px] font-semibold tabular"><NumberPop>{`${record} · ${formatPercent(percent)}`}</NumberPop></span>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-container-high">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
+        <div className={cn("h-full rounded-full", tone === "win" ? "bg-win" : tone === "loss" ? "bg-loss" : "bg-primary")} style={{ width: `${width}%` }} />
       </div>
     </div>
   );
@@ -1451,12 +1451,13 @@ function ScoreDistributionCard({ stats, compact = false }: { stats: PlayerProfil
         <InfoPopover items={SCORE_DISTRIBUTION_INFO} stats={stats} />
         <h2 className="text-base font-semibold tracking-tight">Распределение счёта</h2>
         <div className="mt-2">
-          {rows.map(([label, value]) => (
+          {rows.map(([label, value], i) => (
             <ProgressMetric
               key={label}
               label={label}
               record={String(value)}
               percent={total ? (value / total) * 100 : 0}
+              tone={i < 3 ? "win" : "loss"}
             />
           ))}
         </div>
