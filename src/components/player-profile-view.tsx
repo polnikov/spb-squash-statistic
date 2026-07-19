@@ -1896,22 +1896,50 @@ const MATCH_FILTER_ITEMS: { key: MatchFilter; label: string }[] = [
   { key: "close", label: "Плотные" },
 ];
 
+/**
+ * Match rating: the single most notable trait of a match, shown as a badge.
+ * Same taxonomy as the stage-summary card, adapted to MatchListItem (games are
+ * from the player's perspective: {for, against}). Priority: retirement >
+ * comeback (won after dropping the first two games) > five games > tight >
+ * blowout > plain.
+ */
+type MatchRating = { label: string; className: string };
+function rateProfileMatch(m: MatchListItem): MatchRating {
+  if (m.retired) return { label: "Отказ", className: "border-error/30 bg-error-container text-on-error-container" };
+  const games = m.detail ?? [];
+  const total = m.gamesFor + m.gamesAgainst;
+  const winnerIsPlayer = m.result === "W";
+  const gameWonByWinner = (g: { for: number; against: number }) => (winnerIsPlayer ? g.for > g.against : g.against > g.for);
+  const lostFirstTwo = games.length >= 2 && !gameWonByWinner(games[0]) && !gameWonByWinner(games[1]);
+  const closeGames = games.filter((g) => Math.abs(g.for - g.against) <= 2).length;
+  const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.for - g.against), 0) / games.length : 0;
+
+  if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
+  if (total === 5) return { label: "5 геймов", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]" };
+  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]" };
+  if (Math.min(m.gamesFor, m.gamesAgainst) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
+  return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
+}
+
+function MatchRatingBadge({ rating }: { rating: MatchRating }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+      {rating.label}
+    </span>
+  );
+}
+
 function MatchHistorySection({ active, mobile = false }: { active: PlayerProfileContextData; mobile?: boolean }) {
   const [filter, setFilter] = React.useState<MatchFilter>("all");
   const [open, setOpen] = React.useState(false);
   const [expanded, setExpanded] = React.useState(false);
   const rows = filterMatches(active.matches, filter);
-  const statusByRid = React.useMemo(
-    () => new Map(active.h2h.career.map((o) => [o.opponentRid, o.matchupStatus])),
-    [active.h2h.career],
-  );
 
   React.useEffect(() => {
     setExpanded(false);
   }, [active.key, filter]);
 
   const renderCard = (m: MatchListItem) => {
-    const status = statusByRid.get(m.opponentRid);
     return (
       <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
         <div className="flex items-start justify-between gap-3">
@@ -1938,7 +1966,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
         {/* bottom: season·division·stage left, opponent status right */}
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[11px] text-on-surface-variant">{m.seasonId} · {m.divisionName.replace(/Дивизион\s*/, "Д")} · {m.stageName.replace(/Этап\s*/, "Э")}</span>
-          {status ? <Chip tone={statusTone(status)}>{formatMatchupStatus(status)}</Chip> : null}
+          <MatchRatingBadge rating={rateProfileMatch(m)} />
         </div>
       </div>
     );
