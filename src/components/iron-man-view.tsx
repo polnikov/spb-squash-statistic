@@ -329,7 +329,7 @@ export function IronManView({ league }: { league: League }) {
           </div>
 
           {/* desktop: table */}
-          <div className="hidden overflow-hidden rounded-lg bg-card md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-outline-variant bg-card md:block">
             <TabTransition tabKey={`${scope}-${half}`} rise={false}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">

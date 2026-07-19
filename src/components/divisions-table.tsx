@@ -265,7 +265,7 @@ export function DivisionsTable({
       </div>
 
       <TabTransition tabKey={div} rise={false}>
-      <div className="min-w-0 overflow-hidden rounded-2xl bg-card md:rounded-lg">
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-card md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>

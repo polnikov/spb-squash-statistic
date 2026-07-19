@@ -328,7 +328,7 @@ export function StageSummary({ league }: { league: League }) {
       ) : null}
 
       {/* results table */}
-      <div className={cn("overflow-hidden rounded-2xl bg-card", rows.length === 0 && "border border-outline-variant")}>
+      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
         {rows.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>

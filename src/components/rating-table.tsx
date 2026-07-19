@@ -274,7 +274,7 @@ export function RatingTable({
         </div>
       ) : (
       <TabTransition tabKey={scope} rise={false}>
-      <div className="overflow-hidden rounded-lg bg-card">
+      <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
         <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
