@@ -237,32 +237,6 @@ export function DivisionsTable({
         ))}
       </div>
 
-      <div className="hidden items-center gap-2 md:flex">
-        {SORT_PILLS.map((pill) => (
-          <button
-            key={pill.key}
-            onClick={() => setSortKey(pill.key)}
-            className="relative h-9 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "absolute inset-1 rounded-full bg-primary/60 transition-all duration-300 ease-m3-emphasized-decel",
-                sort.key === pill.key ? "scale-100 opacity-100" : "scale-75 opacity-0",
-              )}
-            />
-            <span
-              className={cn(
-                "relative z-30 flex h-full items-center rounded-full px-3 transition-colors duration-200 ease-m3-standard",
-                sort.key === pill.key ? "text-on-primary" : "text-muted-foreground",
-              )}
-            >
-              {pill.label}{sort.key === pill.key ? sortMark(pill.key) : ""}
-            </span>
-          </button>
-        ))}
-      </div>
-
       <div className="flex w-full items-center gap-2 md:hidden">
         {SORT_PILLS.map((pill) => (
           <button
