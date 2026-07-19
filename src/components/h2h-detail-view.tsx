@@ -200,20 +200,6 @@ function MatchScoreDetails({ match }: { match: MatchListItem }) {
   );
 }
 
-function h2hInsight(stats: PlayerProfileStats, status: MatchupStatus): string {
-  if (stats.matchesPlayed === 0) return "Пока нет сыгранных встреч.";
-  if (status === "not_enough_data") return "Мало встреч для уверенного вывода — статистика предварительная.";
-  const record = formatRecord(stats.matchesWon, stats.matchesLost);
-  const gb = formatSignedNumber(stats.gameBalance);
-  if (status === "very_comfortable" || status === "comfortable")
-    return `Удобный соперник: перевес по матчам (${record}) и положительный баланс геймов (${gb}).`;
-  if (status === "very_uncomfortable" || status === "uncomfortable")
-    return `Неудобный соперник: отрицательный баланс по матчам (${record}) и геймам (${gb}).`;
-  const closing = (stats.fiveGameWinRatePct ?? 50) < 45 || (stats.blownTwoGameLeadRatePct ?? 0) > 25;
-  if (closing) return "Равное противостояние с проблемой концовок: по розыгрышам близко, но решающие геймы чаще уходят сопернику.";
-  return `Равное противостояние: разница минимальна (матчи ${record}, баланс геймов ${gb}).`;
-}
-
 /* --------------------------------------------------------------- charts --- */
 
 function chartBase(): EChartsOption {
@@ -549,7 +535,6 @@ function Hero({ player, opponent, stats, playerStrengthRating, lastMetAt, onClos
         {stats.matchesPlayed < 3 ? <Chip tone="error">Мало встреч для вывода</Chip> : <Chip>{formatSampleSizeLevel(stats.sampleSizeLevel)}</Chip>}
         {lastMetAt ? <Chip>Последняя встреча: {fmtDate(lastMetAt)}</Chip> : null}
       </div>
-      <p className="mt-3 text-center text-[12.5px] leading-snug text-on-surface-variant">{h2hInsight(stats, status)}</p>
     </div>
   );
 }
