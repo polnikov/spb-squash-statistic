@@ -1690,6 +1690,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
     <div className={cardClass()}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer items-center gap-2 px-4 py-4">
         <h2 className="text-base font-semibold tracking-tight">Личные встречи</h2>
+        <Chip>{list.length}</Chip>
         <span onClick={(e) => e.stopPropagation()} className={cn("hidden md:inline-flex", open ? "" : "pointer-events-none opacity-40")}>
           <InfoPopover inline items={OPPONENTS_INFO} stats={active.scopedStats} />
         </span>
@@ -1990,6 +1991,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     <div className={cardClass()}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer items-center gap-2 px-4 py-4">
         <h2 className="text-base font-semibold tracking-tight">История матчей</h2>
+        <Chip>{active.matches.length}</Chip>
         <span onClick={(e) => e.stopPropagation()} className={cn("hidden md:inline-flex", open ? "" : "pointer-events-none opacity-40")}>
           <InfoPopover inline items={MATCHUP_STATUS_INFO} stats={active.scopedStats} />
         </span>
