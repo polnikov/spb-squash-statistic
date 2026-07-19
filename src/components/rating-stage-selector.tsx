@@ -59,10 +59,10 @@ export function RatingStageSelector({
               className={cn(
                 "grid size-full place-items-center rounded-[12px] border font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
                 // Data-bearing stages read in the accent colour; the selected one
-                // is marked by a pink border. The grey fill is the sliding pill
-                // behind it, matching the tab switch animation.
+                // is marked by the sliding grey pill behind it, matching the tab
+                // switch animation.
                 active
-                  ? "border-primary bg-transparent text-primary"
+                  ? "border-transparent bg-transparent text-primary"
                   : passed
                     ? cn("border-transparent text-primary", selectable && "hover:border-primary/40")
                     : "border-transparent text-on-surface-variant/55",
