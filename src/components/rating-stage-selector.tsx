@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 
 function stageTooltip(stage: number, passed: boolean, affectsRating: boolean) {
   if (!passed) return "Данных пока нет";
@@ -26,8 +27,10 @@ export function RatingStageSelector({
   className?: string;
   itemClassName?: string;
 }) {
+  const { setRef, ind } = useTabSlider(String(selectedStage));
   return (
-    <div className={cn("flex items-center gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1", className)}>
+    <div className={cn("relative flex items-center gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1", className)}>
+      <TabSliderPill ind={ind} />
       {Array.from({ length: totalStages }, (_, i) => i + 1).map((n) => {
         const passed = n <= playedStage;
         const affectsRating = n <= ratingMaxStage;
@@ -38,8 +41,9 @@ export function RatingStageSelector({
         return (
           <span
             key={n}
+            ref={setRef(String(n))}
             className={cn(
-              "group/stage relative grid place-items-center",
+              "group/stage relative z-10 grid place-items-center",
               itemClassName ?? "size-9 shrink-0",
             )}
           >
@@ -55,9 +59,10 @@ export function RatingStageSelector({
               className={cn(
                 "grid size-full place-items-center rounded-[12px] border font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
                 // Data-bearing stages read in the accent colour; the selected one
-                // is marked by a pink border instead of a fill.
+                // is marked by a pink border. The grey fill is the sliding pill
+                // behind it, matching the tab switch animation.
                 active
-                  ? "border-primary bg-surface-container-highest text-primary"
+                  ? "border-primary bg-transparent text-primary"
                   : passed
                     ? cn("border-transparent text-primary", selectable && "hover:border-primary/40")
                     : "border-transparent text-on-surface-variant/55",
