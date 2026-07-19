@@ -637,14 +637,33 @@ function HintChip({ children, hint }: { children: React.ReactNode; hint: string 
   );
 }
 
-function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+/** Win-share bar for a KPI tile: green when ahead, red when behind, accent at even. */
+function statBar(won: number, lost: number, wrPct: number | null): { pct: number; tone: "win" | "loss" | "accent" } | undefined {
+  if (won + lost <= 0) return undefined;
+  const lead = won - lost;
+  const wr = wrPct ?? 50;
+  return { tone: lead > 0 ? "win" : lead < 0 ? "loss" : "accent", pct: lead === 0 ? 50 : lead > 0 ? wr : 100 - wr };
+}
+
+function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" } }) {
   return (
     <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>{label}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{value}</NumberPop></div>
       </div>
-      <div className="mt-1 min-w-0 truncate text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
+      {bar ? (
+        // Percent sits inside a compact win-share bar (like the H2H Матчи tile).
+        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md bg-surface-container-high">
+          <div
+            className={cn("absolute inset-y-0 left-0", bar.tone === "win" ? "bg-win" : bar.tone === "loss" ? "bg-loss" : "bg-primary")}
+            style={{ width: `${Math.max(0, Math.min(100, bar.pct))}%` }}
+          />
+          <span className="absolute inset-y-0 left-1.5 z-10 flex items-center font-mono text-[10px] font-semibold tabular text-on-surface"><NumberPop>{sub}</NumberPop></span>
+        </div>
+      ) : (
+        <div className="mt-1 min-w-0 truncate text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
+      )}
     </div>
   );
 }
@@ -715,9 +734,9 @@ function SegmentedControl<T extends string>({
 
 function scopedKpis(stats: PlayerProfileStats) {
   return [
-    { label: "Матчи", value: formatRecord(stats.matchesWon, stats.matchesLost), sub: formatPercent(stats.matchWinRatePct) },
-    { label: "Геймы", value: formatRecord(stats.gamesWon, stats.gamesLost), sub: formatPercent(stats.gameWinRatePct) },
-    { label: "Розыгрыши", value: formatRecord(stats.ralliesWon, stats.ralliesLost), sub: formatPercent(stats.rallyWinRatePct) },
+    { label: "Матчи", value: formatRecord(stats.matchesWon, stats.matchesLost), sub: formatPercent(stats.matchWinRatePct), bar: statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct) },
+    { label: "Геймы", value: formatRecord(stats.gamesWon, stats.gamesLost), sub: formatPercent(stats.gameWinRatePct), bar: statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct) },
+    { label: "Розыгрыши", value: formatRecord(stats.ralliesWon, stats.ralliesLost), sub: formatPercent(stats.rallyWinRatePct), bar: statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct) },
     { label: "Индекс формы", value: stats.formIndex === null ? "x" : stats.formIndex.toFixed(1), sub: formatSampleSizeLevel(stats.sampleSizeLevel) },
   ];
 }
@@ -973,9 +992,9 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
       {/* right column: KPI tiles + timeline */}
       <div className="min-w-0 flex flex-col gap-2 lg:gap-3">
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 lg:gap-3">
-          <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} />
-          <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} />
-          <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} />
+          <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
+          <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
+          <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
           <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
         </div>
         <ResultsTimeline matches={model.contexts.career.matches} longestWinStreak={stats.longestWinStreak} />
