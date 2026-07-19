@@ -35,7 +35,8 @@ const MATCH_CARD_LIMIT = 12;
  */
 type MatchRating = { label: string; className: string };
 function rateMatch(m: RealMatch): MatchRating {
-  if (m.retired) return { label: "Отказ", className: "bg-error-container text-on-error-container" };
+  if (m.retired) return { label: "Отказ", className: "border-error/30 bg-error-container text-on-error-container" };
+  // rating badges below carry a tone-matched border (see MatchRatingBadge base).
   const games = m.detail ?? [];
   const total = m.gamesA + m.gamesB;
   const winnerIsA = m.gamesA > m.gamesB;
@@ -44,16 +45,16 @@ function rateMatch(m: RealMatch): MatchRating {
   const closeGames = games.filter((g) => Math.abs(g.a - g.b) <= 2).length;
   const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.a - g.b), 0) / games.length : 0;
 
-  if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "bg-primary/15 text-primary" };
-  if (total === 5) return { label: "5 геймов", className: "bg-[#ffa52a]/15 text-[#ffa52a]" };
-  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "bg-[#7eeaf5]/15 text-[#7eeaf5]" };
-  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "bg-surface-container-highest text-on-surface-variant" };
-  return { label: "Ровный", className: "bg-surface-container-highest text-on-surface-variant" };
+  if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
+  if (total === 5) return { label: "5 геймов", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]" };
+  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]" };
+  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
+  return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
 }
 
 function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   return (
-    <span className={cn("inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
       {rating.label}
     </span>
   );
