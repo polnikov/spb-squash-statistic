@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { Th } from "@/components/ui/table-header";
 import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/league";
 import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
@@ -103,7 +102,7 @@ function HighlightTile({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 md:px-4 md:py-3", className)}>
+    <div className={cn("rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4", className)}>
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex min-w-0 items-baseline justify-between gap-3 md:mt-2">
         <span className="min-w-0 truncate text-[13px] font-semibold text-on-surface">
@@ -133,7 +132,6 @@ export function DivisionsTable({
 }) {
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
   const [sort, setSort] = React.useState<SortState>({ key: "points", dir: "desc" });
-  const [hlOpen, setHlOpen] = React.useState(false);
   const rows = rowsByDivision[div];
   const sortedRows = React.useMemo(() => {
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -183,6 +181,8 @@ export function DivisionsTable({
       value: highlights.fiveGameMatches ? fmtNum(highlights.fiveGameMatches.fiveGameMatches) : "x",
     },
   ] satisfies { label: string; player: RatingRow | null; value: string }[];
+  // Second tile row: leader cards (form, court, rally WR, five-game matches).
+  const secondRowTiles = [highlightTiles[1], highlightTiles[2], highlightTiles[4], highlightTiles[5]];
   const summary = summaries[div];
   const setSortKey = React.useCallback((key: SortKey) => {
     setSort((current) => {
@@ -230,39 +230,11 @@ export function DivisionsTable({
         <MetricTile label="Время на корте" value={Math.round(summary.court / 60)} unit="часов" />
       </div>
 
-      <div className="flex flex-col gap-2 md:hidden">
-        <div className="text-[13px] font-semibold text-on-surface">Highlights</div>
-        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {highlightTiles.map((tile) => (
-            <HighlightTile
-              key={tile.label}
-              label={tile.label}
-              player={tile.player}
-              value={tile.value}
-              className="min-w-[236px] shrink-0 bg-card"
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="hidden md:block">
-        <button
-          onClick={() => setHlOpen((v) => !v)}
-          className="inline-flex w-fit cursor-pointer select-none items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3 text-[13px] font-semibold text-on-surface transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
-        >
-          Highlights
-          <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-200", hlOpen && "rotate-180")} />
-        </button>
-        {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
-        <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", hlOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-          <div className="min-h-0 overflow-hidden rounded-lg">
-            <div className="mt-2 grid grid-cols-3 gap-3 rounded-lg border border-outline-variant bg-card p-3">
-              {highlightTiles.map((tile) => (
-                <HighlightTile key={tile.label} label={tile.label} player={tile.player} value={tile.value} />
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Second row: leader tiles, sharing the main tile shell. */}
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+        {secondRowTiles.map((tile) => (
+          <HighlightTile key={tile.label} label={tile.label} player={tile.player} value={tile.value} />
+        ))}
       </div>
 
       <div className="hidden items-center gap-2 md:flex">
