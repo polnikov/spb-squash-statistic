@@ -72,11 +72,13 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   );
 }
 
-function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" } }) {
+function KpiCard({ label, value, sub, bar, sign }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" }; sign?: number | null }) {
+  // Balance tiles tint the value: green when positive, red when negative.
+  const valueTone = sign == null ? "text-on-surface" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "text-on-surface";
   return (
     <div className={cardClass("flex flex-col px-[15px] py-[13px] transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5")}>
       <div className="text-[10px] leading-tight text-on-surface-variant md:text-[11px]">{label}</div>
-      <div className="mt-1.5 font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-on-surface md:text-[23px]"><NumberPop>{value}</NumberPop></div>
+      <div className={cn("mt-1.5 font-mono text-[17px] font-semibold leading-none tracking-tight tabular md:text-[23px]", valueTone)}><NumberPop>{value}</NumberPop></div>
       {bar ? (
         <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
           <div
@@ -570,8 +572,8 @@ function KpiGrid({ stats }: { stats: PlayerProfileStats }) {
         <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
       </div>
       <div className="grid grid-cols-2 gap-2 lg:gap-3">
-        <KpiCard label="Баланс геймов / матч" value={formatSignedNumber(stats.gameBalancePerMatch, 1)} sub={`всего ${formatSignedNumber(stats.gameBalance)}`} />
-        <KpiCard label="Баланс розыгрышей / матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 1)} sub={`всего ${formatSignedNumber(stats.rallyBalance)}`} />
+        <KpiCard label="Баланс геймов / матч" value={formatSignedNumber(stats.gameBalancePerMatch, 1)} sub={`всего ${formatSignedNumber(stats.gameBalance)}`} sign={stats.gameBalancePerMatch} />
+        <KpiCard label="Баланс розыгрышей / матч" value={formatSignedNumber(stats.rallyBalancePerMatch, 1)} sub={`всего ${formatSignedNumber(stats.rallyBalance)}`} sign={stats.rallyBalancePerMatch} />
       </div>
     </div>
   );
