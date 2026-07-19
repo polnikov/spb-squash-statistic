@@ -654,7 +654,7 @@ function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub
       </div>
       {bar ? (
         // Percent sits inside a compact win-share bar (like the H2H Матчи tile).
-        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md bg-surface-container-high">
+        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
           <div
             className={cn("absolute inset-y-0 left-0", bar.tone === "win" ? "bg-win" : bar.tone === "loss" ? "bg-loss" : "bg-primary")}
             style={{ width: `${Math.max(0, Math.min(100, bar.pct))}%` }}

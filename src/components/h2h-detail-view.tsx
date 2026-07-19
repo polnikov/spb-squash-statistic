@@ -72,12 +72,22 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   );
 }
 
-function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" } }) {
   return (
-    <div className={cardClass("px-[15px] py-[13px] transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5")}>
+    <div className={cardClass("flex flex-col px-[15px] py-[13px] transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5")}>
       <div className="text-[10px] leading-tight text-on-surface-variant md:text-[11px]">{label}</div>
       <div className="mt-1.5 font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-on-surface md:text-[23px]"><NumberPop>{value}</NumberPop></div>
-      <div className="mt-1 text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
+      {bar ? (
+        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+          <div
+            className={cn("absolute inset-y-0 left-0", bar.tone === "win" ? "bg-win" : bar.tone === "loss" ? "bg-loss" : "bg-primary")}
+            style={{ width: `${Math.max(0, Math.min(100, bar.pct))}%` }}
+          />
+          <span className="absolute inset-y-0 left-1.5 z-10 flex items-center font-mono text-[10px] font-semibold tabular text-on-surface"><NumberPop>{sub}</NumberPop></span>
+        </div>
+      ) : (
+        <div className="mt-1 text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
+      )}
     </div>
   );
 }
@@ -542,13 +552,22 @@ function Hero({ player, opponent, stats, playerStrengthRating, lastMetAt, onClos
   );
 }
 
+// Win-share bar: green when the player leads, red when the opponent leads,
+// accent when even. Width tracks the leader's win share.
+function statBar(won: number, lost: number, wrPct: number | null): { pct: number; tone: "win" | "loss" | "accent" } | undefined {
+  if (won + lost <= 0) return undefined;
+  const lead = won - lost;
+  const wr = wrPct ?? 50;
+  return { tone: lead > 0 ? "win" : lead < 0 ? "loss" : "accent", pct: lead === 0 ? 50 : lead > 0 ? wr : 100 - wr };
+}
+
 function KpiGrid({ stats }: { stats: PlayerProfileStats }) {
   return (
     <div className="flex flex-col gap-2 lg:gap-3">
       <div className="grid grid-cols-3 gap-2 lg:gap-3">
-        <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} />
-        <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} />
-        <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} />
+        <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
+        <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
+        <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
       </div>
       <div className="grid grid-cols-2 gap-2 lg:gap-3">
         <KpiCard label="Баланс геймов / матч" value={formatSignedNumber(stats.gameBalancePerMatch, 1)} sub={`всего ${formatSignedNumber(stats.gameBalance)}`} />
