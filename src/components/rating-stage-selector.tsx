@@ -57,7 +57,7 @@ export function RatingStageSelector({
                 // Data-bearing stages read in the accent colour; the selected one
                 // is marked by a pink border instead of a fill.
                 active
-                  ? "border-primary text-primary"
+                  ? "border-primary bg-surface-container-highest text-primary"
                   : passed
                     ? cn("border-transparent text-primary", selectable && "hover:border-primary/40")
                     : "border-transparent text-on-surface-variant/55",
