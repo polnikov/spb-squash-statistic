@@ -2051,18 +2051,40 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
 function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem[]; longestWinStreak: number }) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   // Desktop: translate a vertical wheel into horizontal scroll while the cursor is
-  // over the timeline, so the mouse wheel walks the results row.
+  // over the timeline. Each notch nudges a target and a rAF loop eases scrollLeft
+  // toward it, so the row glides instead of jumping notch-by-notch.
   React.useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    let target = el.scrollLeft;
+    let raf = 0;
+    const tick = () => {
+      const diff = target - el.scrollLeft;
+      if (Math.abs(diff) < 0.5) {
+        el.scrollLeft = target;
+        raf = 0;
+        return;
+      }
+      el.scrollLeft += diff * 0.2;
+      raf = requestAnimationFrame(tick);
+    };
     function onWheel(e: WheelEvent) {
       if (el!.scrollWidth <= el!.clientWidth) return;
       if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-      el!.scrollLeft += e.deltaY;
       e.preventDefault();
+      // Re-sync to the live position when a new gesture starts (idle rAF), so a
+      // native horizontal scroll in between never leaves the target stale.
+      if (!raf) target = el!.scrollLeft;
+      const step = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      const max = el!.scrollWidth - el!.clientWidth;
+      target = Math.max(0, Math.min(max, target + step));
+      if (!raf) raf = requestAnimationFrame(tick);
     }
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
   if (matches.length === 0) return null;
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-sans text-[11px] font-semibold";
