@@ -45,10 +45,15 @@ export function RatingPinnedBar({
   row,
   onJump,
   onUnpin,
+  revision,
 }: {
   row: PinnedBarRow | undefined;
   onJump: (node: HTMLElement | null) => void;
   onUnpin: () => void;
+  /** Bump when the rows re-sort/reorder so the observer re-resolves the row: on a
+   *  sort the pinned row can hop lists (visible <-> collapsed) and get a fresh DOM
+   *  node, leaving the observer bound to a stale, detached one. */
+  revision?: string | number;
 }) {
   const rid = row?.rid;
   const [rowVisible, setRowVisible] = React.useState(true);
@@ -94,7 +99,7 @@ export function RatingPinnedBar({
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [rid]);
+  }, [rid, revision]);
 
   // Keep the bar mounted while a row is pinned so it can animate out when the
   // row scrolls back into view; visibility is driven by classes, not unmount.

@@ -331,6 +331,7 @@ export function RatingTable({
       {pinnedRow ? (
         <RatingPinnedBar
           row={pinnedRow}
+          revision={`${scope}-${selectedStage}-${q}`}
           onUnpin={() => toggle(pinnedRow.rid)}
           onJump={(node) => {
             if (q) {
