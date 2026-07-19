@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Cross, Search, X } from "lucide-react";
+import { ChevronDown, Cross, Search, Swords, X } from "lucide-react";
 import {
   FINAL_STAGE,
   getStageResults,
   type DivisionScope,
   type League,
+  type RealMatch,
 } from "@/lib/league";
 import { fmtCourt, fmtDate, fmtNum, splitPlayerName, shortPlayerName } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,38 @@ const SCOPES: { key: DivisionScope; label: string }[] = [
 
 const ROW_LIMIT = 15;
 const MATCH_CARD_LIMIT = 12;
+
+/**
+ * Match rating: the single most notable trait of a match, shown as a badge.
+ * Priority: retirement > comeback (won after dropping the first two games) >
+ * five games > tight (two+ games decided by <=2, or a long match of small
+ * margins) > blowout (3:0 with wide margins) > plain competitive.
+ */
+type MatchRating = { label: string; className: string };
+function rateMatch(m: RealMatch): MatchRating {
+  if (m.retired) return { label: "Отказ", className: "bg-error-container text-on-error-container" };
+  const games = m.detail ?? [];
+  const total = m.gamesA + m.gamesB;
+  const winnerIsA = m.gamesA > m.gamesB;
+  const gameWonByWinner = (g: { a: number; b: number }) => (winnerIsA ? g.a > g.b : g.b > g.a);
+  const lostFirstTwo = games.length >= 2 && !gameWonByWinner(games[0]) && !gameWonByWinner(games[1]);
+  const closeGames = games.filter((g) => Math.abs(g.a - g.b) <= 2).length;
+  const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.a - g.b), 0) / games.length : 0;
+
+  if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "bg-primary/15 text-primary" };
+  if (total === 5) return { label: "5 геймов", className: "bg-[#ffa52a]/15 text-[#ffa52a]" };
+  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "bg-[#7eeaf5]/15 text-[#7eeaf5]" };
+  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "bg-surface-container-highest text-on-surface-variant" };
+  return { label: "Ровный", className: "bg-surface-container-highest text-on-surface-variant" };
+}
+
+function MatchRatingBadge({ rating }: { rating: MatchRating }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+      {rating.label}
+    </span>
+  );
+}
 
 /** Form Index for a stage row: Match WR*0.45 + Game WR*0.35 + Rally WR*0.20. */
 function stageFormIndex(r: {
@@ -363,7 +396,10 @@ export function StageSummary({ league }: { league: League }) {
 
       {rows.length > 0 ? (
         <div className="flex items-center gap-3">
-          <h2 className="shrink-0 text-base font-semibold tracking-tight">Матчи этапа</h2>
+          <h2 className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight">
+            <Swords className="hidden size-5 text-primary md:inline" />
+            Матчи этапа
+          </h2>
           <div className="flex h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:ml-auto md:w-[320px] md:flex-none">
             <Search className="size-4 text-muted-foreground" />
             <input
@@ -506,7 +542,10 @@ export function StageSummary({ league }: { league: League }) {
                       <MatchScoreLine games={m.detail} player="b" />
                     </div>
                   </div>
-                  <div className="mt-3 whitespace-nowrap font-mono text-[12px] tabular text-on-surface-variant">{m.durationMin} мин</div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className="whitespace-nowrap font-mono text-[12px] tabular text-on-surface-variant">{m.durationMin} мин</span>
+                    <MatchRatingBadge rating={rateMatch(m)} />
+                  </div>
                 </div>
               );
             })}
