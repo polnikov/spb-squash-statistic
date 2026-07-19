@@ -493,12 +493,30 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       ...wins.map((value) => ({ value, itemStyle: { color: CHART_COLORS.success } })),
       ...losses.map((value) => ({ value, itemStyle: { color: CHART_COLORS.error } })),
     ];
+    const total = bars.reduce((sum, b) => sum + b.value, 0);
     return {
       ...option,
       legend: { show: false },
-      grid: { ...option.grid, top: 16 },
+      // Percent label sits above each bar (desktop only); leave headroom for it.
+      grid: { ...option.grid, top: isMobile ? 16 : 24 },
       xAxis: { ...option.xAxis, data: ["3:0", "3:1", "3:2", "2:3", "1:3", "0:3"] },
-      series: [{ ...barSeries("Матчи", []), data: bars }],
+      series: [
+        {
+          ...barSeries("Матчи", []),
+          data: bars,
+          label: {
+            show: !isMobile,
+            position: "top",
+            color: CHART_COLORS.text,
+            fontSize: 11,
+            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+            formatter: (p: { value?: unknown }) => {
+              const v = Number(p.value) || 0;
+              return total > 0 && v > 0 ? `${Math.round((v / total) * 100)}%` : "";
+            },
+          },
+        },
+      ],
     };
   }
 
