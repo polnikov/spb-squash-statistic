@@ -139,9 +139,17 @@ export function StageSummary({ league }: { league: League }) {
     return map;
   }, [league]);
 
-  // Default view on open: Дивизион 1, Этап 1.
-  const [stage, setStage] = React.useState(1);
   const [scope, setScope] = React.useState<DivisionScope>(1);
+
+  // Latest stage with loaded results in the current division, or 1 before it has
+  // played any. Drives the default tab and follows division / season changes.
+  const lastLoadedStage = React.useMemo(() => {
+    const played = stages.filter((n) => stageDivisions.get(n)?.includes(scope));
+    return played.length ? Math.max(...played) : 1;
+  }, [stages, stageDivisions, scope]);
+
+  // Default view on open: Дивизион 1, its latest loaded stage.
+  const [stage, setStage] = React.useState(lastLoadedStage);
   const [expanded, setExpanded] = React.useState(false);
   const [matchesExpanded, setMatchesExpanded] = React.useState(false);
   const [nameQuery, setNameQuery] = React.useState("");
@@ -193,6 +201,11 @@ export function StageSummary({ league }: { league: League }) {
   React.useEffect(() => {
     setMatchesExpanded(false);
   }, [nq]);
+
+  // Follow the season: jump to its latest loaded stage when the data changes.
+  React.useEffect(() => {
+    setStage(lastLoadedStage);
+  }, [lastLoadedStage]);
 
   function selectStage(nextStage: number) {
     setStage(nextStage);
