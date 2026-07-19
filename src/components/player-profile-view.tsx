@@ -668,6 +668,34 @@ function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub
   );
 }
 
+/** Form Index tier: ring color + status word by value band. */
+function formIndexTier(value: number): { color: string; label: string } {
+  if (value > 60) return { color: "#22c55e", label: "отличный" };
+  if (value >= 50) return { color: "#f59e0b", label: "хороший" };
+  if (value >= 40) return { color: "#eab308", label: "средний" };
+  return { color: "#ef4444", label: "спад" };
+}
+
+/** Header KPI tile for the Form Index: label + value, then a linear gauge that
+ *  mirrors the neighboring KPI bars. Fill width tracks the index, its color the
+ *  tier; the status word (not a percent) sits inside the bar, left-aligned. */
+function FormIndexCard({ formIndex }: { formIndex: number | null }) {
+  const tier = formIndex === null ? { color: "var(--color-on-surface-variant)", label: "нет данных" } : formIndexTier(formIndex);
+  const pct = formIndex === null ? 0 : Math.max(0, Math.min(100, formIndex));
+  return (
+    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
+      <div className={labelClass()}>Индекс формы</div>
+      <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
+        <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{formIndex === null ? "x" : formIndex.toFixed(1)}</NumberPop></div>
+      </div>
+      <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+        <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, backgroundColor: tier.color }} />
+        <span className="absolute inset-y-0 left-1.5 z-10 flex items-center text-[10px] font-semibold text-on-surface">{tier.label}</span>
+      </div>
+    </div>
+  );
+}
+
 function MetricRow({ label, value, sign, noBorder = false, noBorderDesktop = false }: { label: string; value: React.ReactNode; sign?: number | null; noBorder?: boolean; noBorderDesktop?: boolean }) {
   const tone = sign == null ? "" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "";
   return (
@@ -995,7 +1023,7 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
           <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
           <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
           <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
-          <KpiCard label="Форма" value={stats.formIndex === null ? "x" : stats.formIndex.toFixed(1)} sub={stats.currentWinStreak ? `${stats.currentWinStreak} ${pluralRu(stats.currentWinStreak, ["победа", "победы", "побед"])} подряд` : formatSampleSizeLevel(stats.sampleSizeLevel)} />
+          <FormIndexCard formIndex={stats.formIndex} />
         </div>
         <ResultsTimeline matches={model.contexts.career.matches} longestWinStreak={stats.longestWinStreak} />
         {/* Mobile only: on desktop this card lives at the top of the left content
