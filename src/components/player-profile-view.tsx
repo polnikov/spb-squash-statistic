@@ -2045,7 +2045,7 @@ function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
   if (matches.length === 0) return null;
-  const cell = "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-semibold";
+  const cell = "grid size-7 shrink-0 place-items-center rounded-full font-sans text-[11px] font-semibold";
   return (
     <div className="min-w-0">
       <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
