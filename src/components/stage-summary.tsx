@@ -244,7 +244,7 @@ export function StageSummary({ league }: { league: League }) {
                 hasData ? "text-primary" : "text-on-surface-variant",
               )}
             >
-              <span className="md:hidden">Э{n}</span>
+              <span className="md:hidden">{n}</span>
               <span className="hidden md:inline">Этап {n}</span>
             </button>
           );
