@@ -112,9 +112,22 @@ function HighlightTile({
   return (
     <div className={cn("rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4", className)}>
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
-      <div className="mt-1 flex min-w-0 items-baseline justify-between gap-3 md:mt-2">
-        <span className="min-w-0 truncate text-[13px] font-semibold text-on-surface">
-          {player?.name ?? "x"}
+      <div className="mt-1 flex min-w-0 items-end justify-between gap-3 md:mt-2">
+        <span className="min-w-0 text-[13px] font-semibold text-on-surface">
+          {player ? (
+            <>
+              {/* Mobile: split first name / rest onto two lines. Desktop: single. */}
+              <span className="block leading-[1.15] md:hidden">
+                <span className="block truncate">{splitPlayerName(player.name).first}</span>
+                {splitPlayerName(player.name).rest ? (
+                  <span className="block truncate text-on-surface-variant">{splitPlayerName(player.name).rest}</span>
+                ) : null}
+              </span>
+              <span className="hidden truncate md:inline">{player.name}</span>
+            </>
+          ) : (
+            "x"
+          )}
         </span>
         <span className="shrink-0 text-right font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-white md:text-2xl">
           <NumberPop>{player ? value : "x"}</NumberPop>
