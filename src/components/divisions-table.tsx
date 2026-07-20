@@ -10,6 +10,9 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
+import { ChevronDown } from "lucide-react";
+
+const MOBILE_PAGE = 10;
 
 const DIVS = [1, 2, 3] as const;
 /** Shared class for the numeric division columns (narrow on mobile, roomy on md). */
@@ -144,6 +147,50 @@ const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
   { key: "court", label: "Время", mobileWeight: 0.95 },
 ];
 
+function StatTile({ label, record, wrLabel, wr }: { label: string; record: string; wrLabel: string; wr: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-outline-variant bg-brand-surface-2 px-2 py-2">
+      <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface">{record}</div>
+      <div className="mt-1.5 flex items-baseline justify-between gap-1">
+        <span className="text-[10px] leading-none text-muted-foreground">{wrLabel}</span>
+        <span className="font-mono text-[11px] font-semibold tabular text-on-surface-variant">{wr}</span>
+      </div>
+    </div>
+  );
+}
+
+function DivisionMobileCard({ r }: { r: RatingRow }) {
+  const [open, setOpen] = React.useState(false);
+  const gamesLost = r.games - r.gamesWon;
+  const ballsLost = r.balls - r.ballsWon;
+  return (
+    <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-brand-surface-2/40"
+      >
+        <span className="w-6 shrink-0 text-center font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-on-surface">{r.name}</div>
+          <div className="mt-0.5 text-[11px] leading-none text-on-surface-variant">Этапы: {r.stages}/{TOTAL_STAGES}</div>
+        </div>
+        <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface">{fmtNum(r.points)}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-200", open && "rotate-180")} />
+      </button>
+      {open ? (
+        <div className="grid grid-cols-3 gap-2 border-t border-outline-variant px-3 py-3">
+          <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} />
+          <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} />
+          <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DivisionsTable({
   rowsByDivision,
   summaries,
@@ -153,6 +200,8 @@ export function DivisionsTable({
 }) {
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
   const [sort, setSort] = React.useState<SortState>({ key: "points", dir: "desc" });
+  const [mobileCount, setMobileCount] = React.useState(MOBILE_PAGE);
+  React.useEffect(() => { setMobileCount(MOBILE_PAGE); }, [div]);
   const rows = rowsByDivision[div];
   const sortedRows = React.useMemo(() => {
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -286,7 +335,24 @@ export function DivisionsTable({
       </div>
 
       <TabTransition tabKey={div} rise={false}>
-      <div className="min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-card md:rounded-lg">
+      {/* Mobile: player accordion cards. */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {sortedRows.slice(0, mobileCount).map((r) => (
+          <DivisionMobileCard key={r.playerIdx} r={r} />
+        ))}
+        {mobileCount < sortedRows.length ? (
+          <button
+            type="button"
+            onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
+            className="mt-1 h-11 rounded-full border border-outline-variant bg-brand-surface-2 text-[13px] font-semibold text-on-surface transition-colors hover:text-primary"
+          >
+            Показать ещё
+          </button>
+        ) : null}
+      </div>
+
+      {/* Desktop: full stats table. */}
+      <div className="hidden min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-card md:block md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>
