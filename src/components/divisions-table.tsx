@@ -178,15 +178,23 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
   const ballsLost = r.balls - r.ballsWon;
   return (
     <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } }}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-brand-surface-2/40"
+        className="flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-brand-surface-2/40"
       >
         <span className="w-6 shrink-0 text-center font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-on-surface">{r.name}</div>
+          <Link
+            href={playerHref(r.rid)}
+            onClick={(e) => e.stopPropagation()}
+            className="block truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary"
+          >
+            {r.name}
+          </Link>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <MetaBadge label="Этапы" value={`${r.stages}/${TOTAL_STAGES}`} />
             <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} />
@@ -195,7 +203,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
         </div>
         <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface">{fmtNum(r.points)}</span>
         <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-200", open && "rotate-180")} />
-      </button>
+      </div>
       {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
