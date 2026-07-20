@@ -75,6 +75,14 @@ function stageFormIndex(r: {
   return mwr * 0.45 + gwr * 0.35 + rwr * 0.2;
 }
 
+/** Form Index progress-bar color by value band. */
+function formIndexColor(value: number): string {
+  if (value > 60) return "#22c55e";
+  if (value >= 50) return "#f59e0b";
+  if (value >= 40) return "#eab308";
+  return "#ef4444";
+}
+
 function MetricTile({ label, value, sub, compact }: { label: string; value: string | number; sub?: string; compact?: boolean }) {
   if (compact) {
     // mobile: value first, metric description below it
@@ -375,7 +383,12 @@ export function StageSummary({ league }: { league: League }) {
                       <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{r.ballsWon}-{r.ballsLost}</span></td>
                       <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
                       <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
-                      <td className="w-px whitespace-nowrap py-[11px] pl-2.5 pr-5 text-center"><span className="font-mono text-sm tabular text-on-surface-variant">{stageFormIndex(r).toFixed(1)}</span></td>
+                      <td className="relative w-px whitespace-nowrap py-[11px] pl-2.5 pr-5 text-center">
+                        <span className="font-mono text-sm tabular text-on-surface-variant">{stageFormIndex(r).toFixed(1)}</span>
+                        <div className="absolute inset-x-0 bottom-0 hidden h-[10.5px] overflow-hidden bg-surface-container-high md:block">
+                          <div className="h-full transition-[width] duration-500 ease-m3-emphasized-decel" style={{ width: `${Math.max(0, Math.min(100, stageFormIndex(r)))}%`, backgroundColor: formIndexColor(stageFormIndex(r)) }} />
+                        </div>
+                      </td>
                     </tr>
                     );
                   })}
