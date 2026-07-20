@@ -191,7 +191,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
           <Link
             href={playerHref(r.rid)}
             onClick={(e) => e.stopPropagation()}
-            className="block truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary"
+            className="inline-block max-w-full truncate align-top text-sm font-semibold text-on-surface transition-colors hover:text-primary"
           >
             {r.name}
           </Link>
