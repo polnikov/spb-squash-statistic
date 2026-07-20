@@ -978,7 +978,7 @@ export function H2hDetailView({
 
       {/* Mobile: full-screen page — Panel reveal (transitions.dev): slides in from the right. */}
       <div className={cn("app-bg-blend fixed inset-0 z-[80] flex flex-col transition-transform duration-500 ease-m3-emphasized-decel md:hidden", shown ? "translate-x-0" : "translate-x-full")}>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
           <Hero player={player} opponent={opponent} stats={stats} playerStrengthRating={playerStrengthRating} lastMetAt={lastMetAt} mobile />
           <Segmented items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} className="shrink-0" equal />
           <TabTransition tabKey={mobileTab} className="flex flex-col gap-4">
@@ -990,7 +990,7 @@ export function H2hDetailView({
         <button
           type="button"
           onClick={requestClose}
-          className="flex shrink-0 items-center justify-center gap-2 border-t border-outline-variant bg-brand-bg/95 px-3 py-3.5 text-[13px] font-semibold text-on-surface backdrop-blur-lg"
+          className="flex shrink-0 items-center justify-center gap-2 border-t border-outline-variant bg-brand-bg/95 px-3 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] text-[13px] font-semibold text-on-surface backdrop-blur-lg"
         >
           <ArrowLeft className="size-4" /> Назад в профиль
         </button>
