@@ -147,14 +147,26 @@ const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
   { key: "court", label: "Время", mobileWeight: 0.95 },
 ];
 
-function StatTile({ label, record, wrLabel, wr }: { label: string; record: string; wrLabel: string; wr: string }) {
+function MetaBadge({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-outline-variant bg-brand-surface-2 px-2 py-2">
+    <span className="inline-flex items-center gap-1 text-[11px] leading-none text-on-surface-variant">
+      {label}
+      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">{value}</span>
+    </span>
+  );
+}
+
+function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number }) {
+  return (
+    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-2 pb-2.5 pt-2">
       <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
       <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface">{record}</div>
       <div className="mt-1.5 flex items-baseline justify-between gap-1">
         <span className="text-[10px] leading-none text-muted-foreground">{wrLabel}</span>
         <span className="font-mono text-[11px] font-semibold tabular text-on-surface-variant">{wr}</span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
+        <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
       </div>
     </div>
   );
@@ -175,18 +187,25 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
         <span className="w-6 shrink-0 text-center font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold text-on-surface">{r.name}</div>
-          <div className="mt-0.5 text-[11px] leading-none text-on-surface-variant">Этапы: {r.stages}/{TOTAL_STAGES}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <MetaBadge label="Этапы" value={`${r.stages}/${TOTAL_STAGES}`} />
+            <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} />
+            <MetaBadge label="Время" value={fmtCourt(r.court)} />
+          </div>
         </div>
         <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface">{fmtNum(r.points)}</span>
         <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-200", open && "rotate-180")} />
       </button>
-      {open ? (
-        <div className="grid grid-cols-3 gap-2 border-t border-outline-variant px-3 py-3">
-          <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} />
-          <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} />
-          <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} />
+      {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
+      <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+        <div className="min-h-0 overflow-hidden">
+          <div className="grid grid-cols-3 gap-2 border-t border-outline-variant px-3 py-3">
+            <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} />
+            <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} />
+            <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} />
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
