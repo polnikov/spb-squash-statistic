@@ -41,6 +41,14 @@ function formIndex(row: RatingRow) {
   return pct(row.wins, row.matches) * 0.45 + pct(row.gamesWon, row.games) * 0.35 + pct(row.ballsWon, row.balls) * 0.2;
 }
 
+/** Form Index ring color by value band. */
+function formIndexColor(value: number): string {
+  if (value > 60) return "#22c55e";
+  if (value >= 50) return "#f59e0b";
+  if (value >= 40) return "#eab308";
+  return "#ef4444";
+}
+
 function sortValue(row: RatingRow, key: SortKey) {
   switch (key) {
     case "place":
@@ -292,8 +300,11 @@ export function DivisionsTable({
               const gamesLost = r.games - r.gamesWon;
               const ballsLost = r.balls - r.ballsWon;
               const matchWr = pctText(r.wins, r.matches);
+              const matchWrPct = r.matches ? (r.wins / r.matches) * 100 : 0;
               const gameWr = pctText(r.gamesWon, r.games);
+              const gameWrPct = r.games ? (r.gamesWon / r.games) * 100 : 0;
               const rallyWr = pctText(r.ballsWon, r.balls);
+              const rallyWrPct = r.balls ? (r.ballsWon / r.balls) * 100 : 0;
               return (
               <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:h-[60px]">
                 <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
@@ -318,17 +329,37 @@ export function DivisionsTable({
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.matches)} | {fmtNum(r.wins)}-{fmtNum(r.matches - r.wins)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{matchWr}</span></td>
+                <td className="relative w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{matchWr}</span>
+                  <div className="absolute inset-x-0 bottom-0 hidden h-[10.5px] overflow-hidden bg-surface-container-high md:block">
+                    <div className={cn("h-full transition-[width] duration-500 ease-m3-emphasized-decel", matchWrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${matchWrPct}%` }} />
+                  </div>
+                </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.gamesWon)}-{fmtNum(gamesLost)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{gameWr}</span></td>
+                <td className="relative w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{gameWr}</span>
+                  <div className="absolute inset-x-0 bottom-0 hidden h-[10.5px] overflow-hidden bg-surface-container-high md:block">
+                    <div className={cn("h-full transition-[width] duration-500 ease-m3-emphasized-decel", gameWrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${gameWrPct}%` }} />
+                  </div>
+                </td>
                 <td className="w-px whitespace-nowrap py-[9px] pl-2.5 pr-5 text-center md:w-auto md:px-4">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.ballsWon)}-{fmtNum(ballsLost)}</span>
                 </td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{rallyWr}</span></td>
+                <td className="relative w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{rallyWr}</span>
+                  <div className="absolute inset-x-0 bottom-0 hidden h-[10.5px] overflow-hidden bg-surface-container-high md:block">
+                    <div className={cn("h-full transition-[width] duration-500 ease-m3-emphasized-decel", rallyWrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${rallyWrPct}%` }} />
+                  </div>
+                </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtCourt(r.court)}</span></td>
-                <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{formIndex(r).toFixed(1)}</span></td>
+                <td className="relative w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{formIndex(r).toFixed(1)}</span>
+                  <div className="absolute inset-x-0 bottom-0 hidden h-[10.5px] overflow-hidden bg-surface-container-high md:block">
+                    <div className="h-full transition-[width] duration-500 ease-m3-emphasized-decel" style={{ width: `${Math.max(0, Math.min(100, formIndex(r)))}%`, backgroundColor: formIndexColor(formIndex(r)) }} />
+                  </div>
+                </td>
               </tr>
               );
             }) : (
