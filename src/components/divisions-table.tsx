@@ -147,11 +147,11 @@ const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
   { key: "court", label: "Время", mobileWeight: 0.95 },
 ];
 
-function MetaBadge({ label, value }: { label: string; value: string }) {
+function MetaBadge({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[11px] leading-none text-on-surface-variant">
       {label}
-      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">{value}</span>
+      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}>{value}</span>
     </span>
   );
 }
@@ -197,7 +197,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
           </Link>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <MetaBadge label="Этапы" value={`${r.stages}/${TOTAL_STAGES}`} />
-            <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} />
+            <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} color={formIndexColor(formIndex(r))} />
             <MetaBadge label="Время" value={fmtCourt(r.court)} />
           </div>
         </div>
