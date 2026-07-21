@@ -560,7 +560,7 @@ function MatchesCell({ value, won, lost }: { value: string; won: number; lost: n
   return (
     <div className="min-w-0 px-1.5 text-center">
       <div className="truncate font-mono text-[12.5px] font-semibold tabular text-on-surface">{value}</div>
-      <div className="mt-1 flex h-[6px] overflow-hidden rounded-full bg-surface-container-high">
+      <div className="mt-2.5 flex h-[6px] overflow-hidden rounded-full bg-surface-container-high">
         {total > 0 && (
           <>
             <div className="h-full bg-win" style={{ width: `${winPct}%` }} />
@@ -572,15 +572,11 @@ function MatchesCell({ value, won, lost }: { value: string; won: number; lost: n
   );
 }
 
-/** Strength rating: value, an accent progress bar, then the rating band label. */
-function RatingCell({ value, fill, status }: { value: string; fill: number | null; status: string | null }) {
-  const pct = fill == null ? null : Math.max(0, Math.min(1, fill)) * 100;
+/** Strength rating: value, then the rating band label. */
+function RatingCell({ value, status }: { value: string; status: string | null }) {
   return (
     <div className="min-w-0 px-1.5 text-center">
       <div className="truncate font-mono text-[12.5px] font-semibold tabular text-on-surface">{value}</div>
-      <div className="mt-1 h-[6px] overflow-hidden rounded-full bg-surface-container-high">
-        {pct != null && <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />}
-      </div>
       {status ? <div className="mt-1 text-balance text-[11px] leading-tight text-on-surface-variant">{status}</div> : null}
     </div>
   );
@@ -610,7 +606,6 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
       <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
       <RatingCell
         value={player.strengthRating === null ? "x" : String(player.strengthRating)}
-        fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200}
         status={getStrengthBand(player.strengthRating)?.labelRu ?? null}
       />
       <MatchesCell value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} won={player.matchesWon} lost={player.matchesLost} />
