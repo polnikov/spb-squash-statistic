@@ -361,7 +361,7 @@ export function StageSummary({ league }: { league: League }) {
                       <Link href={playerHref(r.playerIdx)} className="block min-w-0 flex-1 truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary">{r.name}</Link>
                       <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
                     </div>
-                    <div className="mt-3 grid grid-cols-5 gap-2">
+                    <div className="mt-3 grid grid-cols-[1fr_1fr_1.5fr_1fr_1fr] gap-2">
                       <StageTile label="Матчи" value={`${r.wins}-${r.losses}`} />
                       <StageTile label="Геймы" value={`${r.gamesWon}-${r.gamesLost}`} />
                       <StageTile label="Розыгрыши" value={`${r.ballsWon}-${r.ballsLost}`} />
