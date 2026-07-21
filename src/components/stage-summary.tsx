@@ -83,6 +83,15 @@ function formIndexColor(value: number): string {
   return "#ef4444";
 }
 
+function StageTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-outline-variant bg-brand-surface-2 px-1.5 py-1.5 text-center">
+      <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface"><NumberPop>{value}</NumberPop></div>
+    </div>
+  );
+}
+
 function MetricTile({ label, value, sub, compact }: { label: string; value: string | number; sub?: string; compact?: boolean }) {
   if (compact) {
     // mobile: value first, metric description below it
@@ -335,8 +344,47 @@ export function StageSummary({ league }: { league: League }) {
         </div>
       ) : null}
 
-      {/* results table */}
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
+      {/* mobile results: player cards */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {rows.length === 0 ? (
+          <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
+            <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
+          </div>
+        ) : (
+          <>
+            <TabTransition tabKey={`${scope}-${stage}-m`} rise={false}>
+              <div className="flex flex-col gap-2">
+                {visibleRows.map((r) => (
+                  <div key={`m-${r.div}-${r.playerIdx}`} className="rounded-2xl border border-outline-variant bg-card p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant"><NumberPop>{r.place}</NumberPop></span>
+                      <Link href={playerHref(r.playerIdx)} className="block min-w-0 flex-1 truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary">{r.name}</Link>
+                      <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-4 gap-2">
+                      <StageTile label="Матчи" value={`${r.wins}-${r.losses}`} />
+                      <StageTile label="Геймы" value={`${r.gamesWon}-${r.gamesLost}`} />
+                      <StageTile label="Розыгрыши" value={`${r.ballsWon}-${r.ballsLost}`} />
+                      <StageTile label="Время" value={fmtCourt(r.court)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabTransition>
+            {moreCount > 0 ? (
+              <button
+                onClick={() => setExpanded(true)}
+                className="mt-1 h-11 rounded-full border border-outline-variant bg-brand-surface-2 text-[13px] font-semibold text-primary transition-colors hover:brightness-110"
+              >
+                Показать ещё {moreCount}
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      {/* desktop results table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-outline-variant bg-card md:block">
         {rows.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
