@@ -357,7 +357,7 @@ export function StageSummary({ league }: { league: League }) {
                 {visibleRows.map((r) => (
                   <div key={`m-${r.div}-${r.playerIdx}`} className="rounded-2xl border border-outline-variant bg-card p-3">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant"><NumberPop>{r.place}</NumberPop></span>
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
                       <Link href={playerHref(r.playerIdx)} className="block min-w-0 flex-1 truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary">{r.name}</Link>
                       <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
                     </div>

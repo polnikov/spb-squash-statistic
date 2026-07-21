@@ -144,7 +144,7 @@ export function RatingMobile({
                 className="flex flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-4 py-3"
               >
                 <div className="flex items-center gap-2.5 border-b border-outline-variant pb-2">
-                  <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-on-surface-variant">
+                  <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-primary">
                     <NumberPop>{r.place}</NumberPop>
                   </span>
                   <span className="shrink-0">

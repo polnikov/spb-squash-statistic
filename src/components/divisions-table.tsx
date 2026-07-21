@@ -194,7 +194,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant"><NumberPop>{r.place}</NumberPop></span>
+            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
             <Link
               href={playerHref(r.rid)}
               onClick={(e) => e.stopPropagation()}
