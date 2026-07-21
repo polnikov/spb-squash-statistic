@@ -158,12 +158,16 @@ function MetaBadge({ label, value, color }: { label: string; value: string; colo
 
 function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-2 pb-2.5 pt-2">
-      <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
-      <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface">{record}</div>
-      <div className="mt-1.5 flex items-baseline justify-between gap-1">
-        <span className="text-[10px] leading-none text-muted-foreground">{wrLabel}</span>
-        <span className="font-mono text-[11px] font-semibold tabular text-on-surface-variant">{wr}</span>
+    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[11px] leading-none text-muted-foreground">{label}</div>
+          <div className="mt-1.5 truncate font-mono text-[13px] font-semibold tabular text-on-surface">{record}</div>
+        </div>
+        <div className="flex shrink-0 items-baseline gap-1.5">
+          <span className="text-[11px] leading-none text-muted-foreground">{wrLabel}</span>
+          <span className="font-mono text-[12px] font-semibold tabular text-on-surface-variant">{wr}</span>
+        </div>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
         <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
@@ -209,7 +213,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
       {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="grid grid-cols-3 gap-2 border-t border-outline-variant px-3 py-3">
+          <div className="flex flex-col gap-2 border-t border-outline-variant px-3 py-3">
             <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} />
             <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} />
             <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} />
@@ -375,7 +379,7 @@ export function DivisionsTable({
             onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
             className="mt-1 h-11 rounded-full border border-outline-variant bg-brand-surface-2 text-[13px] font-semibold text-primary transition-colors hover:brightness-110"
           >
-            Показать ещё ({sortedRows.length - mobileCount})
+            Показать ещё {sortedRows.length - mobileCount}
           </button>
         ) : null}
       </div>
