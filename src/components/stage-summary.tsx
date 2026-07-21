@@ -352,7 +352,7 @@ export function StageSummary({ league }: { league: League }) {
                     <Th className="sticky left-8 z-20 w-px whitespace-nowrap bg-brand-surface-2 py-3 pl-2 pr-3 font-medium md:static md:z-auto md:bg-transparent">Игрок</Th>
                     <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Матчи</Th>
                     <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Геймы</Th>
-                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Мячи</Th>
+                    <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Розыгрыши</Th>
                     <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Время</Th>
                     <Th className="w-px whitespace-nowrap px-2.5 py-3 font-medium">Очки</Th>
                     <Th className="w-px whitespace-nowrap py-3 pl-2.5 pr-5 font-medium">Форма</Th>
