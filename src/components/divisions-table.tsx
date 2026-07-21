@@ -143,8 +143,8 @@ function HighlightTile({
 const SORT_PILLS: { key: SortKey; label: string }[] = [
   { key: "points", label: "Очки" },
   { key: "form", label: "Форма" },
-  { key: "gameWr", label: "GWR" },
   { key: "matchWr", label: "MWR" },
+  { key: "gameWr", label: "GWR" },
   { key: "rallyWr", label: "RWR" },
   { key: "court", label: "Время" },
 ];
