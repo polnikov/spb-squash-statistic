@@ -785,7 +785,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="w-full rounded-lg bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-surface-container-highest"
+                  className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                 >
                   {expanded ? "Свернуть" : `Показать ещё ${mRest.length}`}
                 </button>
