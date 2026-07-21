@@ -373,9 +373,9 @@ export function DivisionsTable({
           <button
             type="button"
             onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
-            className="mt-1 h-11 rounded-full border border-outline-variant bg-brand-surface-2 text-[13px] font-semibold text-on-surface transition-colors hover:text-primary"
+            className="mt-1 h-11 rounded-full border border-outline-variant bg-brand-surface-2 text-[13px] font-semibold text-primary transition-colors hover:brightness-110"
           >
-            Показать ещё
+            Показать ещё ({sortedRows.length - mobileCount})
           </button>
         ) : null}
       </div>
