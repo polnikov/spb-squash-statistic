@@ -10,6 +10,11 @@ const makeConfig = (phase) => ({
     // drizzle vendor-chunk otherwise).
     serverComponentsExternalPackages: ["bullmq", "ioredis", "postgres", "drizzle-orm"],
   },
+  // Рейтинг живёт на корне `/`; отдельного роута /rating нет, так что прямой
+  // заход по нему без редиректа даёт 404.
+  async redirects() {
+    return [{ source: "/rating", destination: "/", permanent: true }];
+  },
   webpack(config, { dev }) {
     if (dev) {
       config.watchOptions = {
