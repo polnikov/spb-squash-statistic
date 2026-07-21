@@ -151,7 +151,7 @@ function MetaBadge({ label, value, color }: { label: string; value: string; colo
   return (
     <span className="inline-flex items-center gap-1 text-[11px] leading-none text-on-surface-variant">
       {label}
-      <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}>{value}</span>
+      <span className="rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}>{value}</span>
     </span>
   );
 }
@@ -186,16 +186,18 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
         aria-expanded={open}
         className="flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-brand-surface-2/40"
       >
-        <span className="w-6 shrink-0 text-center font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
         <div className="min-w-0 flex-1">
-          <Link
-            href={playerHref(r.rid)}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-block max-w-full truncate align-top text-sm font-semibold text-on-surface transition-colors hover:text-primary"
-          >
-            {r.name}
-          </Link>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant">{r.place}</span>
+            <Link
+              href={playerHref(r.rid)}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-block min-w-0 truncate align-top text-sm font-semibold text-on-surface transition-colors hover:text-primary"
+            >
+              {r.name}
+            </Link>
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             <MetaBadge label="Этапы" value={`${r.stages}/${TOTAL_STAGES}`} />
             <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} color={formIndexColor(formIndex(r))} />
             <MetaBadge label="Время" value={fmtCourt(r.court)} />
