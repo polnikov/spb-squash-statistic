@@ -159,18 +159,18 @@ function MetaBadge({ label, value, color }: { label: string; value: string; colo
 function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number }) {
   return (
     <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[11px] leading-none text-muted-foreground">{label}</div>
-          <div className="mt-1.5 truncate font-mono text-[13px] font-semibold tabular text-on-surface">{record}</div>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] leading-none text-muted-foreground">{label}</span>
         <div className="flex shrink-0 items-baseline gap-1.5">
           <span className="text-[11px] leading-none text-muted-foreground">{wrLabel}</span>
           <span className="font-mono text-[12px] font-semibold tabular text-on-surface-variant">{wr}</span>
         </div>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
-        <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
+      <div className="mt-1.5 flex items-center gap-3">
+        <span className="min-w-0 truncate font-mono text-[13px] font-semibold tabular text-on-surface">{record}</span>
+        <div className="ml-auto h-1.5 w-1/2 shrink-0 overflow-hidden rounded-full bg-surface-container-high">
+          <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
+        </div>
       </div>
     </div>
   );
