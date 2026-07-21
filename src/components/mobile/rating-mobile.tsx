@@ -29,7 +29,7 @@ function ChangeBadge({ delta }: { delta: number }) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular text-on-surface">
+    <span className="inline-flex items-center rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular text-on-surface">
       {children}
     </span>
   );
