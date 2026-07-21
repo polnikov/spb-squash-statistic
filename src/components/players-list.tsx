@@ -15,6 +15,7 @@ import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { PageHeader } from "@/components/page-header";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
+import { getStrengthBand } from "@/lib/stats/compute";
 
 const MOBILE_PAGE_SIZE = 16;
 const DESKTOP_LEADERBOARD_PAGE_SIZE = 15;
@@ -529,27 +530,42 @@ function DesktopLeaderboardHeader({
   );
 }
 
-function DesktopMetric({
-  value,
-  fill,
-  valueClassName,
-}: {
-  value: string;
-  /** 0..1 proportion; draws a left-to-right accent bar behind the value. */
-  fill?: number | null;
-  valueClassName?: string;
-}) {
+/** Plain metric value, no pill. */
+function PlainCell({ value, valueClassName }: { value: string; valueClassName?: string }) {
+  return (
+    <div className="min-w-0 truncate px-1.5 py-2 text-center font-mono text-[12.5px] font-semibold tabular text-on-surface">
+      <span className={valueClassName}>{value}</span>
+    </div>
+  );
+}
+
+/** Win-rate value with a colored bottom bar (green above 50%, red below), like the divisions table. */
+function WrCell({ value, pct }: { value: string; pct: number | null }) {
+  return (
+    <div className="relative min-w-0 overflow-hidden px-1.5 py-2 text-center">
+      <span className="font-mono text-[12.5px] font-semibold tabular text-on-surface">{value}</span>
+      {pct != null && (
+        <div className="absolute inset-x-0 bottom-0 h-[10.5px] overflow-hidden bg-surface-container-high">
+          <div
+            className={cn("h-full transition-[width] duration-500 ease-m3-emphasized-decel", pct > 50 ? "bg-win" : "bg-loss")}
+            style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Strength rating: value, an accent progress bar, then the rating band label. */
+function RatingCell({ value, fill, status }: { value: string; fill: number | null; status: string | null }) {
   const pct = fill == null ? null : Math.max(0, Math.min(1, fill)) * 100;
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[12.5px] font-semibold tabular text-on-surface">
-      {pct != null && (
-        <span
-          aria-hidden
-          className="absolute inset-y-0 left-0 bg-[#f9a8d4]/30"
-          style={{ width: `${pct}%` }}
-        />
-      )}
-      <span className={cn("relative z-10 block truncate", valueClassName)}>{value}</span>
+    <div className="min-w-0 px-1.5 text-center">
+      <div className="truncate font-mono text-[12.5px] font-semibold tabular text-on-surface">{value}</div>
+      <div className="mt-1 h-[6px] overflow-hidden rounded-full bg-surface-container-high">
+        {pct != null && <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />}
+      </div>
+      {status ? <div className="mt-1 text-balance text-[9.5px] leading-tight text-on-surface-variant">{status}</div> : null}
     </div>
   );
 }
@@ -576,15 +592,17 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
         <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-11 text-[15px]" />
       </Link>
       <Link href={playerHref(player.rid)} className="min-w-0 truncate text-sm font-semibold text-on-surface transition-colors group-hover:text-primary">{player.name}</Link>
-      <DesktopMetric value={player.strengthRating === null ? "x" : String(player.strengthRating)} fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200} />
-      <DesktopMetric value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} />
-      <DesktopMetric value={formatPct(player.winPct)} fill={player.winPct == null ? null : player.winPct / 100} />
-      <DesktopMetric value={formatPct(player.gameWinRatePct)} fill={player.gameWinRatePct == null ? null : player.gameWinRatePct / 100} />
-      <DesktopMetric value={formatPct(player.rallyWinRatePct)} fill={player.rallyWinRatePct == null ? null : player.rallyWinRatePct / 100} />
-      <DesktopMetric value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} />
-      <div className="min-w-0 truncate rounded-md border border-outline-variant bg-surface-container-high px-1.5 py-2 text-center font-mono text-[13px] font-semibold tabular text-on-surface">
-        {player.longestWinStreak > 0 ? player.longestWinStreak : "x"}
-      </div>
+      <RatingCell
+        value={player.strengthRating === null ? "x" : String(player.strengthRating)}
+        fill={player.strengthRating === null ? null : (player.strengthRating - 1000) / 1200}
+        status={getStrengthBand(player.strengthRating)?.labelRu ?? null}
+      />
+      <PlainCell value={`${player.matches} | ${player.matchesWon}-${player.matchesLost}`} />
+      <WrCell value={formatPct(player.winPct)} pct={player.winPct ?? null} />
+      <WrCell value={formatPct(player.gameWinRatePct)} pct={player.gameWinRatePct ?? null} />
+      <WrCell value={formatPct(player.rallyWinRatePct)} pct={player.rallyWinRatePct ?? null} />
+      <PlainCell value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} />
+      <PlainCell value={player.longestWinStreak > 0 ? String(player.longestWinStreak) : "x"} />
       <div className="flex items-center justify-center">
         <RatingPinButton pinned={pinned} onClick={() => onToggle(player.rid)} />
       </div>
