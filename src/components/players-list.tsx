@@ -400,14 +400,20 @@ function DesktopPlayersCarousel({ players }: { players: PlayerOverview[] }) {
       moved = false;
       startX = event.clientX;
       startScroll = node.scrollLeft;
-      node.style.scrollBehavior = "auto";
-      node.setPointerCapture(event.pointerId);
+      // Capture is deferred to the first real drag (see onPointerMove); grabbing
+      // the pointer on every press would steal the click from the card's link.
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!down) return;
       const dx = event.clientX - startX;
-      if (Math.abs(dx) > 4) moved = true;
-      node.scrollLeft = startScroll - dx;
+      if (!moved && Math.abs(dx) > 4) {
+        moved = true;
+        node.style.scrollBehavior = "auto";
+        try {
+          node.setPointerCapture(event.pointerId);
+        } catch {}
+      }
+      if (moved) node.scrollLeft = startScroll - dx;
     };
     const onPointerUp = (event: PointerEvent) => {
       if (!down) return;
