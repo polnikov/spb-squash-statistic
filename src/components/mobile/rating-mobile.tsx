@@ -29,7 +29,7 @@ function ChangeBadge({ delta }: { delta: number }) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-md bg-surface-container-high px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular text-on-surface">
+    <span className="inline-flex items-center rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular text-on-surface">
       {children}
     </span>
   );
@@ -160,11 +160,9 @@ export function RatingMobile({
                     <span className="inline-flex shrink-0 items-center gap-1">
                       Этапы<Badge>{`${r.stages}/${totalStages}`}</Badge>
                     </span>
-                    <span className="shrink-0">·</span>
                     <span className="inline-flex shrink-0 items-center gap-1">
                       Матчи<Badge>{r.matches}</Badge>
                     </span>
-                    <span className="shrink-0">·</span>
                     <span className="inline-flex shrink-0 items-center gap-1">
                       Последний этап<Badge>{r.lastStagePoints > 0 ? `+${r.lastStagePoints}` : "x"}</Badge>
                     </span>
