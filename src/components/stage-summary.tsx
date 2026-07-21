@@ -460,7 +460,9 @@ export function StageSummary({ league }: { league: League }) {
       {rows.length > 0 ? (
         <div className="flex items-center gap-3">
           <h2 className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight">
-            <Swords className="hidden size-5 text-primary md:inline" />
+            <span className="hidden size-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high md:flex">
+              <Swords className="size-4 text-primary" />
+            </span>
             Матчи этапа
           </h2>
           <div className="flex h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40 md:ml-auto md:w-[320px] md:flex-none">
