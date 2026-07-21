@@ -140,34 +140,36 @@ function HighlightTile({
   );
 }
 
-const SORT_PILLS: { key: SortKey; label: string; mobileWeight: number }[] = [
-  { key: "points", label: "Очки", mobileWeight: 1.18 },
-  { key: "form", label: "Форма", mobileWeight: 0.95 },
-  { key: "matches", label: "Активность", mobileWeight: 1.55 },
-  { key: "court", label: "Время", mobileWeight: 0.95 },
+const SORT_PILLS: { key: SortKey; label: string }[] = [
+  { key: "points", label: "Очки" },
+  { key: "form", label: "Форма" },
+  { key: "gameWr", label: "GWR" },
+  { key: "matchWr", label: "MWR" },
+  { key: "rallyWr", label: "RWR" },
+  { key: "court", label: "Время" },
 ];
 
 function MetaBadge({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[11px] leading-none text-on-surface-variant">
       {label}
-      <span className="rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}>{value}</span>
+      <span className="rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}><NumberPop>{value}</NumberPop></span>
     </span>
   );
 }
 
 function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-2.5">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-1.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] leading-none text-muted-foreground">{label}</span>
         <div className="flex shrink-0 items-baseline gap-1.5">
           <span className="text-[11px] leading-none text-muted-foreground">{wrLabel}</span>
-          <span className="font-mono text-[12px] font-semibold tabular text-on-surface-variant">{wr}</span>
+          <span className="font-mono text-[12px] font-semibold tabular text-on-surface-variant"><NumberPop>{wr}</NumberPop></span>
         </div>
       </div>
-      <div className="mt-1.5 flex items-center gap-3">
-        <span className="min-w-0 truncate font-mono text-[13px] font-semibold tabular text-on-surface">{record}</span>
+      <div className="mt-1 flex items-center gap-3">
+        <span className="min-w-0 truncate font-mono text-[13px] font-semibold tabular text-on-surface"><NumberPop>{record}</NumberPop></span>
         <div className="ml-auto h-1.5 w-1/2 shrink-0 overflow-hidden rounded-full bg-surface-container-high">
           <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
         </div>
@@ -192,7 +194,7 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant">{r.place}</span>
+            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-on-surface-variant"><NumberPop>{r.place}</NumberPop></span>
             <Link
               href={playerHref(r.rid)}
               onClick={(e) => e.stopPropagation()}
@@ -207,13 +209,13 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
             <MetaBadge label="Время" value={fmtCourt(r.court)} />
           </div>
         </div>
-        <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface">{fmtNum(r.points)}</span>
+        <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
         <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-200", open && "rotate-180")} />
       </div>
       {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-2 border-t border-outline-variant px-3 py-3">
+          <div className="flex flex-col gap-1.5 border-t border-outline-variant px-3 py-2.5">
             <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} />
             <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} />
             <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} />
@@ -340,13 +342,12 @@ export function DivisionsTable({
         ))}
       </div>
 
-      <div className="flex w-full items-center gap-2 md:hidden">
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
         {SORT_PILLS.map((pill) => (
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            style={{ flex: `${pill.mobileWeight} 1 0` }}
-            className="relative h-9 min-w-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            className="relative h-9 shrink-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
               aria-hidden
