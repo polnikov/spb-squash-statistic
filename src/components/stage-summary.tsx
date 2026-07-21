@@ -83,11 +83,11 @@ function formIndexColor(value: number): string {
   return "#ef4444";
 }
 
-function StageTile({ label, value }: { label: string; value: string }) {
+function StageTile({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="min-w-0 rounded-lg border border-outline-variant bg-brand-surface-2 px-1.5 py-1.5 text-center">
       <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
-      <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface"><NumberPop>{value}</NumberPop></div>
+      <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}><NumberPop>{value}</NumberPop></div>
     </div>
   );
 }
@@ -361,11 +361,12 @@ export function StageSummary({ league }: { league: League }) {
                       <Link href={playerHref(r.playerIdx)} className="block min-w-0 flex-1 truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary">{r.name}</Link>
                       <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
                     </div>
-                    <div className="mt-3 grid grid-cols-4 gap-2">
+                    <div className="mt-3 grid grid-cols-5 gap-2">
                       <StageTile label="Матчи" value={`${r.wins}-${r.losses}`} />
                       <StageTile label="Геймы" value={`${r.gamesWon}-${r.gamesLost}`} />
                       <StageTile label="Розыгрыши" value={`${r.ballsWon}-${r.ballsLost}`} />
                       <StageTile label="Время" value={fmtCourt(r.court)} />
+                      <StageTile label="Форма" value={stageFormIndex(r).toFixed(1)} color={formIndexColor(stageFormIndex(r))} />
                     </div>
                   </div>
                 ))}
