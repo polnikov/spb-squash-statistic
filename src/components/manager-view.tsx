@@ -6,13 +6,21 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  Clock,
+  Copy,
   Edit3,
   ExternalLink,
   Info,
+  Megaphone,
   Merge,
   Plus,
   Search,
+  Sparkles,
+  Swords,
   TableProperties,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
   Upload,
   Users,
   X,
@@ -21,6 +29,10 @@ import {
   getPlayersOverview,
   type League,
 } from "@/lib/league";
+import { buildStageDigest, stageDigestCaption, type StageDigest } from "@/lib/stage-digest";
+import { formIndexColor } from "@/lib/stats/match-rating";
+import { NumberPop } from "@/components/ui/number-pop";
+import { TabTransition } from "@/components/ui/tab-transition";
 import {
   createPlayerAction,
   deleteImportedStageAction,
@@ -56,12 +68,13 @@ import {
   type PlayerAvatarDraft,
 } from "@/lib/player-avatar-store";
 
-type ManagerTab = "players" | "upload" | "points" | "duplicates";
+type ManagerTab = "players" | "upload" | "points" | "duplicates" | "digest";
 type UploadStep = "input" | "preview" | "done";
 
 const MANAGER_TABS: { key: ManagerTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: "players", label: "Игроки", icon: Users },
   { key: "upload", label: "Загрузка этапа", icon: Upload },
+  { key: "digest", label: "Дайджест этапа", icon: Megaphone },
   { key: "points", label: "Таблицы очков", icon: TableProperties },
   { key: "duplicates", label: "Дубликаты", icon: Merge },
 ];
@@ -1985,6 +1998,260 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
   );
 }
 
+// --- Stage digest (social-post highlights) ---
+
+function DigestRatingBadge({ rating }: { rating: { label: string; className: string } }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+      {rating.label}
+    </span>
+  );
+}
+
+function DigestMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+      <div className="font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
+      <div className="mt-1 text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
+    </div>
+  );
+}
+
+function DigestCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-outline-variant bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+        <Icon className="size-4 text-primary" />
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DigestMatchRow({ m, sub }: { m: StageDigest["matchOfStage"]; sub?: string }) {
+  if (!m) return null;
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 truncate text-sm font-semibold text-on-surface">
+          {m.winner.name} <span className="text-on-surface-variant">-</span> {m.loser.name}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="font-mono text-sm font-semibold tabular">{m.winnerGames}:{m.loserGames}</span>
+          <DigestRatingBadge rating={m.rating} />
+        </div>
+      </div>
+      {sub ? <div className="mt-1 font-mono text-[12px] tabular text-on-surface-variant">{sub}</div> : null}
+    </div>
+  );
+}
+
+function DigestManager({ league }: { league: League }) {
+  const stageHasData = React.useCallback(
+    (div: number, n: number) => league.results.some((r) => r.div === div && r.stage === n),
+    [league],
+  );
+  const [division, setDivision] = React.useState<1 | 2 | 3>(1);
+  const lastLoaded = React.useMemo(() => {
+    const played = Array.from({ length: 9 }, (_, i) => i + 1).filter((n) => stageHasData(division, n));
+    return played.length ? Math.max(...played) : 1;
+  }, [division, stageHasData]);
+  const [stage, setStage] = React.useState(lastLoaded);
+  React.useEffect(() => setStage(lastLoaded), [lastLoaded]);
+
+  const digest = React.useMemo(() => buildStageDigest(league, division, stage), [league, division, stage]);
+  const caption = React.useMemo(() => stageDigestCaption(digest), [digest]);
+  const [copied, setCopied] = React.useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
+
+  const divSlider = useTabSlider(String(division));
+  const stageSlider = useTabSlider(String(stage));
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-start gap-3">
+        <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+          <TabSliderPill ind={divSlider.ind} />
+          {DIVISIONS.map((d) => (
+            <button
+              key={d}
+              ref={divSlider.setRef(String(d))}
+              onClick={() => setDivision(d)}
+              className={cn(
+                "relative z-10 h-9 rounded-[12px] px-5 text-xs font-semibold transition-colors duration-200 ease-m3-standard",
+                division === d ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+              )}
+            >
+              Дивизион {d}
+            </button>
+          ))}
+        </div>
+        <div className="relative grid flex-1 grid-cols-9 gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+          <TabSliderPill ind={stageSlider.ind} />
+          {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              ref={stageSlider.setRef(String(n))}
+              onClick={() => setStage(n)}
+              className={cn(
+                "relative z-10 h-9 rounded-[12px] font-mono text-[12px] font-semibold tabular transition-colors duration-200 ease-m3-standard",
+                stageHasData(division, n) ? "text-primary" : "text-on-surface-variant",
+              )}
+            >
+              Этап {n}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <TabTransition tabKey={`${division}-${stage}`} rise={false}>
+        {!digest.hasData ? (
+          <div className="rounded-lg border border-outline-variant bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
+            Этап {stage} в дивизионе {division} ещё не загружен
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
+              <DigestMetric label="Матчей" value={digest.metrics.matches} />
+              <DigestMetric label="Игроков" value={digest.metrics.players} />
+              <DigestMetric label="Пятигеймовых" value={digest.metrics.fiveGame} />
+              <DigestMetric label="Время на корте" value={fmtCourt(digest.metrics.totalTime)} />
+              <DigestMetric label="Среднее матча" value={fmtCourt(digest.metrics.avgTime)} />
+              <DigestMetric label="Длиннейший" value={fmtCourt(digest.metrics.longestTime)} />
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-2">
+              <DigestCard icon={Trophy} title="Итог этапа">
+                <ol className="space-y-2">
+                  {digest.podium.map((p) => (
+                    <li key={p.rid} className="flex items-center gap-3">
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
+                        {p.place}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{p.name}</span>
+                      <span className="shrink-0 font-mono text-[12.5px] tabular text-on-surface-variant">{p.wins}-{p.losses}</span>
+                      <span className="w-14 shrink-0 text-right font-mono text-[12.5px] font-semibold tabular">{fmtNum(p.points)}</span>
+                    </li>
+                  ))}
+                </ol>
+              </DigestCard>
+
+              <DigestCard icon={TrendingUp} title="Движение в таблице">
+                <div className="space-y-3">
+                  {digest.climber ? (
+                    <div className="flex items-center gap-2.5">
+                      <TrendingUp className="size-4 shrink-0 text-win" />
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{digest.climber.name}</span>
+                      <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular text-win">+{digest.climber.delta}</span>
+                      <span className="w-12 shrink-0 text-right text-[11px] text-on-surface-variant">{digest.climber.place}-й</span>
+                    </div>
+                  ) : null}
+                  {digest.faller ? (
+                    <div className="flex items-center gap-2.5">
+                      <TrendingDown className="size-4 shrink-0 text-loss" />
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{digest.faller.name}</span>
+                      <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular text-loss">{digest.faller.delta}</span>
+                      <span className="w-12 shrink-0 text-right text-[11px] text-on-surface-variant">{digest.faller.place}-й</span>
+                    </div>
+                  ) : null}
+                  {!digest.climber && !digest.faller ? (
+                    <div className="text-sm text-on-surface-variant">Без заметных перемещений</div>
+                  ) : null}
+                </div>
+              </DigestCard>
+
+              {digest.matchOfStage ? (
+                <DigestCard icon={Swords} title="Матч этапа">
+                  <DigestMatchRow m={digest.matchOfStage} sub={`${digest.matchOfStage.durationMin} мин`} />
+                </DigestCard>
+              ) : null}
+
+              {digest.longestMatch ? (
+                <DigestCard icon={Clock} title="Самый длинный матч">
+                  <DigestMatchRow m={digest.longestMatch} sub={fmtCourt(digest.longestMatch.durationMin)} />
+                </DigestCard>
+              ) : null}
+
+              <DigestCard icon={Sparkles} title="Отличились">
+                <div className="space-y-3">
+                  {digest.sweeps.length ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] text-on-surface-variant">Сухие победы:</span>
+                      {digest.sweeps.map((s) => (
+                        <span key={s.rid} className="inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
+                          {s.name} <span className="font-mono tabular text-win">{s.wins}-0</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {digest.bestForm ? (
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[11px] text-on-surface-variant">Лучшая форма:</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{digest.bestForm.name}</span>
+                      <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular" style={{ color: formIndexColor(digest.bestForm.form) }}>
+                        {digest.bestForm.form.toFixed(1)}
+                      </span>
+                    </div>
+                  ) : null}
+                  {digest.retirements.length ? (
+                    <div className="flex flex-wrap items-center gap-2 text-[12px] text-on-surface-variant">
+                      <span className="text-[11px]">Отказы:</span>
+                      {digest.retirements.map((m, i) => (
+                        <span key={`${m.loser.rid}-${i}`} className="font-semibold text-on-surface">{m.loser.name}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {!digest.sweeps.length && !digest.bestForm && !digest.retirements.length ? (
+                    <div className="text-sm text-on-surface-variant">Нет ярких индивидуальных фактов</div>
+                  ) : null}
+                </div>
+              </DigestCard>
+            </div>
+
+            <div className="rounded-lg border border-outline-variant bg-card p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                  <Megaphone className="size-4 text-primary" />
+                  Текст для поста
+                </div>
+                <button
+                  type="button"
+                  onClick={copy}
+                  className={cn(PRIMARY_BTN, "inline-flex items-center gap-2 px-3.5 py-2 text-xs")}
+                >
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copied ? "Скопировано" : "Копировать"}
+                </button>
+              </div>
+              <textarea
+                readOnly
+                value={caption}
+                rows={caption.split("\n").length + 1}
+                className="w-full resize-none rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </TabTransition>
+    </div>
+  );
+}
+
 export function ManagerView({ league }: { league: League }) {
   const [tab, setTab] = React.useState<ManagerTab>("players");
   const [duplicatesCount, setDuplicatesCount] = React.useState(0);
@@ -2012,6 +2279,7 @@ export function ManagerView({ league }: { league: League }) {
         </div>
         {tab === "players" ? <PlayersManager league={league} /> : null}
         {tab === "upload" ? <UploadManager /> : null}
+        {tab === "digest" ? <DigestManager league={league} /> : null}
         {tab === "points" ? <PointsManager /> : null}
         {tab === "duplicates" ? <DuplicatesManager onCount={setDuplicatesCount} /> : null}
       </div>

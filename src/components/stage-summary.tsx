@@ -17,6 +17,7 @@ import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { NumberPop } from "@/components/ui/number-pop";
 import { Th } from "@/components/ui/table-header";
+import { rateMatch, stageFormIndex, formIndexColor, type MatchRating } from "@/lib/stats/match-rating";
 
 const SCOPES: { key: DivisionScope; label: string }[] = [
   { key: 1, label: "Див 1" },
@@ -27,60 +28,12 @@ const SCOPES: { key: DivisionScope; label: string }[] = [
 const ROW_LIMIT = 15;
 const MATCH_CARD_LIMIT = 12;
 
-/**
- * Match rating: the single most notable trait of a match, shown as a badge.
- * Priority: retirement > comeback (won after dropping the first two games) >
- * five games > tight (two+ games decided by <=2, or a long match of small
- * margins) > blowout (3:0 with wide margins) > plain competitive.
- */
-type MatchRating = { label: string; className: string };
-function rateMatch(m: RealMatch): MatchRating {
-  if (m.retired) return { label: "Отказ", className: "border-error/30 bg-error-container text-on-error-container" };
-  // rating badges below carry a tone-matched border (see MatchRatingBadge base).
-  const games = m.detail ?? [];
-  const total = m.gamesA + m.gamesB;
-  const winnerIsA = m.gamesA > m.gamesB;
-  const gameWonByWinner = (g: { a: number; b: number }) => (winnerIsA ? g.a > g.b : g.b > g.a);
-  const lostFirstTwo = games.length >= 2 && !gameWonByWinner(games[0]) && !gameWonByWinner(games[1]);
-  const closeGames = games.filter((g) => Math.abs(g.a - g.b) <= 2).length;
-  const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.a - g.b), 0) / games.length : 0;
-
-  if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
-  if (total === 5) return { label: "5 геймов", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]" };
-  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]" };
-  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
-  return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
-}
-
 function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
       {rating.label}
     </span>
   );
-}
-
-/** Form Index for a stage row: Match WR*0.45 + Game WR*0.35 + Rally WR*0.20. */
-function stageFormIndex(r: {
-  matches: number;
-  wins: number;
-  games: number;
-  gamesWon: number;
-  balls: number;
-  ballsWon: number;
-}): number {
-  const mwr = r.matches ? (r.wins / r.matches) * 100 : 0;
-  const gwr = r.games ? (r.gamesWon / r.games) * 100 : 0;
-  const rwr = r.balls ? (r.ballsWon / r.balls) * 100 : 0;
-  return mwr * 0.45 + gwr * 0.35 + rwr * 0.2;
-}
-
-/** Form Index progress-bar color by value band. */
-function formIndexColor(value: number): string {
-  if (value > 60) return "#22c55e";
-  if (value >= 50) return "#f59e0b";
-  if (value >= 40) return "#eab308";
-  return "#ef4444";
 }
 
 function StageTile({ label, value, color }: { label: string; value: string; color?: string }) {
