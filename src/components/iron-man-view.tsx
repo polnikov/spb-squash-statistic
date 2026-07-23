@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
+import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
 import { SearchBox } from "@/components/ui/search-box";
 
@@ -195,6 +196,7 @@ function ironSortValue(row: IronRow, key: IronSortKey) {
 export function IronManView({ league }: { league: League }) {
   const [scope, setScope] = React.useState<DivisionScope>("all");
   const [half, setHalf] = React.useState<1 | 2>(1);
+  const slideDir = useSlideDirection((scope === "all" ? 0 : scope) * 10 + half);
   const [open, setOpen] = React.useState<Record<number, boolean>>({});
   const [expanded, setExpanded] = React.useState(false);
   const [sort, setSort] = React.useState<IronSort>({ key: "court", direction: "desc" });
@@ -279,8 +281,9 @@ export function IronManView({ league }: { league: League }) {
             <MetricTile label="Среднее время матча" value={fmtCourt(summary.avgMatchMin)} />
           </div>
 
-          {/* mobile: expandable cards */}
-          <div className="flex flex-col gap-2 md:hidden">
+          {/* mobile: expandable cards, directional slide on tab switch */}
+          <div className="overflow-hidden md:hidden">
+            <SlideSwitch tabKey={`${scope}-${half}`} direction={slideDir} className="flex flex-col gap-2">
             {visibleMobileRows.map((r) => {
               const isOpen = !!open[r.playerIdx];
               return (
@@ -326,6 +329,7 @@ export function IronManView({ league }: { league: League }) {
                 Показать ещё {mobileMoreCount}
               </button>
             ) : null}
+            </SlideSwitch>
           </div>
 
           {/* desktop: table */}

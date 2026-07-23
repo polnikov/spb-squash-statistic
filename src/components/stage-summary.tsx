@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
+import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
 import { Th } from "@/components/ui/table-header";
 import { rateMatch, stageFormIndex, formIndexColor, type MatchRating } from "@/lib/stats/match-rating";
@@ -154,6 +155,7 @@ export function StageSummary({ league }: { league: League }) {
 
   // Default view on open: Дивизион 1, its latest loaded stage.
   const [stage, setStage] = React.useState(lastLoadedStage);
+  const slideDir = useSlideDirection(Number(scope) * 100 + stage);
   const [expanded, setExpanded] = React.useState(false);
   const [matchesExpanded, setMatchesExpanded] = React.useState(false);
   const [nameQuery, setNameQuery] = React.useState("");
@@ -298,15 +300,14 @@ export function StageSummary({ league }: { league: League }) {
       ) : null}
 
       {/* mobile results: player cards */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 overflow-hidden md:hidden">
         {rows.length === 0 ? (
           <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
             <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
           </div>
         ) : (
           <>
-            <TabTransition tabKey={`${scope}-${stage}-m`} rise={false}>
-              <div className="flex flex-col gap-2">
+            <SlideSwitch tabKey={`${scope}-${stage}`} direction={slideDir} className="flex flex-col gap-2">
                 {visibleRows.map((r) => (
                   <div key={`m-${r.div}-${r.playerIdx}`} className="rounded-2xl border border-outline-variant bg-card p-3">
                     <div className="flex items-center gap-3">
@@ -323,8 +324,7 @@ export function StageSummary({ league }: { league: League }) {
                     </div>
                   </div>
                 ))}
-              </div>
-            </TabTransition>
+            </SlideSwitch>
             {moreCount > 0 ? (
               <button
                 onClick={() => setExpanded(true)}

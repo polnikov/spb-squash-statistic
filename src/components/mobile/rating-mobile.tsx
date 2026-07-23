@@ -12,6 +12,7 @@ import { RatingStageSelector } from "@/components/rating-stage-selector";
 import { NumberPop } from "@/components/ui/number-pop";
 import { SearchBox } from "@/components/ui/search-box";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
+import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { usePinnedPlayer } from "@/components/ui/use-pinned-player";
 import { useFlipList } from "@/components/ui/use-flip-list";
 
@@ -73,6 +74,7 @@ export function RatingMobile({
   const pinnedRow = pinnedRid ? list.find((r) => r.rid === pinnedRid) : undefined;
 
   const { setRef, ind } = useTabSlider(String(div));
+  const slideDir = useSlideDirection(div);
 
   React.useLayoutEffect(() => {
     flip.play();
@@ -129,8 +131,9 @@ export function RatingMobile({
           {/* search: after the stage element, full width */}
           <SearchBox value={query} onChange={setQuery} className="mb-4 w-full" />
 
-          {/* player cards */}
-          <div className="flex flex-col gap-2">
+          {/* player cards, directional slide on division switch */}
+          <div className="overflow-hidden">
+          <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
             {visibleList.length === 0 ? (
               <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
                 {q ? "Ничего не найдено" : "Данных пока нет"}
@@ -179,6 +182,7 @@ export function RatingMobile({
                 </div>
               </Link>
             ))}
+          </SlideSwitch>
           </div>
         </>
       )}

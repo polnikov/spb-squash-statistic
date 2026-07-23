@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
+import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
 import { ChevronDown } from "lucide-react";
 
@@ -237,6 +238,7 @@ export function DivisionsTable({
   const [sort, setSort] = React.useState<SortState>({ key: "points", dir: "desc" });
   const [mobileCount, setMobileCount] = React.useState(MOBILE_PAGE);
   React.useEffect(() => { setMobileCount(MOBILE_PAGE); }, [div]);
+  const slideDir = useSlideDirection(div);
   const rows = rowsByDivision[div];
   const sortedRows = React.useMemo(() => {
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -368,24 +370,26 @@ export function DivisionsTable({
         ))}
       </div>
 
-      <TabTransition tabKey={div} rise={false}>
-      {/* Mobile: player accordion cards. */}
-      <div className="flex flex-col gap-2 md:hidden">
-        {sortedRows.slice(0, mobileCount).map((r) => (
-          <DivisionMobileCard key={r.playerIdx} r={r} />
-        ))}
-        {mobileCount < sortedRows.length ? (
-          <button
-            type="button"
-            onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
-          >
-            Показать ещё {sortedRows.length - mobileCount}
-          </button>
-        ) : null}
+      {/* Mobile: player accordion cards, directional slide on tab switch. */}
+      <div className="overflow-hidden md:hidden">
+        <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
+          {sortedRows.slice(0, mobileCount).map((r) => (
+            <DivisionMobileCard key={r.playerIdx} r={r} />
+          ))}
+          {mobileCount < sortedRows.length ? (
+            <button
+              type="button"
+              onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+            >
+              Показать ещё {sortedRows.length - mobileCount}
+            </button>
+          ) : null}
+        </SlideSwitch>
       </div>
 
       {/* Desktop: full stats table. */}
+      <TabTransition tabKey={div} rise={false}>
       <div className="hidden min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-card md:block md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
