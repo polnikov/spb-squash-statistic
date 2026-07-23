@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import { Sidebar } from "@/components/shell/sidebar";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
@@ -29,9 +31,18 @@ export default async function AppLayout({
             <img src="/icons/icon-192x192.png" alt="SPB Squash Statistic" width={32} height={32} className="size-8 shrink-0 rounded-[9px] object-contain" />
             <span className="font-brand truncate text-[1.5rem] font-semibold tracking-tight">SPB Squash Statistic</span>
           </div>
-          <Suspense fallback={null}>
-            <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />
-          </Suspense>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Link
+              href="/guide"
+              aria-label="Памятка по метрикам"
+              className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <BookOpen className="size-[18px]" />
+            </Link>
+            <Suspense fallback={null}>
+              <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />
+            </Suspense>
+          </div>
         </header>
         <main className="mx-auto min-w-0 w-full max-w-[1280px] flex-1 px-2 pb-[calc(84px+env(safe-area-inset-bottom))] pt-5 md:px-8 md:pb-10 md:pt-24">
           {children}

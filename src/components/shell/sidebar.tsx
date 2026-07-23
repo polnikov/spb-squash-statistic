@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { BookOpen } from "lucide-react";
 import { NAV_ITEMS, isActive } from "./nav-items";
 import { cn } from "@/lib/utils";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
@@ -39,6 +40,20 @@ export function Sidebar({ seasons }: { seasons: string[] }) {
               </Link>
             );
           })}
+          {/* Metrics handbook: an icon-only link so the five main tabs stay tight. */}
+          <Link
+            href="/guide"
+            aria-label="Памятка по метрикам"
+            title="Памятка по метрикам"
+            className={cn(
+              "grid size-9 place-items-center rounded-[12px] transition-colors duration-200 ease-m3-standard",
+              pathname === "/guide"
+                ? "bg-brand-surface-2 text-primary shadow-e1"
+                : "text-muted-foreground hover:bg-brand-surface-2/60 hover:text-foreground",
+            )}
+          >
+            <BookOpen className="size-4" />
+          </Link>
         </nav>
 
         <div className="ml-6">
