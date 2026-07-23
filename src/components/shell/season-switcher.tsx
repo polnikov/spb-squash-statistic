@@ -66,7 +66,7 @@ export function SeasonSwitcher({
         )}
       >
         {variant === "header" ? <span className="size-2 rounded-full bg-primary shadow-[0_0_0_3px_var(--m3-primary-container)]" /> : null}
-        <span className="text-[10px] text-muted-foreground">Сезон</span>
+        <span className="hidden text-[10px] text-muted-foreground md:inline">Сезон</span>
         <span className="font-mono text-[13px] font-semibold tabular">{season}</span>
         <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
