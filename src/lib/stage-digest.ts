@@ -4,8 +4,11 @@ import {
   type League,
   type RealMatch,
 } from "@/lib/league";
-import { fmtCourt, fmtDate, matchesLabel, pluralRu } from "@/lib/format";
+import { fmtCourt, fmtDate, matchesLabel, playersLabel, pluralRu } from "@/lib/format";
 import { matchInterestScore, rateMatch, stageFormIndex, type MatchRating } from "@/lib/stats/match-rating";
+
+const pointsLabel = (n: number) => `${n} ${pluralRu(n, ["очко", "очка", "очков"])}`;
+const placesLabel = (n: number) => `${n} ${pluralRu(n, ["место", "места", "мест"])}`;
 
 export type DigestPlayer = { name: string; rid: string };
 
@@ -46,12 +49,13 @@ export type StageDigest = {
   faller: DigestMover | null;
   matchOfStage: DigestMatch | null;
   longestMatch: DigestMatch | null;
+  comebacks: DigestMatch[];
   sweeps: DigestSweep[];
   bestForm: DigestForm | null;
   retirements: DigestMatch[];
 };
 
-function toDigestMatch(league: League, m: RealMatch): DigestMatch {
+export function toDigestMatch(league: League, m: RealMatch): DigestMatch {
   const pa = league.players[m.aIdx];
   const pb = league.players[m.bIdx];
   const a: DigestPlayer = { name: pa?.name ?? "?", rid: pa?.rid ?? "" };
@@ -87,6 +91,7 @@ export function buildStageDigest(league: League, division: 1 | 2 | 3, stage: num
     faller: null,
     matchOfStage: null,
     longestMatch: null,
+    comebacks: [],
     sweeps: [],
     bestForm: null,
     retirements: [],
@@ -128,6 +133,9 @@ export function buildStageDigest(league: League, division: 1 | 2 | 3, stage: num
     ? toDigestMatch(league, matches.reduce((best, m) => (m.durationMin > best.durationMin ? m : best)))
     : null;
 
+  // All comeback matches (won after dropping the first two games).
+  const comebacks = decided.filter((m) => rateMatch(m).label === "Камбэк").map((m) => toDigestMatch(league, m));
+
   // Clean sweeps: played 2+ matches, lost none.
   const sweeps: DigestSweep[] = rows
     .filter((r) => r.matches >= 2 && r.losses === 0)
@@ -156,6 +164,7 @@ export function buildStageDigest(league: League, division: 1 | 2 | 3, stage: num
     faller,
     matchOfStage,
     longestMatch,
+    comebacks,
     sweeps,
     bestForm,
     retirements,
@@ -170,15 +179,16 @@ export function stageDigestCaption(d: StageDigest): string {
   lines.push(header, "");
 
   if (d.winner) {
-    lines.push(`Победитель этапа: ${d.winner.name} (${d.winner.wins}-${d.winner.losses}, ${d.winner.points} очк.)`);
+    lines.push(`Победитель этапа: ${d.winner.name} (${d.winner.wins}-${d.winner.losses}, ${pointsLabel(d.winner.points)})`);
   }
   if (d.podium.length > 1) {
-    lines.push(`Топ-3: ${d.podium.map((p) => `${p.place}. ${p.name}`).join(" · ")}`);
+    lines.push("Топ-3:");
+    for (const p of d.podium) lines.push(`${p.place}. ${p.name}`);
   }
   if (d.climber || d.faller) {
     lines.push("");
-    if (d.climber) lines.push(`Взлёт этапа: ${d.climber.name} +${d.climber.delta} (теперь ${d.climber.place}-й)`);
-    if (d.faller) lines.push(`Падение: ${d.faller.name} ${d.faller.delta} (теперь ${d.faller.place}-й)`);
+    if (d.climber) lines.push(`Взлёт этапа: ${d.climber.name} +${placesLabel(d.climber.delta)} (теперь ${d.climber.place}-й)`);
+    if (d.faller) lines.push(`Падение: ${d.faller.name} -${placesLabel(-d.faller.delta)} (теперь ${d.faller.place}-й)`);
   }
 
   lines.push("");
@@ -186,24 +196,31 @@ export function stageDigestCaption(d: StageDigest): string {
     const m = d.matchOfStage;
     lines.push(`Матч этапа [${m.rating.label}]: ${m.winner.name} - ${m.loser.name} ${m.winnerGames}:${m.loserGames}`);
   }
+  if (d.comebacks.length) {
+    const word = pluralRu(d.comebacks.length, ["камбэк", "камбэка", "камбэков"]);
+    lines.push(`Камбэки (${d.comebacks.length} ${word}):`);
+    for (const m of d.comebacks) lines.push(`- ${m.winner.name} - ${m.loser.name} ${m.winnerGames}:${m.loserGames}`);
+  }
   if (d.longestMatch) {
     const m = d.longestMatch;
     lines.push(`Самый длинный матч: ${m.a.name} - ${m.b.name} (${fmtCourt(m.durationMin)})`);
   }
   if (d.sweeps.length) {
-    lines.push(`Сухая победа: ${d.sweeps.map((s) => `${s.name} (${s.wins}-0)`).join(", ")}`);
+    const word = pluralRu(d.sweeps.length, ["сухая победа", "сухие победы", "сухих побед"]);
+    lines.push(`${word[0].toUpperCase()}${word.slice(1)}: ${d.sweeps.map((s) => `${s.name} (${s.wins}-0)`).join(", ")}`);
   }
   if (d.bestForm) {
     lines.push(`Лучшая форма: ${d.bestForm.name} (${d.bestForm.form.toFixed(1)})`);
   }
   if (d.retirements.length) {
-    lines.push(`Отказы: ${[...new Set(d.retirements.map((m) => m.loser.name))].join(", ")}`);
+    const names = [...new Set(d.retirements.map((m) => m.loser.name))];
+    lines.push(`${pluralRu(names.length, ["Отказ", "Отказы", "Отказы"])}: ${names.join(", ")}`);
   }
 
   lines.push("");
-  const fiveWord = pluralRu(d.metrics.fiveGame, ["пятигеймовый", "пятигеймовых", "пятигеймовых"]);
+  const fiveWord = pluralRu(d.metrics.fiveGame, ["пятигеймовый матч", "пятигеймовых матча", "пятигеймовых матчей"]);
   lines.push(
-    `Цифры этапа: ${matchesLabel(d.metrics.matches)} · ${fmtCourt(d.metrics.totalTime)} на корте · ${d.metrics.fiveGame} ${fiveWord} · среднее ${fmtCourt(d.metrics.avgTime)}`,
+    `Цифры этапа: ${playersLabel(d.metrics.players)} · ${matchesLabel(d.metrics.matches)} · ${fmtCourt(d.metrics.totalTime)} на корте · ${d.metrics.fiveGame} ${fiveWord} · среднее ${fmtCourt(d.metrics.avgTime)}`,
   );
 
   return lines.join("\n");
