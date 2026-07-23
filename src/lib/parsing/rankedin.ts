@@ -212,6 +212,8 @@ export type ImportedStage = {
   date: string | null;
   players: number;
   matches: number;
+  /** When the stage-division was parsed/imported (ISO), for the upload audit. */
+  parsedAt: string | null;
 };
 
 /** All imported stage-divisions with row counts, for the admin list. */
@@ -223,6 +225,7 @@ export async function listImportedStages(): Promise<ImportedStage[]> {
       season: seasons.label,
       stage: stages.number,
       date: stages.date,
+      parsedAt: stageDivisions.parsedAt,
     })
     .from(stageDivisions)
     .innerJoin(stages, eq(stageDivisions.stageId, stages.id))
@@ -247,6 +250,7 @@ export async function listImportedStages(): Promise<ImportedStage[]> {
       date: sd.date,
       players: resBy.get(`${sd.stageId}:${sd.division}`) ?? 0,
       matches: matchBy.get(`${sd.stageId}:${sd.division}`) ?? 0,
+      parsedAt: sd.parsedAt ? sd.parsedAt.toISOString() : null,
     }))
     .sort((a, b) => a.season.localeCompare(b.season) || a.division - b.division || a.stage - b.stage);
 }

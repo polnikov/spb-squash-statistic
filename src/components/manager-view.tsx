@@ -3,6 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
+  AlertTriangle,
+  Award,
+  CalendarClock,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -10,17 +14,21 @@ import {
   Copy,
   Edit3,
   ExternalLink,
+  History,
   Info,
   Megaphone,
   Merge,
   Plus,
+  RotateCcw,
   Search,
   Sparkles,
   Swords,
   TableProperties,
+  Timer,
   TrendingDown,
   TrendingUp,
   Trophy,
+  Undo2,
   Upload,
   Users,
   X,
@@ -30,6 +38,13 @@ import {
   type League,
 } from "@/lib/league";
 import { buildStageDigest, stageDigestCaption, type StageDigest } from "@/lib/stage-digest";
+import { buildManagerOps, type ManagerOps } from "@/lib/manager-ops";
+import {
+  buildSeasonSummary,
+  seasonSummaryCaption,
+  type SeasonScope,
+} from "@/lib/season-summary";
+import type { SeasonStrengthRow } from "@/lib/db/season-summary";
 import { formIndexColor } from "@/lib/stats/match-rating";
 import { NumberPop } from "@/components/ui/number-pop";
 import { TabTransition } from "@/components/ui/tab-transition";
@@ -57,7 +72,7 @@ import {
   type StageImportPreview,
   type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
-import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel } from "@/lib/format";
+import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel, pluralRu } from "@/lib/format";
 import { isDeletedRankedinProfile, isFakeRankedinId, isLiveRankedinId, rankedinPlayerUrl } from "@/lib/rankedin-id";
 import { Th } from "@/components/ui/table-header";
 import { cn } from "@/lib/utils";
@@ -68,15 +83,17 @@ import {
   type PlayerAvatarDraft,
 } from "@/lib/player-avatar-store";
 
-type ManagerTab = "players" | "upload" | "points" | "duplicates" | "digest";
+type ManagerTab = "ops" | "players" | "upload" | "points" | "duplicates" | "digest" | "summary";
 type UploadStep = "input" | "preview" | "done";
 
 const MANAGER_TABS: { key: ManagerTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { key: "ops", label: "Дашборд", icon: Activity },
   { key: "players", label: "Игроки", icon: Users },
   { key: "upload", label: "Загрузка этапа", icon: Upload },
-  { key: "digest", label: "Дайджест этапа", icon: Megaphone },
   { key: "points", label: "Таблицы очков", icon: TableProperties },
   { key: "duplicates", label: "Дубликаты", icon: Merge },
+  { key: "digest", label: "Дайджест этапа", icon: Megaphone },
+  { key: "summary", label: "Итоги сезона", icon: Award },
 ];
 
 const DIVISIONS = [1, 2, 3] as const;
@@ -2011,8 +2028,8 @@ function DigestRatingBadge({ rating }: { rating: { label: string; className: str
 function DigestMetric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
-      <div className="font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
-      <div className="mt-1 text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
+      <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
+      <div className="mt-1.5 font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
     </div>
   );
 }
@@ -2181,6 +2198,16 @@ function DigestManager({ league }: { league: League }) {
                 </DigestCard>
               ) : null}
 
+              {digest.comebacks.length ? (
+                <DigestCard icon={Undo2} title={`Камбэки · ${digest.comebacks.length}`}>
+                  <div className="space-y-3">
+                    {digest.comebacks.map((m, i) => (
+                      <DigestMatchRow key={`${m.winner.rid}-${m.loser.rid}-${i}`} m={m} />
+                    ))}
+                  </div>
+                </DigestCard>
+              ) : null}
+
               {digest.longestMatch ? (
                 <DigestCard icon={Clock} title="Самый длинный матч">
                   <DigestMatchRow m={digest.longestMatch} sub={fmtCourt(digest.longestMatch.durationMin)} />
@@ -2252,9 +2279,606 @@ function DigestManager({ league }: { league: League }) {
   );
 }
 
-export function ManagerView({ league }: { league: League }) {
-  const [tab, setTab] = React.useState<ManagerTab>("players");
+/* ---------------------------------------------------------- season parts --- */
+
+/** Season metric tile: label (heading) on top, value below. */
+function SeasonMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+      <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
+      <div className="mt-1 font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
+    </div>
+  );
+}
+
+function SeasonAwardRow({ icon: Icon, label, name, value, valueColor }: { icon: React.ComponentType<{ className?: string }>; label: string; name: string; value: string; valueColor?: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <Icon className="size-4 shrink-0 text-primary" />
+      <span className="w-40 shrink-0 text-[11px] text-on-surface-variant">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{name}</span>
+      <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
+    </div>
+  );
+}
+
+const SEASON_SCOPES: { key: string; scope: SeasonScope; label: string }[] = [
+  { key: "1", scope: 1, label: "Дивизион 1" },
+  { key: "2", scope: 2, label: "Дивизион 2" },
+  { key: "3", scope: 3, label: "Дивизион 3" },
+  { key: "all", scope: "all", label: "Общее" },
+];
+
+function SeasonSummaryManager({ league, strength }: { league: League; strength: Map<string, SeasonStrengthRow> }) {
+  const [scopeKey, setScopeKey] = React.useState("1");
+  const scope = SEASON_SCOPES.find((s) => s.key === scopeKey)?.scope ?? 1;
+  const summary = React.useMemo(() => buildSeasonSummary(league, scope, strength), [league, scope, strength]);
+  const caption = React.useMemo(() => seasonSummaryCaption(summary), [summary]);
+
+  const [copied, setCopied] = React.useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
+
+  const slider = useTabSlider(scopeKey);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+        <TabSliderPill ind={slider.ind} />
+        {SEASON_SCOPES.map((s) => (
+          <button
+            key={s.key}
+            ref={slider.setRef(s.key)}
+            onClick={() => setScopeKey(s.key)}
+            className={cn(
+              "relative z-10 h-9 rounded-[12px] px-5 text-xs font-semibold transition-colors duration-200 ease-m3-standard",
+              scopeKey === s.key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+            )}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      <TabTransition tabKey={scopeKey} rise={false}>
+        {!summary.hasData ? (
+          <div className="rounded-lg border border-outline-variant bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
+            В этом контексте пока нет данных
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {!summary.seasonFinished ? (
+              <div className="rounded-lg border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-[13px] text-on-surface">
+                Сезон ещё идёт: сыгран {summary.stagesDone} из {summary.totalStages} этапов - итоги промежуточные.
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              <SeasonMetric label="Игроков" value={summary.metrics.players} />
+              <SeasonMetric label="Матчей" value={summary.metrics.matches} />
+              <SeasonMetric label="Пятигеймовых" value={summary.metrics.fiveGame} />
+              <SeasonMetric label="Время на корте" value={fmtCourt(summary.metrics.totalTime)} />
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-2">
+              {summary.podium.length ? (
+                <DigestCard icon={Trophy} title="Итог сезона">
+                  <ol className="space-y-2">
+                    {summary.podium.map((p) => (
+                      <li key={p.rid} className="flex items-center gap-3">
+                        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
+                          {p.place}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{p.name}</span>
+                        <span className="shrink-0 font-mono text-[12.5px] tabular text-on-surface-variant">{p.wins}-{p.losses}</span>
+                        <span className="w-14 shrink-0 text-right font-mono text-[12.5px] font-semibold tabular">{fmtNum(p.points)}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  {summary.promotion.length ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-outline-variant pt-3 text-[12.5px]">
+                      <TrendingUp className="size-4 shrink-0 text-win" />
+                      <span className="text-[11px] text-on-surface-variant">Кандидаты на повышение:</span>
+                      {summary.promotion.map((p) => (
+                        <span key={p.rid} className="font-semibold text-on-surface">{p.name}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </DigestCard>
+              ) : null}
+
+              {summary.mvp || summary.progress || summary.stable ? (
+                <DigestCard icon={Award} title="Награды сезона">
+                  <div className="space-y-3">
+                    {summary.mvp ? (
+                      <SeasonAwardRow icon={Award} label="MVP по рейтингу силы" name={summary.mvp.name} value={`${summary.mvp.rating}${summary.mvp.band ? ` · ${summary.mvp.band}` : ""}`} />
+                    ) : null}
+                    {summary.progress ? (
+                      <SeasonAwardRow icon={TrendingUp} label="Прогресс сезона" name={summary.progress.name} value={`+${summary.progress.delta} (${summary.progress.from} → ${summary.progress.to})`} valueColor="#22c55e" />
+                    ) : null}
+                    {summary.stable ? (
+                      <SeasonAwardRow icon={Sparkles} label="Самый стабильный" name={summary.stable.name} value={`форма ${summary.stable.avgForm.toFixed(1)} ± ${summary.stable.spread.toFixed(1)}`} valueColor={formIndexColor(summary.stable.avgForm)} />
+                    ) : null}
+                  </div>
+                </DigestCard>
+              ) : null}
+
+              <DigestCard icon={Sparkles} title="Рекорды сезона">
+                <div className="space-y-3">
+                  {summary.records.streak ? (
+                    <SeasonAwardRow icon={TrendingUp} label="Серия побед" name={summary.records.streak.name} value={`${summary.records.streak.length} подряд`} />
+                  ) : null}
+                  {summary.records.bestWr ? (
+                    <SeasonAwardRow icon={Trophy} label="Лучший winrate" name={summary.records.bestWr.name} value={`${summary.records.bestWr.wrPct.toFixed(0)}% (${summary.records.bestWr.wins}/${summary.records.bestWr.matches})`} />
+                  ) : null}
+                  {summary.records.mostMatches ? (
+                    <SeasonAwardRow icon={Swords} label="Больше всех матчей" name={summary.records.mostMatches.name} value={String(summary.records.mostMatches.matches)} />
+                  ) : null}
+                  {summary.records.mostTime ? (
+                    <SeasonAwardRow icon={Clock} label="Больше всех на корте" name={summary.records.mostTime.name} value={fmtCourt(summary.records.mostTime.minutes)} />
+                  ) : null}
+                  {summary.records.comebackKing ? (
+                    <SeasonAwardRow icon={Undo2} label="Король камбэков" name={summary.records.comebackKing.name} value={String(summary.records.comebackKing.comebacks)} />
+                  ) : null}
+                  {summary.records.fastestWin ? (
+                    <SeasonAwardRow
+                      icon={Timer}
+                      label="Самая быстрая победа"
+                      name={summary.records.fastestWin.name}
+                      value={`${fmtCourt(Math.round(summary.records.fastestWin.perMatch))}/матч · этап ${summary.records.fastestWin.stage}`}
+                    />
+                  ) : null}
+                </div>
+              </DigestCard>
+
+              {summary.records.longestMatch ? (
+                <DigestCard icon={Clock} title="Самый длинный матч сезона">
+                  <DigestMatchRow
+                    m={summary.records.longestMatch}
+                    sub={`${fmtCourt(summary.records.longestMatch.durationMin)} · этап ${summary.records.longestMatch.stage} · дивизион ${summary.records.longestMatch.division}`}
+                  />
+                </DigestCard>
+              ) : null}
+
+              <DigestCard icon={Users} title="Явка">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[11px] text-on-surface-variant">Средняя явка:</span>
+                    <span className="font-mono text-[12.5px] font-semibold tabular text-on-surface">{summary.attendance.avgPct.toFixed(0)}%</span>
+                  </div>
+                  {summary.attendance.perfect.length ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] text-on-surface-variant">Сыграли все этапы:</span>
+                      {summary.attendance.perfect.map((p) => (
+                        <span key={p.rid} className="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
+                          {p.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="space-y-2 border-t border-outline-variant pt-3">
+                    {summary.attendance.top.map((r) => (
+                      <div key={r.rid} className="flex items-center gap-2.5">
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{r.name}</span>
+                        <span className="shrink-0 font-mono text-[12px] tabular text-on-surface-variant">{r.played}/{r.total}</span>
+                        <span className="w-12 shrink-0 text-right font-mono text-[12.5px] font-semibold tabular">{r.pct.toFixed(0)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </DigestCard>
+
+              {summary.derby.frequent ? (
+                <DigestCard icon={Swords} title="Дерби сезона">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-[11px] text-on-surface-variant">Самая частая пара</div>
+                      <div className="mt-1 flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-sm font-semibold text-on-surface">
+                          {summary.derby.frequent.a.name} <span className="text-on-surface-variant">-</span> {summary.derby.frequent.b.name}
+                        </span>
+                        <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular">
+                          {summary.derby.frequent.aWins}-{summary.derby.frequent.bWins}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 font-mono text-[12px] tabular text-on-surface-variant">{summary.derby.frequent.matches} {pluralRu(summary.derby.frequent.matches, ["встреча", "встречи", "встреч"])}</div>
+                    </div>
+                    {summary.derby.closest ? (
+                      <div className="border-t border-outline-variant pt-3">
+                        <div className="text-[11px] text-on-surface-variant">Самая упорная</div>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-sm font-semibold text-on-surface">
+                            {summary.derby.closest.a.name} <span className="text-on-surface-variant">-</span> {summary.derby.closest.b.name}
+                          </span>
+                          <span className="shrink-0 font-mono text-[12.5px] font-semibold tabular">
+                            {summary.derby.closest.aWins}-{summary.derby.closest.bWins}
+                          </span>
+                        </div>
+                        <div className="mt-0.5 font-mono text-[12px] tabular text-on-surface-variant">
+                          средняя разница {summary.derby.closest.avgGameDiff.toFixed(1)} гейма · пятигеймовых {summary.derby.closest.fiveGames}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </DigestCard>
+              ) : null}
+            </div>
+
+            <div className="rounded-lg border border-outline-variant bg-card p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                  <Megaphone className="size-4 text-primary" />
+                  Текст для поста
+                </div>
+                <button
+                  type="button"
+                  onClick={copy}
+                  className={cn(PRIMARY_BTN, "inline-flex items-center gap-2 px-3.5 py-2 text-xs")}
+                >
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copied ? "Скопировано" : "Копировать"}
+                </button>
+              </div>
+              <textarea
+                readOnly
+                value={caption}
+                rows={Math.min(caption.split("\n").length + 1, 30)}
+                className="w-full resize-none rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </TabTransition>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- operations --- */
+
+function fmtDateTime(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function OpsStat({ label, value, tone = "neutral" }: { label: string; value: number | string; tone?: "neutral" | "ok" | "warn" | "bad" }) {
+  const color =
+    tone === "bad" ? "text-loss" : tone === "warn" ? "text-[#ffa52a]" : tone === "ok" ? "text-win" : "text-on-surface";
+  return (
+    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+      <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
+      <div className={cn("mt-1 font-mono text-[20px] font-semibold tracking-tight tabular", color)}><NumberPop>{value}</NumberPop></div>
+    </div>
+  );
+}
+
+const PLAYER_KIND_LABEL: Record<OpsPlayerNoIdKind, string> = {
+  fake: "фейковый",
+  deleted: "удалён",
+  empty: "нет id",
+};
+type OpsPlayerNoIdKind = ManagerOps["playersNoId"][number]["kind"];
+
+/** Count cell for the completeness matrix: number when >0, else a green check. */
+function OpsCountCell({ value, tone }: { value: number; tone: "bad" | "warn" }) {
+  return (
+    <td className="px-4 py-2.5 text-center">
+      {value > 0 ? (
+        <span className={cn("font-mono text-[13px] font-semibold tabular", tone === "bad" ? "text-loss" : "text-[#ffa52a]")}>{value}</span>
+      ) : (
+        <Check className="mx-auto size-4 text-win" />
+      )}
+    </td>
+  );
+}
+
+type OpsRow = { division: number; key: string; left: string; right?: string; rightTone?: "loss"; badges?: string[] };
+
+/** Detail list split under per-division subheaders; division 0 = no division. */
+function OpsGroupedList({ divisions, rows }: { divisions: number[]; rows: OpsRow[] }) {
+  const byDiv = new Map<number, OpsRow[]>();
+  for (const r of rows) {
+    const list = byDiv.get(r.division) ?? [];
+    list.push(r);
+    byDiv.set(r.division, list);
+  }
+  const order = [...divisions, 0].filter((d) => byDiv.has(d));
+  return (
+    <div className="flex max-h-72 flex-col gap-2.5 overflow-y-auto pr-1">
+      {order.map((d) => (
+        <div key={d}>
+          <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-primary">
+            {d === 0 ? "Без дивизиона" : `Дивизион ${d}`}
+          </div>
+          <div className="flex flex-col gap-1">
+            {byDiv.get(d)!.map((r) => (
+              <div key={r.key} className="flex items-center justify-between gap-3 text-[12.5px]">
+                <span className="min-w-0 truncate text-on-surface">{r.left}</span>
+                <span className="flex shrink-0 items-center gap-1">
+                  {r.badges?.map((b) => (
+                    <span key={b} className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", b === "счёт" ? "bg-loss/15 text-loss" : "bg-[#ffa52a]/15 text-[#ffa52a]")}>{b}</span>
+                  ))}
+                  {r.right ? <span className={cn("font-mono text-[11.5px] tabular", r.rightTone === "loss" ? "text-loss" : "text-on-surface-variant")}>{r.right}</span> : null}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OperationsManager({ league, duplicatesCount }: { league: League; duplicatesCount: number }) {
+  const router = useRouter();
+  const ops = React.useMemo(() => buildManagerOps(league), [league]);
+  const [imported, setImported] = React.useState<ImportedStage[]>([]);
+  const [confirmKey, setConfirmKey] = React.useState<string | null>(null);
+  const [busyKey, setBusyKey] = React.useState<string | null>(null);
+
+  const refresh = React.useCallback(async () => setImported(await listImportedStagesAction()), []);
+  React.useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const rollback = async (s: ImportedStage) => {
+    const key = `${s.season}-${s.division}-${s.stage}`;
+    if (confirmKey !== key) {
+      setConfirmKey(key);
+      return;
+    }
+    setConfirmKey(null);
+    setBusyKey(key);
+    await deleteImportedStageAction({ season: s.season, division: s.division, stage: s.stage });
+    setBusyKey(null);
+    await refresh();
+    router.refresh();
+  };
+
+  const divisions = ops.divisions.map((d) => d.division);
+  const missingSet = new Set(ops.missing.map((m) => `${m.division}:${m.stage}`));
+  // Audit rows newest upload first; unknown parse time sinks to the bottom.
+  const audit = [...imported].sort((a, b) => (b.parsedAt ?? "").localeCompare(a.parsedAt ?? ""));
+  const auditDivs = [...new Set(audit.map((s) => s.division))].sort((a, b) => a - b);
+  const cleanData =
+    ops.missing.length === 0 && ops.noScoreCount === 0 && ops.noTimeCount === 0 && ops.playersNoId.length === 0 && duplicatesCount === 0;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* ---------------------------------------------- season status --- */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+          <CalendarClock className="size-4 text-primary" />
+          Статус сезона · {ops.season}
+        </div>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {ops.divisions.map((d) => (
+            <div key={d.division} className="rounded-lg border border-outline-variant bg-card p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-on-surface">Дивизион {d.division}</div>
+                <span className="font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
+                  {d.played}/{ops.totalStages}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${(d.played / ops.totalStages) * 100}%` }} />
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-on-surface-variant">
+                <span>{d.players} {pluralRu(d.players, ["игрок", "игрока", "игроков"])}</span>
+                <span>осталось {d.remaining} {pluralRu(d.remaining, ["этап", "этапа", "этапов"])}</span>
+                {d.nextStage != null ? (
+                  <span className={cn("inline-flex items-center gap-1", d.nextOverdue && "font-semibold text-loss")}>
+                    {d.nextOverdue ? <AlertTriangle className="size-3.5" /> : null}
+                    этап {d.nextStage}{d.nextDate ? ` · ${fmtDate(d.nextDate)}` : ""}
+                  </span>
+                ) : (
+                  <span className="font-semibold text-win">сезон завершён</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid: stages down, divisions across. */}
+        <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-outline-variant text-[11px] uppercase tracking-wide text-on-surface-variant">
+                <th className="px-4 py-2.5 text-left font-medium">Этап</th>
+                <th className="px-4 py-2.5 text-left font-medium">Дата</th>
+                {divisions.map((d) => (
+                  <th key={d} className="px-4 py-2.5 text-center font-medium">Див {d}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {ops.calendar.map((row) => (
+                <tr key={row.stage} className="border-t border-outline-variant first:border-t-0">
+                  <td className="px-4 py-2.5 font-mono text-[13px] font-semibold tabular">{row.stage}</td>
+                  <td className={cn("px-4 py-2.5 font-mono text-[12.5px] tabular", row.overdue ? "text-loss" : "text-on-surface-variant")}>
+                    {row.date ? fmtDate(row.date) : "—"}
+                  </td>
+                  {divisions.map((d) => {
+                    const loaded = row.loaded[d];
+                    const overdue = missingSet.has(`${d}:${row.stage}`);
+                    return (
+                      <td key={d} className="px-4 py-2.5 text-center">
+                        {loaded ? (
+                          <Check className="mx-auto size-4 text-win" />
+                        ) : overdue ? (
+                          <span className="inline-flex items-center justify-center rounded-full bg-loss/15 px-2 py-0.5 text-[10.5px] font-semibold text-loss">просрочен</span>
+                        ) : (
+                          <span className="text-on-surface-variant/50">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11.5px] leading-snug text-on-surface-variant">
+          Даты берутся из календаря этапов (поле <span className="font-mono">stages.date</span>), заполняемого при загрузке или заведении этапа. «Просрочен» - дата прошла, а результаты дивизиона ещё не загружены.
+        </p>
+      </section>
+
+      {/* -------------------------------------------- data completeness --- */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+          <AlertTriangle className="size-4 text-primary" />
+          Полнота данных
+        </div>
+        {/* Per-division completeness matrix. Duplicates are a global concern. */}
+        <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-outline-variant text-[11px] uppercase tracking-wide text-on-surface-variant">
+                <th className="px-4 py-2.5 text-left font-medium">Дивизион</th>
+                <th className="px-4 py-2.5 text-center font-medium">Этапы не загружены</th>
+                <th className="px-4 py-2.5 text-center font-medium">Без счёта</th>
+                <th className="px-4 py-2.5 text-center font-medium">Без времени</th>
+                <th className="px-4 py-2.5 text-center font-medium">Без ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ops.divisions.map((d) => (
+                <tr key={d.division} className="border-t border-outline-variant first:border-t-0">
+                  <td className="px-4 py-2.5 text-[13px] font-semibold text-on-surface">Дивизион {d.division}</td>
+                  <OpsCountCell value={d.missingCount} tone="bad" />
+                  <OpsCountCell value={d.noScoreCount} tone="warn" />
+                  <OpsCountCell value={d.noTimeCount} tone="warn" />
+                  <OpsCountCell value={d.noIdCount} tone="warn" />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
+          <Merge className="size-4 shrink-0 text-primary" />
+          <span className="text-on-surface-variant">Дубликаты (общие по сезону):</span>
+          <span className={cn("font-mono font-semibold tabular", duplicatesCount ? "text-loss" : "text-win")}>{duplicatesCount}</span>
+          {duplicatesCount ? <span className="text-on-surface-variant">- разрешить во вкладке «Дубликаты»</span> : null}
+        </div>
+
+        {cleanData ? (
+          <div className="flex items-center gap-2 rounded-lg border border-win/25 bg-win/10 px-4 py-3 text-[13px] text-on-surface">
+            <CheckCircle2 className="size-4 shrink-0 text-win" />
+            Всё загружено и заполнено, нерешённых проблем нет.
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-3">
+            {ops.missing.length ? (
+              <DigestCard icon={CalendarClock} title={`Не загружены · ${ops.missing.length}`}>
+                <OpsGroupedList
+                  divisions={divisions}
+                  rows={ops.missing.map((m) => ({ division: m.division, key: `${m.division}:${m.stage}`, left: `этап ${m.stage}`, right: m.date ? fmtDate(m.date) : "—", rightTone: "loss" as const }))}
+                />
+              </DigestCard>
+            ) : null}
+
+            {ops.badMatches.length ? (
+              <DigestCard icon={AlertTriangle} title={`Матчи с пропусками · ${ops.badMatches.length}`}>
+                <OpsGroupedList
+                  divisions={divisions}
+                  rows={ops.badMatches.map((m, i) => ({
+                    division: m.division,
+                    key: `${m.division}-${m.stage}-${i}`,
+                    left: `Э${m.stage} ${m.a} — ${m.b}`,
+                    badges: [m.noScore ? "счёт" : null, m.noTime ? "время" : null].filter(Boolean) as string[],
+                  }))}
+                />
+              </DigestCard>
+            ) : null}
+
+            {ops.playersNoId.length ? (
+              <DigestCard icon={Users} title={`Игроки без живого ID · ${ops.playersNoId.length}`}>
+                <OpsGroupedList
+                  divisions={divisions}
+                  rows={ops.playersNoId.flatMap((p) =>
+                    (p.divisions.length ? p.divisions : [0]).map((d) => ({
+                      division: d,
+                      key: `${p.rid || p.name}-${d}`,
+                      left: p.name,
+                      right: PLAYER_KIND_LABEL[p.kind],
+                    })),
+                  )}
+                />
+              </DigestCard>
+            ) : null}
+          </div>
+        )}
+      </section>
+
+      {/* --------------------------------------------- upload audit --- */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
+          <History className="size-4 text-primary" />
+          Аудит загрузок · {audit.length}
+        </div>
+        <p className="text-[11.5px] leading-snug text-on-surface-variant">
+          «Откатить» удаляет загруженный этап дивизиона: его матчи и результаты стираются, рейтинги и агрегаты пересчитываются. Отменить нельзя, поэтому кнопка требует второго клика.
+        </p>
+        {audit.length === 0 ? (
+          <div className="rounded-lg border border-outline-variant bg-card px-4 py-8 text-center text-sm text-on-surface-variant">Нет загруженных этапов</div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-3">
+            {auditDivs.map((dv) => {
+              const rows = audit.filter((s) => s.division === dv);
+              return (
+                <div key={dv} className="flex flex-col overflow-hidden rounded-lg border border-outline-variant bg-card">
+                  <div className="flex items-center justify-between border-b border-outline-variant px-4 py-2.5">
+                    <span className="text-[13px] font-semibold text-on-surface">Дивизион {dv}</span>
+                    <span className="font-mono text-[11.5px] tabular text-on-surface-variant">{rows.length}</span>
+                  </div>
+                  {rows.map((s) => {
+                    const key = `${s.season}-${s.division}-${s.stage}`;
+                    const confirming = confirmKey === key;
+                    return (
+                      <div key={key} className="flex items-center justify-between gap-2 border-t border-outline-variant px-4 py-2.5 first:border-t-0">
+                        <div className="min-w-0">
+                          <div className="text-[12.5px] font-semibold text-on-surface">{s.season} · Этап {s.stage}</div>
+                          <div className="mt-0.5 font-mono text-[11px] tabular text-on-surface-variant">
+                            {s.parsedAt ? fmtDateTime(s.parsedAt) : "время неизвестно"} · {playersLabel(s.players)} · {matchesLabel(s.matches)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => rollback(s)}
+                          onMouseLeave={() => confirming && setConfirmKey(null)}
+                          disabled={busyKey === key}
+                          className={cn(
+                            "inline-flex shrink-0 items-center gap-1.5 rounded-[10px] px-2.5 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-60",
+                            confirming ? "bg-error text-on-error" : "text-error hover:bg-error-container/40",
+                          )}
+                        >
+                          <RotateCcw className="size-3.5" />
+                          {busyKey === key ? "…" : confirming ? "Точно?" : "Откат"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+export function ManagerView({ league, seasonStrength = [] }: { league: League; seasonStrength?: SeasonStrengthRow[] }) {
+  const [tab, setTab] = React.useState<ManagerTab>("ops");
   const [duplicatesCount, setDuplicatesCount] = React.useState(0);
+  // Server components cannot pass a Map across the boundary, so rebuild it here.
+  const strengthByRid = React.useMemo(() => new Map(seasonStrength.map((r) => [r.rid, r])), [seasonStrength]);
 
   // Fetch the count once so the tab badge shows even before the Дубликаты tab is
   // opened; while the tab is open DuplicatesManager keeps it in sync via onCount.
@@ -2277,9 +2901,11 @@ export function ManagerView({ league }: { league: League }) {
             </button>
           </form>
         </div>
+        {tab === "ops" ? <OperationsManager league={league} duplicatesCount={duplicatesCount} /> : null}
         {tab === "players" ? <PlayersManager league={league} /> : null}
         {tab === "upload" ? <UploadManager /> : null}
         {tab === "digest" ? <DigestManager league={league} /> : null}
+        {tab === "summary" ? <SeasonSummaryManager league={league} strength={strengthByRid} /> : null}
         {tab === "points" ? <PointsManager /> : null}
         {tab === "duplicates" ? <DuplicatesManager onCount={setDuplicatesCount} /> : null}
       </div>
