@@ -208,7 +208,7 @@ function StrengthInlineBadge({ value, className }: { value: number | null; class
 
 function LeaderboardTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <div className="min-w-0 rounded-md bg-surface-container-high px-1 py-2 text-center">
+    <div className="min-w-0 rounded-md border border-outline-variant bg-surface-container-high px-1 py-2 text-center">
       <div className="text-[9px] leading-tight text-on-surface-variant">{label}</div>
       <div className={cn("mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface", valueClassName)}>
         {value}
