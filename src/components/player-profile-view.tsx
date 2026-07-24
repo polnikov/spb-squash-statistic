@@ -626,7 +626,7 @@ function HintChip({ children, hint }: { children: React.ReactNode; hint: string 
       <span
         tabIndex={0}
         aria-label={hint}
-        className="inline-flex cursor-help items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant outline-none"
+        className="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant outline-none"
       >
         {children}
       </span>
