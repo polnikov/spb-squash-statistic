@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { fmtDate, matchesLabel, pluralRu } from "@/lib/format";
-import type { EChartsOption } from "echarts";
+import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
   MatchListItem,
@@ -38,12 +38,20 @@ import { TabTransition } from "@/components/ui/tab-transition";
 import { avatarBackgroundStyle } from "@/lib/player-avatar-store";
 import { STRENGTH_BANDS, getStrengthBand } from "@/lib/stats/compute";
 
-const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
-  option: EChartsOption;
-  style?: React.CSSProperties;
-  notMerge?: boolean;
-  lazyUpdate?: boolean;
-}>;
+const ReactECharts = dynamic(
+  () =>
+    import("echarts-for-react/lib/core").then(
+      (m) =>
+        m.default as unknown as React.ComponentType<{
+          echarts: typeof echarts;
+          option: EChartsOption;
+          style?: React.CSSProperties;
+          notMerge?: boolean;
+          lazyUpdate?: boolean;
+        }>,
+    ),
+  { ssr: false },
+);
 
 export type PlayerProfileChartType =
   | "winrateByStage"
@@ -589,7 +597,7 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
   }
   return (
     <div ref={hostRef} style={{ height, width: "100%" }}>
-      {canRender ? <ReactECharts option={option} style={{ height: "100%", width: "100%" }} notMerge lazyUpdate /> : null}
+      {canRender ? <ReactECharts echarts={echarts} option={option} style={{ height: "100%", width: "100%" }} notMerge lazyUpdate /> : null}
     </div>
   );
 }

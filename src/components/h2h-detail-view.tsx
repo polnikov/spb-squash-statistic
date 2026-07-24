@@ -3,7 +3,7 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { EChartsOption } from "echarts";
+import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, Cross, Snail, X } from "lucide-react";
 import type {
   MatchListItem,
@@ -28,12 +28,20 @@ import { NumberPop } from "@/components/ui/number-pop";
 import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 
-const EChart = dynamic(() => import("echarts-for-react"), { ssr: false }) as React.ComponentType<{
-  option: EChartsOption;
-  style?: React.CSSProperties;
-  notMerge?: boolean;
-  lazyUpdate?: boolean;
-}>;
+const EChart = dynamic(
+  () =>
+    import("echarts-for-react/lib/core").then(
+      (m) =>
+        m.default as unknown as React.ComponentType<{
+          echarts: typeof echarts;
+          option: EChartsOption;
+          style?: React.CSSProperties;
+          notMerge?: boolean;
+          lazyUpdate?: boolean;
+        }>,
+    ),
+  { ssr: false },
+);
 
 /* ---------------------------------------------------------------- atoms --- */
 
@@ -326,7 +334,7 @@ function ChartView({ tab, meetings, stats, height }: { tab: ChartKey; meetings: 
   if (tab === "timeline") return <MeetingTimeline meetings={meetings} />;
   const option = chartOptionFor(tab, meetings, stats);
   return option ? (
-    <EChart option={option} style={{ height, width: "100%" }} notMerge lazyUpdate />
+    <EChart echarts={echarts} option={option} style={{ height, width: "100%" }} notMerge lazyUpdate />
   ) : (
     <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
       Недостаточно данных для графика

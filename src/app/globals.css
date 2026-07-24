@@ -1,5 +1,14 @@
-@import url("https://rsms.me/inter/inter.css");
 @import "tailwindcss";
+
+/* Inter (self-hosted variable woff2 from rsms.me/inter). Single file covers Latin
+ * + Cyrillic, so no separate subset. --font-sans = "InterVariable","Inter",... */
+@font-face {
+  font-family: "InterVariable";
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* JetBrains Mono (self-hosted variable woff2). Used for every tabular number via
  * --font-mono. Two subsets keep Cyrillic tooltips/labels in the same face. */
