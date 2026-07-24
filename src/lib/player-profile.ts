@@ -641,7 +641,12 @@ function aggregateStats(
   stats.longestMatchDurationSec = durations.length ? Math.max(...durations) : null;
   stats.avgGameDurationSec = ratio(stats.totalMatchDurationSec, stats.gamesPlayed);
   stats.avgSecondsPerRally = ratio(stats.totalMatchDurationSec, stats.ralliesPlayed);
-  stats.matchLoadScore = stats.avgMatchDurationSec === null ? null : numberOrNull((stats.avgMatchDurationSec / 60) * Math.sqrt(Math.max(1, stats.matchesPlayed)));
+  // Keep this in lockstep with compute.ts (matchLoadScore) so the pure and the
+  // DB-backed profile paths report the same "Индекс нагрузки".
+  stats.matchLoadScore =
+    stats.avgMatchDurationSec === null || stats.matchesPlayed === 0
+      ? null
+      : numberOrNull((stats.avgMatchDurationSec / 60) * (stats.gamesPlayed / stats.matchesPlayed) / 4);
 
   const matchWr = stats.matchWinRatePct;
   const gameWr = stats.gameWinRatePct;
