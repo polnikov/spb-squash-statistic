@@ -181,17 +181,17 @@ export function StageSummary({ league }: { league: League }) {
     [allStageMatches, league, nq],
   );
   const stageMetrics = React.useMemo(() => {
-    const totalTime = stageMatches.reduce((sum, m) => sum + m.durationMin, 0);
-    const longest = Math.max(0, ...stageMatches.map((m) => m.durationMin));
+    const totalTime = allStageMatches.reduce((sum, m) => sum + m.durationMin, 0);
+    const longest = Math.max(0, ...allStageMatches.map((m) => m.durationMin));
     return {
       players: rows.length,
-      matches: stageMatches.length,
+      matches: allStageMatches.length,
       totalTime,
-      avgTime: stageMatches.length ? Math.round(totalTime / stageMatches.length) : 0,
-      fiveGameMatches: stageMatches.filter((m) => m.gamesA + m.gamesB === 5).length,
+      avgTime: allStageMatches.length ? Math.round(totalTime / allStageMatches.length) : 0,
+      fiveGameMatches: allStageMatches.filter((m) => m.gamesA + m.gamesB === 5).length,
       longest,
     };
-  }, [rows.length, stageMatches]);
+  }, [rows.length, allStageMatches]);
   const selectedStageDate = rows[0]?.date;
   const visibleRows = expanded ? rows : rows.slice(0, ROW_LIMIT);
   const moreCount = Math.max(0, rows.length - visibleRows.length);
