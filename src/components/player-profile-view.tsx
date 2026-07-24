@@ -739,12 +739,15 @@ function SegmentedControl<T extends string>({
   onChange,
   className,
   equal = false,
+  compact = false,
 }: {
   items: { key: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   className?: string;
   equal?: boolean;
+  /** Tighter horizontal padding so more options fit on one row without scroll. */
+  compact?: boolean;
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
@@ -758,7 +761,7 @@ function SegmentedControl<T extends string>({
           onClick={() => onChange(item.key)}
           className={cn(
             "relative z-10 h-9 whitespace-nowrap rounded-[12px] text-xs font-semibold transition-colors duration-200 ease-m3-standard",
-            equal ? "min-w-0 flex-1 px-2" : "shrink-0 px-3.5",
+            equal ? "min-w-0 flex-1 px-2" : compact ? "shrink-0 px-2" : "shrink-0 px-3.5",
             value === item.key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
           )}
         >
@@ -1724,11 +1727,15 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
   const [sort, setSort] = React.useState<H2hSort>("meetings");
   const [open, setOpen] = React.useState(false);
   const [expanded, setExpanded] = React.useState(false);
-  const list = sortOpponents(mode === "career" ? active.h2h.career : active.h2h.scoped, sort);
+  const [query, setQuery] = React.useState("");
+  const nq = query.trim().toLowerCase();
+  const list = sortOpponents(mode === "career" ? active.h2h.career : active.h2h.scoped, sort).filter(
+    (o) => !nq || o.opponentName.toLowerCase().includes(nq),
+  );
   const first = list.slice(0, 5);
   const rest = list.slice(5);
 
-  React.useEffect(() => setExpanded(false), [active.key, mode, sort]);
+  React.useEffect(() => setExpanded(false), [active.key, mode, sort, nq]);
 
   // Mobile: no accordion, no title. Mode tabs top-left, sort as scrollable
   // pills below, then all opponent cards (click opens H2H).
@@ -1737,13 +1744,15 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
       <div className={cardClass("p-4")}>
         {hideModeTabs ? null : (
           <SegmentedControl
+            equal
             items={[{ key: "career", label: "За карьеру" }, { key: "current", label: "Текущий фильтр" }]}
             value={mode}
             onChange={setMode}
-            className="w-fit"
+            className="w-full"
           />
         )}
-        <div className={cn("flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", !hideModeTabs && "mt-3")}>
+        <MatchSearch value={query} onChange={setQuery} className={cn("w-full", !hideModeTabs && "mt-3")} />
+        <div className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {H2H_SORT_OPTIONS.map((o) => (
             <button
               key={o.key}
@@ -1800,16 +1809,17 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
       {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className={cn("flex flex-wrap items-center gap-2 px-4 pb-4", hideModeTabs ? "justify-end" : "justify-between")}>
+          <div className="flex items-center gap-2 px-4 pb-4">
             {hideModeTabs ? null : (
               <SegmentedControl
                 items={[{ key: "career", label: "За карьеру" }, { key: "current", label: "Текущий фильтр" }]}
                 value={mode}
                 onChange={setMode}
-                className="w-fit"
+                className="w-fit shrink-0"
               />
             )}
-            <SegmentedControl items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} />
+            <SegmentedControl compact items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} className="shrink-0" />
+            <MatchSearch value={query} onChange={setQuery} className="ml-auto w-[220px] shrink-0" />
           </div>
 
           {list.length === 0 ? (
@@ -2003,15 +2013,43 @@ function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   );
 }
 
+function MatchSearch({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  return (
+    <div className={cn("flex h-9 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-high px-3 focus-within:border-primary/60", className)}>
+      <Search className="size-4 shrink-0 text-on-surface-variant" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Поиск..."
+        className="h-full w-full min-w-0 bg-transparent text-[12.5px] font-medium outline-none placeholder:text-on-surface-variant/55"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Очистить поиск"
+          className="grid size-6 shrink-0 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-highest hover:text-on-surface"
+        >
+          <X className="size-3.5" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function MatchHistorySection({ active, mobile = false }: { active: PlayerProfileContextData; mobile?: boolean }) {
   const [filter, setFilter] = React.useState<MatchFilter>("all");
   const [open, setOpen] = React.useState(false);
   const [expanded, setExpanded] = React.useState(false);
-  const rows = filterMatches(active.matches, filter);
+  const [query, setQuery] = React.useState("");
+  const nq = query.trim().toLowerCase();
+  const rows = filterMatches(active.matches, filter).filter(
+    (m) => !nq || m.opponentName.toLowerCase().includes(nq),
+  );
 
   React.useEffect(() => {
     setExpanded(false);
-  }, [active.key, filter]);
+  }, [active.key, filter, nq]);
 
   const renderCard = (m: MatchListItem) => {
     return (
@@ -2056,6 +2094,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     const mRest = rows.slice(5);
     return (
       <div className={cardClass("p-4")}>
+        <MatchSearch value={query} onChange={setQuery} className="mb-3 w-full" />
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {MATCH_FILTER_ITEMS.map((o) => (
             <button
@@ -2129,7 +2168,8 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
       {/* whole block accordion (filters collapse with it, stay right) */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex justify-end px-4">
+          <div className="flex items-center gap-3 px-4">
+            <MatchSearch value={query} onChange={setQuery} className="flex-1" />
             <SegmentedControl items={MATCH_FILTER_ITEMS} value={filter} onChange={setFilter} />
           </div>
           {rows.length === 0 ? (
