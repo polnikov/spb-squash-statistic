@@ -2034,13 +2034,24 @@ function DigestMetric({ label, value }: { label: string; value: string | number 
   );
 }
 
+/** Neutral pill for a count sitting after a section heading. */
+function CountBadge({ value }: { value: number }) {
+  return (
+    <span className="rounded-full bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface-variant">
+      {value}
+    </span>
+  );
+}
+
 function DigestCard({
   icon: Icon,
   title,
+  count,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
+  count?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -2048,6 +2059,7 @@ function DigestCard({
       <div className="mb-3 flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
         <Icon className="size-4 text-primary" />
         {title}
+        {count != null ? <CountBadge value={count} /> : null}
       </div>
       {children}
     </div>
@@ -2577,10 +2589,25 @@ function OpsCountCell({ value, tone }: { value: number; tone: "bad" | "warn" }) 
   );
 }
 
-type OpsRow = { division: number; key: string; left: string; right?: string; rightTone?: "loss"; badges?: string[] };
+type OpsRow = { division: number; stage?: number; key: string; left: string; right?: string; rightTone?: "loss"; badges?: string[] };
 
-/** Detail list split under per-division subheaders; division 0 = no division. */
-function OpsGroupedList({ divisions, rows }: { divisions: number[]; rows: OpsRow[] }) {
+function OpsRowLine({ r }: { r: OpsRow }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-[12.5px]">
+      <span className="min-w-0 truncate text-on-surface">{r.left}</span>
+      <span className="flex shrink-0 items-center gap-1">
+        {r.badges?.map((b) => (
+          <span key={b} className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", b === "счёт" ? "bg-loss/15 text-loss" : "bg-[#ffa52a]/15 text-[#ffa52a]")}>{b}</span>
+        ))}
+        {r.right ? <span className={cn("font-mono text-[11.5px] tabular", r.rightTone === "loss" ? "text-loss" : "text-on-surface-variant")}>{r.right}</span> : null}
+      </span>
+    </div>
+  );
+}
+
+/** Detail list split under per-division subheaders; division 0 = no division.
+ *  With groupByStage the rows inside each division are further split by stage. */
+function OpsGroupedList({ divisions, rows, groupByStage = false }: { divisions: number[]; rows: OpsRow[]; groupByStage?: boolean }) {
   const byDiv = new Map<number, OpsRow[]>();
   for (const r of rows) {
     const list = byDiv.get(r.division) ?? [];
@@ -2590,26 +2617,35 @@ function OpsGroupedList({ divisions, rows }: { divisions: number[]; rows: OpsRow
   const order = [...divisions, 0].filter((d) => byDiv.has(d));
   return (
     <div className="flex max-h-72 flex-col gap-2.5 overflow-y-auto pr-1">
-      {order.map((d) => (
-        <div key={d}>
-          <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-primary">
-            {d === 0 ? "Без дивизиона" : `Дивизион ${d}`}
-          </div>
-          <div className="flex flex-col gap-1">
-            {byDiv.get(d)!.map((r) => (
-              <div key={r.key} className="flex items-center justify-between gap-3 text-[12.5px]">
-                <span className="min-w-0 truncate text-on-surface">{r.left}</span>
-                <span className="flex shrink-0 items-center gap-1">
-                  {r.badges?.map((b) => (
-                    <span key={b} className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold", b === "счёт" ? "bg-loss/15 text-loss" : "bg-[#ffa52a]/15 text-[#ffa52a]")}>{b}</span>
-                  ))}
-                  {r.right ? <span className={cn("font-mono text-[11.5px] tabular", r.rightTone === "loss" ? "text-loss" : "text-on-surface-variant")}>{r.right}</span> : null}
-                </span>
+      {order.map((d) => {
+        const divRows = byDiv.get(d)!;
+        const stages = groupByStage
+          ? [...new Set(divRows.map((r) => r.stage ?? 0))].sort((a, b) => a - b)
+          : [];
+        return (
+          <div key={d}>
+            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-primary">
+              {d === 0 ? "Без дивизиона" : `Дивизион ${d}`}
+            </div>
+            {groupByStage ? (
+              <div className="flex flex-col gap-1.5">
+                {stages.map((st) => (
+                  <div key={st}>
+                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">Этап {st}</div>
+                    <div className="flex flex-col gap-1">
+                      {divRows.filter((r) => (r.stage ?? 0) === st).map((r) => <OpsRowLine key={r.key} r={r} />)}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-col gap-1">
+                {divRows.map((r) => <OpsRowLine key={r.key} r={r} />)}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -2779,7 +2815,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
         ) : (
           <div className="grid gap-3 lg:grid-cols-3">
             {ops.missing.length ? (
-              <DigestCard icon={CalendarClock} title={`Не загружены · ${ops.missing.length}`}>
+              <DigestCard icon={CalendarClock} title="Не загружены" count={ops.missing.length}>
                 <OpsGroupedList
                   divisions={divisions}
                   rows={ops.missing.map((m) => ({ division: m.division, key: `${m.division}:${m.stage}`, left: `этап ${m.stage}`, right: m.date ? fmtDate(m.date) : "—", rightTone: "loss" as const }))}
@@ -2788,13 +2824,15 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
             ) : null}
 
             {ops.badMatches.length ? (
-              <DigestCard icon={AlertTriangle} title={`Матчи с пропусками · ${ops.badMatches.length}`}>
+              <DigestCard icon={AlertTriangle} title="Матчи с пропусками" count={ops.badMatches.length}>
                 <OpsGroupedList
                   divisions={divisions}
+                  groupByStage
                   rows={ops.badMatches.map((m, i) => ({
                     division: m.division,
+                    stage: m.stage,
                     key: `${m.division}-${m.stage}-${i}`,
-                    left: `Э${m.stage} ${m.a} — ${m.b}`,
+                    left: `${m.a} — ${m.b}`,
                     badges: [m.noScore ? "счёт" : null, m.noTime ? "время" : null].filter(Boolean) as string[],
                   }))}
                 />
@@ -2802,7 +2840,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
             ) : null}
 
             {ops.playersNoId.length ? (
-              <DigestCard icon={Users} title={`Игроки без живого ID · ${ops.playersNoId.length}`}>
+              <DigestCard icon={Users} title="Игроки без живого ID" count={ops.playersNoId.length}>
                 <OpsGroupedList
                   divisions={divisions}
                   rows={ops.playersNoId.flatMap((p) =>
@@ -2824,7 +2862,8 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
           <History className="size-4 text-primary" />
-          Аудит загрузок · {audit.length}
+          Аудит загрузок
+          <CountBadge value={audit.length} />
         </div>
         <p className="text-[11.5px] leading-snug text-on-surface-variant">
           «Удалить» стирает загруженный этап дивизиона: его матчи и результаты удаляются, рейтинги и агрегаты пересчитываются. Отменить нельзя, поэтому кнопка требует второго клика.
@@ -2839,7 +2878,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
                 <div key={dv} className="flex flex-col overflow-hidden rounded-lg border border-outline-variant bg-card">
                   <div className="flex items-center justify-between border-b border-outline-variant px-4 py-2.5">
                     <span className="text-[13px] font-semibold text-on-surface">Дивизион {dv}</span>
-                    <span className="font-mono text-[11.5px] tabular text-on-surface-variant">{rows.length}</span>
+                    <CountBadge value={rows.length} />
                   </div>
                   {rows.map((s) => {
                     const key = `${s.season}-${s.division}-${s.stage}`;
@@ -2849,7 +2888,10 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
                         <div className="min-w-0">
                           <div className="text-[12.5px] font-semibold text-on-surface">{s.season} · Этап {s.stage}</div>
                           <div className="mt-0.5 font-mono text-[11px] tabular text-on-surface-variant">
-                            {s.parsedAt ? fmtDateTime(s.parsedAt) : "время неизвестно"} · {playersLabel(s.players)} · {matchesLabel(s.matches)}
+                            {s.parsedAt ? fmtDateTime(s.parsedAt) : "время неизвестно"}
+                          </div>
+                          <div className="mt-0.5 font-mono text-[11px] tabular text-on-surface-variant">
+                            {playersLabel(s.players)} · {matchesLabel(s.matches)}
                           </div>
                         </div>
                         <button
