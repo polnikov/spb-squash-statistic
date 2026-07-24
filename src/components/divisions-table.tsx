@@ -234,7 +234,7 @@ function DivisionSearch({ value, onChange, className }: { value: string; onChang
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Поиск игрока..."
+        placeholder="Поиск..."
         className="h-full w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
       />
       {value ? (
