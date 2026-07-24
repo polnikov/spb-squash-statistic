@@ -310,7 +310,7 @@ export function IronManView({ league }: { league: League }) {
                           { label: "Геймы", value: r.gamesWon + r.gamesLost },
                           { label: "Ср. матч", value: fmtCourt(r.perMatch) },
                         ].map((s) => (
-                          <div key={s.label} className="flex-1 rounded-md bg-surface-container-high px-1 py-2 text-center">
+                          <div key={s.label} className="flex-1 rounded-md border border-outline-variant bg-surface-container-high px-1 py-2 text-center">
                             <div className="text-[10px] text-on-surface-variant">{s.label}</div>
                             <div className="mt-0.5 font-mono text-[13px] font-semibold tabular">{s.value}</div>
                           </div>
