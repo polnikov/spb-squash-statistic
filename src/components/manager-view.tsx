@@ -2027,9 +2027,9 @@ function DigestRatingBadge({ rating }: { rating: { label: string; className: str
 
 function DigestMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+    <div className="flex items-start justify-between gap-2 rounded-lg border border-outline-variant bg-card px-3 py-2">
       <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
-      <div className="mt-1.5 font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
+      <div className="shrink-0 font-mono text-[16px] font-semibold leading-tight tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
     </div>
   );
 }
@@ -2293,12 +2293,12 @@ function DigestManager({ league }: { league: League }) {
 
 /* ---------------------------------------------------------- season parts --- */
 
-/** Season metric tile: label (heading) on top, value below. */
+/** Season metric tile: label heading left, value in the top-right corner. */
 function SeasonMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+    <div className="flex items-start justify-between gap-2 rounded-lg border border-outline-variant bg-card px-3 py-2">
       <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
-      <div className="mt-1 font-mono text-[20px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
+      <div className="shrink-0 font-mono text-[16px] font-semibold leading-tight tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
     </div>
   );
 }
@@ -2920,11 +2920,16 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
   );
 }
 
-export function ManagerView({ league, seasonStrength = [] }: { league: League; seasonStrength?: SeasonStrengthRow[] }) {
+export function ManagerView({ league, managedPlayers, seasonStrength = [] }: { league: League; managedPlayers: League["players"]; seasonStrength?: SeasonStrengthRow[] }) {
   const [tab, setTab] = React.useState<ManagerTab>("ops");
   const [duplicatesCount, setDuplicatesCount] = React.useState(0);
   // Server components cannot pass a Map across the boundary, so rebuild it here.
   const strengthByRid = React.useMemo(() => new Map(seasonStrength.map((r) => [r.rid, r])), [seasonStrength]);
+  // Admin roster (every DB player, name-sorted) is what Ops/Players want. But its
+  // array order no longer matches the per-season match idx, so the Digest/Summary
+  // builders - which index league.players by position - MUST use the plain season
+  // league, or they show wrong (even out-of-division) players.
+  const rosterLeague = React.useMemo(() => ({ ...league, players: managedPlayers }), [league, managedPlayers]);
 
   // Fetch the count once so the tab badge shows even before the Дубликаты tab is
   // opened; while the tab is open DuplicatesManager keeps it in sync via onCount.
@@ -2947,8 +2952,8 @@ export function ManagerView({ league, seasonStrength = [] }: { league: League; s
             </button>
           </form>
         </div>
-        {tab === "ops" ? <OperationsManager league={league} duplicatesCount={duplicatesCount} /> : null}
-        {tab === "players" ? <PlayersManager league={league} /> : null}
+        {tab === "ops" ? <OperationsManager league={rosterLeague} duplicatesCount={duplicatesCount} /> : null}
+        {tab === "players" ? <PlayersManager league={rosterLeague} /> : null}
         {tab === "upload" ? <UploadManager /> : null}
         {tab === "digest" ? <DigestManager league={league} /> : null}
         {tab === "summary" ? <SeasonSummaryManager league={league} strength={strengthByRid} /> : null}

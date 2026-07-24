@@ -17,5 +17,8 @@ export default async function ManagerPage({ searchParams }: { searchParams?: { s
   // Season rating movement for the "Итоги сезона" tab (Map is not serializable
   // across the RSC boundary, hence the array).
   const seasonStrength = [...(await loadSeasonStrengthSummary(season)).values()];
-  return <ManagerView league={{ ...league, players }} seasonStrength={seasonStrength} />;
+  // Pass the plain season league (players array position == per-season idx) plus
+  // the full admin roster separately. ManagerView routes the roster to Ops/Players
+  // and keeps the season league for the idx-sensitive Digest/Summary builders.
+  return <ManagerView league={league} managedPlayers={players} seasonStrength={seasonStrength} />;
 }
