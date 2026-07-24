@@ -235,7 +235,7 @@ export function RatingTable({
         action={hasScopeData ? <SearchBox value={query} onChange={setQuery} className="w-[280px]" /> : undefined}
       />
 
-      <div className="flex items-end gap-4">
+      <div className="flex items-start gap-3">
         <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
           <TabSliderPill ind={ind} className="bg-brand-surface-2" />
           {SCOPES.map((s) => (
@@ -263,7 +263,8 @@ export function RatingTable({
             selectedStage={selectedStage}
             ratingMaxStage={ratingMaxStage}
             onSelect={selectStage}
-            className="ml-auto shrink-0 border-border bg-brand-surface"
+            variant="strip"
+            className="flex-1"
           />
         ) : null}
       </div>

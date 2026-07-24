@@ -18,6 +18,7 @@ export function RatingStageSelector({
   onSelect,
   className,
   itemClassName,
+  variant = "compact",
 }: {
   totalStages: number;
   playedStage: number;
@@ -26,10 +27,20 @@ export function RatingStageSelector({
   onSelect: (stage: number) => void;
   className?: string;
   itemClassName?: string;
+  /** "compact": square number chips (mobile). "strip": full "Этап N" tab row, matching the Stages page. */
+  variant?: "compact" | "strip";
 }) {
   const { setRef, ind } = useTabSlider(String(selectedStage));
+  const strip = variant === "strip";
   return (
-    <div className={cn("relative flex items-center gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1", className)}>
+    <div
+      className={cn(
+        "relative gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1",
+        strip ? "grid" : "flex items-center",
+        className,
+      )}
+      style={strip ? { gridTemplateColumns: `repeat(${totalStages}, minmax(0, 1fr))` } : undefined}
+    >
       <TabSliderPill ind={ind} />
       {Array.from({ length: totalStages }, (_, i) => i + 1).map((n) => {
         const passed = n <= playedStage;
@@ -37,14 +48,15 @@ export function RatingStageSelector({
         const selectable = passed && affectsRating;
         const active = n === selectedStage;
         const tooltip = stageTooltip(n, passed, affectsRating);
-        const showTooltip = n === 9;
+        const showTooltip = n === totalStages;
         return (
           <span
             key={n}
             ref={setRef(String(n))}
             className={cn(
               "group/stage relative z-10 grid place-items-center",
-              itemClassName ?? "size-9 shrink-0",
+              strip ? "min-w-0" : (itemClassName ?? "size-9 shrink-0"),
+              strip ? itemClassName : undefined,
             )}
           >
             <button
@@ -57,19 +69,25 @@ export function RatingStageSelector({
                 if (selectable) onSelect(n);
               }}
               className={cn(
-                "grid size-full place-items-center rounded-[12px] border font-mono text-[12px] font-semibold tabular transition-all duration-200 ease-m3-standard",
+                "relative z-10 grid place-items-center rounded-[12px] font-mono text-[12px] font-semibold tabular transition-colors duration-200 ease-m3-standard",
+                strip ? "h-9 min-w-0 px-0 md:px-3" : "size-full border border-transparent",
                 // Data-bearing stages read in the accent colour; the selected one
                 // is marked by the sliding grey pill behind it, matching the tab
                 // switch animation.
-                active
-                  ? "border-transparent bg-transparent text-primary"
-                  : passed
-                    ? cn("border-transparent text-primary", selectable && "hover:border-primary/40")
-                    : "border-transparent text-on-surface-variant/55",
+                passed
+                  ? cn("text-primary", !strip && selectable && "hover:border-primary/40")
+                  : "text-on-surface-variant/55",
                 selectable ? "cursor-pointer" : "cursor-default",
               )}
             >
-              {n}
+              {strip ? (
+                <>
+                  <span className="md:hidden">{n}</span>
+                  <span className="hidden md:inline">Этап {n}</span>
+                </>
+              ) : (
+                n
+              )}
             </button>
             {showTooltip ? (
               <span

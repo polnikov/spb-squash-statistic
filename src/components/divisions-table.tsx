@@ -11,7 +11,7 @@ import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 
 const MOBILE_PAGE = 10;
 
@@ -227,6 +227,30 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
   );
 }
 
+function DivisionSearch({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  return (
+    <div className={cn("flex h-[46px] items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40", className)}>
+      <Search className="size-4 shrink-0 text-muted-foreground" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Поиск игрока..."
+        className="h-full w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Очистить поиск"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-m3-standard hover:bg-surface-container-high hover:text-on-surface"
+        >
+          <X className="size-4" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function DivisionsTable({
   rowsByDivision,
   summaries,
@@ -237,7 +261,9 @@ export function DivisionsTable({
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
   const [sort, setSort] = React.useState<SortState>({ key: "points", dir: "desc" });
   const [mobileCount, setMobileCount] = React.useState(MOBILE_PAGE);
+  const [query, setQuery] = React.useState("");
   React.useEffect(() => { setMobileCount(MOBILE_PAGE); }, [div]);
+  React.useEffect(() => { setMobileCount(MOBILE_PAGE); }, [query]);
   const slideDir = useSlideDirection(div);
   const rows = rowsByDivision[div];
   const sortedRows = React.useMemo(() => {
@@ -247,6 +273,11 @@ export function DivisionsTable({
       return delta === 0 ? a.place - b.place : delta * dir;
     });
   }, [rows, sort]);
+  const nq = query.trim().toLowerCase();
+  const filteredRows = React.useMemo(
+    () => (nq ? sortedRows.filter((r) => r.name.toLowerCase().includes(nq)) : sortedRows),
+    [sortedRows, nq],
+  );
   const highlights = React.useMemo(() => {
     const rating = bestBy(rows, (row) => row.points);
     const form = bestBy(rows, formIndex);
@@ -306,22 +337,25 @@ export function DivisionsTable({
   const { setRef, ind } = useTabSlider(String(div));
   return (
     <div className="flex min-w-0 flex-col gap-5">
-      <div className="relative flex gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex md:self-start">
-        <TabSliderPill ind={ind} className="bg-brand-surface-2" />
-        {DIVS.map((d) => (
-          <button
-            key={d}
-            ref={setRef(String(d))}
-            onClick={() => setDiv(d)}
-            className={cn(
-              "relative z-10 h-9 flex-1 rounded-[12px] px-4 text-xs font-semibold transition-colors duration-200 ease-m3-standard md:flex-none md:px-5",
-              div === d ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <span className="md:hidden">Див {d}</span>
-            <span className="hidden md:inline">Дивизион {d}</span>
-          </button>
-        ))}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative flex gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex md:self-start">
+          <TabSliderPill ind={ind} className="bg-brand-surface-2" />
+          {DIVS.map((d) => (
+            <button
+              key={d}
+              ref={setRef(String(d))}
+              onClick={() => setDiv(d)}
+              className={cn(
+                "relative z-10 h-9 flex-1 rounded-[12px] px-4 text-xs font-semibold transition-colors duration-200 ease-m3-standard md:flex-none md:px-5",
+                div === d ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span className="md:hidden">Див {d}</span>
+              <span className="hidden md:inline">Дивизион {d}</span>
+            </button>
+          ))}
+        </div>
+        {rows.length > 0 ? <DivisionSearch value={query} onChange={setQuery} className="hidden w-[280px] md:flex" /> : null}
       </div>
 
       {rows.length === 0 ? (
@@ -343,6 +377,8 @@ export function DivisionsTable({
           <HighlightTile key={tile.label} label={tile.label} player={tile.player} value={tile.value} />
         ))}
       </div>
+
+      <DivisionSearch value={query} onChange={setQuery} className="w-full md:hidden" />
 
       <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
         {SORT_PILLS.map((pill) => (
@@ -373,16 +409,21 @@ export function DivisionsTable({
       {/* Mobile: player accordion cards, directional slide on tab switch. */}
       <div className="overflow-hidden md:hidden">
         <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
-          {sortedRows.slice(0, mobileCount).map((r) => (
+          {filteredRows.slice(0, mobileCount).map((r) => (
             <DivisionMobileCard key={r.playerIdx} r={r} />
           ))}
-          {mobileCount < sortedRows.length ? (
+          {filteredRows.length === 0 ? (
+            <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+              Игроки не найдены
+            </div>
+          ) : null}
+          {mobileCount < filteredRows.length ? (
             <button
               type="button"
               onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
               className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
             >
-              Показать ещё {sortedRows.length - mobileCount}
+              Показать ещё {filteredRows.length - mobileCount}
             </button>
           ) : null}
         </SlideSwitch>
@@ -412,7 +453,7 @@ export function DivisionsTable({
             </tr>
           </thead>
           <tbody>
-            {sortedRows.length ? sortedRows.map((r) => {
+            {filteredRows.length ? filteredRows.map((r) => {
               const name = splitPlayerName(r.name);
               const gamesLost = r.games - r.gamesWon;
               const ballsLost = r.balls - r.ballsWon;
@@ -482,7 +523,7 @@ export function DivisionsTable({
             }) : (
               <tr className="border-t border-border">
                 <td colSpan={12} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  Данных по дивизиону пока нет
+                  {nq ? "Игроки не найдены" : "Данных по дивизиону пока нет"}
                 </td>
               </tr>
             )}
