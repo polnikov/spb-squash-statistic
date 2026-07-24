@@ -1814,17 +1814,19 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
       {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 pb-4">
-            {hideModeTabs ? null : (
-              <SegmentedControl
-                items={[{ key: "career", label: "За карьеру" }, { key: "current", label: "Текущий фильтр" }]}
-                value={mode}
-                onChange={setMode}
-                className="w-fit shrink-0"
-              />
-            )}
-            <SegmentedControl compact items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} className="shrink-0" />
-            <MatchSearch value={query} onChange={setQuery} className="ml-auto w-[220px] shrink-0" />
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            <div className="flex items-center gap-2">
+              {hideModeTabs ? null : (
+                <SegmentedControl
+                  items={[{ key: "career", label: "За карьеру" }, { key: "current", label: "Текущий фильтр" }]}
+                  value={mode}
+                  onChange={setMode}
+                  className="w-fit shrink-0"
+                />
+              )}
+              <MatchSearch value={query} onChange={setQuery} variant="divisions" className="ml-auto w-[280px]" />
+            </div>
+            <SegmentedControl equal items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} className="w-full" />
           </div>
 
           {list.length === 0 ? (
@@ -2018,7 +2020,32 @@ function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   );
 }
 
-function MatchSearch({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+/** Search field. "pill" is the compact h-9 mobile look; "divisions" mirrors the
+ *  Divisions page search (h-[46px], rounded-2xl, brand surface). */
+function MatchSearch({ value, onChange, className, variant = "pill" }: { value: string; onChange: (v: string) => void; className?: string; variant?: "pill" | "divisions" }) {
+  if (variant === "divisions") {
+    return (
+      <div className={cn("flex h-[46px] items-center gap-2.5 rounded-2xl border border-border bg-brand-surface px-3.5 focus-within:ring-2 focus-within:ring-ring/40", className)}>
+        <Search className="size-4 shrink-0 text-muted-foreground" />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Поиск..."
+          className="h-full w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+        />
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            aria-label="Очистить поиск"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-m3-standard hover:bg-surface-container-high hover:text-on-surface"
+          >
+            <X className="size-4" />
+          </button>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className={cn("flex h-9 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-high px-3 focus-within:border-primary/60", className)}>
       <Search className="size-4 shrink-0 text-on-surface-variant" />
@@ -2179,7 +2206,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
           <div className="flex items-center gap-3 px-4">
-            <MatchSearch value={query} onChange={setQuery} className="flex-1" />
+            <MatchSearch value={query} onChange={setQuery} variant="divisions" className="flex-1" />
             <SegmentedControl items={MATCH_FILTER_ITEMS} value={filter} onChange={setFilter} />
           </div>
           {rows.length === 0 ? (
