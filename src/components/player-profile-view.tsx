@@ -1814,7 +1814,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
       {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-2 px-4 pb-4">
+          <div className="flex flex-col gap-2 px-4 pb-4 pt-1.5">
             <div className="flex items-center gap-2">
               {hideModeTabs ? null : (
                 <SegmentedControl
@@ -1826,7 +1826,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
               )}
               <MatchSearch value={query} onChange={setQuery} variant="divisions" className="ml-auto w-[280px]" />
             </div>
-            <SegmentedControl equal items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} className="w-full" />
+            <SegmentedControl items={H2H_SORT_OPTIONS} value={sort} onChange={setSort} className="w-full" />
           </div>
 
           {list.length === 0 ? (
@@ -2205,7 +2205,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
       {/* whole block accordion (filters collapse with it, stay right) */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex items-center gap-3 px-4">
+          <div className="flex items-center gap-3 px-4 pt-1.5">
             <MatchSearch value={query} onChange={setQuery} variant="divisions" className="flex-1" />
             <SegmentedControl items={MATCH_FILTER_ITEMS} value={filter} onChange={setFilter} />
           </div>
