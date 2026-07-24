@@ -6,7 +6,7 @@ import { Rocket, Search, Snail, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerOverview } from "@/lib/league";
 import { cn } from "@/lib/utils";
-import { splitPlayerName, playerHref, playersLabel } from "@/lib/format";
+import { playerHref, playersLabel } from "@/lib/format";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
 import { RatingPinButton } from "@/components/rating-pin-button";
 import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
@@ -274,23 +274,19 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({
 
 function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   const avatar = usePlayerAvatar(player.rid);
-  const name = splitPlayerName(player.name);
 
   if (avatar) {
     return (
       <Link
         href={playerHref(player.rid)}
-        className="relative flex min-h-[178px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center text-center"
+        className="relative flex min-h-[178px] overflow-hidden rounded-lg bg-card bg-cover bg-center text-center"
         style={avatarBackgroundStyle(avatar)}
       >
         <StrengthMiniBadge value={player.strengthRating} />
         <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#161616] to-transparent" />
-        <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-2 px-3.5 pb-4 text-left">
-          <div className="min-w-0 text-[13.5px] font-semibold leading-tight text-white">
-            <span className="block truncate">{name.first}</span>
-            {name.rest ? <span className="block truncate">{name.rest}</span> : null}
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+        <div className="relative z-10 mt-auto flex w-full flex-col items-center gap-2 px-3.5 pb-4 text-center">
+          <div className="max-w-full truncate text-[13.5px] font-semibold leading-tight text-white">{player.name}</div>
+          <div className="flex flex-wrap justify-center gap-1.5">
             <DivBadges items={player.divisionPlaces} />
           </div>
         </div>
@@ -315,23 +311,19 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
 
 const DesktopPlayerCard = React.memo(function DesktopPlayerCard({ player }: { player: PlayerOverview }) {
   const avatar = usePlayerAvatar(player.rid);
-  const name = splitPlayerName(player.name);
 
   if (avatar) {
     return (
       <Link
         href={playerHref(player.rid)}
-        className="group relative flex min-h-[168px] overflow-hidden rounded-lg border border-outline-variant bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
+        className="group relative flex min-h-[168px] overflow-hidden rounded-lg bg-card bg-cover bg-center transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5"
         style={avatarBackgroundStyle(avatar)}
       >
         <StrengthMiniBadge value={player.strengthRating} />
         <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#161616] to-transparent" />
-        <div className="relative z-10 mt-auto flex w-full items-end justify-between gap-3 px-4 pb-4">
-          <div className="min-w-0 text-sm font-semibold leading-tight text-white">
-            <span className="block truncate">{name.first}</span>
-            {name.rest ? <span className="block truncate">{name.rest}</span> : null}
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+        <div className="relative z-10 mt-auto flex w-full flex-col items-center gap-2 px-4 pb-4 text-center">
+          <div className="max-w-full truncate text-sm font-semibold leading-tight text-white">{player.name}</div>
+          <div className="flex flex-wrap justify-center gap-1.5">
             <DivBadges items={player.divisionPlaces} />
           </div>
         </div>
