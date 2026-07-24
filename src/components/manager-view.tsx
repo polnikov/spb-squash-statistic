@@ -350,10 +350,11 @@ function PlayersManager({ league }: { league: League }) {
     }
     setSaving(false);
     setEditingRid(null);
+    // No router.refresh(): the table already renders the edited name/id/avatar
+    // from local state, so a full page reload after Сохранить is unnecessary.
     // Re-read the avatars so the local draft (which still holds the uploaded data
     // URL) is replaced by the served, versioned URL.
     void listPlayerAvatarsAction().then(setAvatars);
-    router.refresh();
   }
 
   function openCreate() {
