@@ -241,6 +241,7 @@ export async function buildPlayerProfileModelFromDb(
         matchId: playerRatingHistory.matchId,
         ratingAfter: playerRatingHistory.ratingAfter,
         delta: playerRatingHistory.delta,
+        division: matches.division,
         stageNumber: stages.number,
         seasonLabel: seasons.label,
       })
@@ -265,6 +266,7 @@ export async function buildPlayerProfileModelFromDb(
       label: `${r.seasonLabel} · Э${r.stageNumber}`,
       rating: r.ratingAfter,
       delta: r.delta,
+      division: r.division,
     }));
 
   // Strength Rating (Elo) lives on `players` — index every player's rating/games

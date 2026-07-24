@@ -174,6 +174,8 @@ export type PlayerProfileStrengthPoint = {
   label: string;
   rating: number;
   delta: number;
+  /** Division the match was played in, for the tooltip. */
+  division: number;
 };
 
 export type PlayerOpponentStats = {

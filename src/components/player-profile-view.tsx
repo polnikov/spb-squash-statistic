@@ -351,7 +351,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
           const point = history[dataIndex];
           if (!point) return "";
           const sign = point.delta > 0 ? "+" : "";
-          return `${point.label}<br/>Рейтинг: ${point.rating}<br/>Изменение: ${sign}${point.delta}`;
+          return `${point.label} · Д${point.division}<br/>Рейтинг: ${point.rating}<br/>Изменение: ${sign}${point.delta}`;
         },
       },
       dataZoom: zoomed
@@ -1196,7 +1196,7 @@ function InfoPopover({
       </button>
       <div
         className={cn(
-          "rounded-xl border border-outline-variant bg-surface-container-high p-4 shadow-e3 transition-all duration-300 ease-m3-emphasized-decel",
+          "rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-lg shadow-black/25 transition-all duration-300 ease-m3-emphasized-decel",
           mobileSafe
             ? "fixed inset-x-2 bottom-[calc(76px+env(safe-area-inset-bottom))] z-[70] max-h-[calc(100dvh-120px)] w-auto origin-bottom-right overflow-y-auto overscroll-contain md:absolute md:inset-x-auto md:z-0 md:max-h-none md:w-[min(390px,calc(100vw-32px))] md:overflow-visible"
             : "absolute z-0 w-[min(390px,calc(100vw-32px))]",
@@ -1209,7 +1209,16 @@ function InfoPopover({
           open ? "scale-100 opacity-100" : "pointer-events-none scale-90 opacity-0",
         )}
       >
-        <div className="flex flex-col gap-3">
+        {/* Diamond pointer toward the (i) trigger, same look as the stage-9 tooltip. */}
+        <span
+          className={cn(
+            "absolute size-2 rotate-45 border-border bg-popover",
+            mobileSafe && "hidden md:block",
+            inline ? "left-3" : "right-3",
+            placement === "up" ? "bottom-[-4px] border-b border-r" : "top-[-4px] border-l border-t",
+          )}
+        />
+        <div className="relative flex flex-col gap-3">
           {items.map((it) => {
             const active = it.match ? it.match(stats) : null;
             return (
