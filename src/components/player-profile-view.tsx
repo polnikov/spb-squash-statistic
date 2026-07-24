@@ -986,43 +986,46 @@ function HeroPhotoCard({ model, stats, seasonId, className }: { model: PlayerPro
       ? model.player.divisions.map((div) => ({ div, place: null }))
       : model.divisionPlacesBySeason[seasonId] ?? [];
   return (
-    <div
-      className={cn(
-        "relative aspect-square min-h-0 overflow-hidden rounded-xl bg-card",
-        avatar ? "bg-cover bg-center" : "border border-outline-variant",
-        className,
-      )}
-      style={avatar ? avatarBackgroundStyle(avatar) : undefined}
-    >
-      <ActivityBadge active={model.active} />
-      <StrengthRatingBadge stats={stats} rank={model.strengthRatingRank} />
-      {avatar ? (
-        <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
-      ) : null}
+    <div className={cn("relative aspect-square min-h-0 rounded-xl", className)}>
+      {/* Clipped photo/content layer. Kept separate from the badges so their help
+          popovers can overflow the rounded card instead of being cut off. */}
       <div
         className={cn(
-          "absolute z-10 flex flex-col items-center gap-2.5 px-7 text-center",
-          avatar ? "inset-x-0 bottom-0 pb-6" : "inset-0 justify-center",
+          "absolute inset-0 overflow-hidden rounded-xl bg-card",
+          avatar ? "bg-cover bg-center" : "border border-outline-variant",
         )}
+        style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
-        {!avatar ? (
-          <PlayerAvatar rid={model.player.rid} initials={model.player.initials} color={model.player.color} className="size-[84px] text-3xl" />
+        {avatar ? (
+          <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
         ) : null}
-        <h1 className="max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]">{model.player.name}</h1>
-        <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px] text-on-surface-variant">
-          <MetaItem label="Сезонов" value={stats.seasonsPlayed} />
-          <MetaItem label="Этапов" value={stats.stagesPlayed} />
-          <MetaItem label="Матчей" value={stats.matchesPlayed} />
-        </div>
-        <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
-          {divisionChips.map((d) => (
-            <Chip key={d.div}>Дивизион {d.div}{d.place ? ` · #${d.place}` : ""}</Chip>
-          ))}
-          <a href={model.player.rankedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1.5 font-mono text-xs text-primary">
-            <span className="min-w-0 break-all">{model.player.rid}</span> <ExternalLink className="size-3 shrink-0" />
-          </a>
+        <div
+          className={cn(
+            "absolute z-10 flex flex-col items-center gap-2.5 px-7 text-center",
+            avatar ? "inset-x-0 bottom-0 pb-6" : "inset-0 justify-center",
+          )}
+        >
+          {!avatar ? (
+            <PlayerAvatar rid={model.player.rid} initials={model.player.initials} color={model.player.color} className="size-[84px] text-3xl" />
+          ) : null}
+          <h1 className="max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]">{model.player.name}</h1>
+          <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px] text-on-surface-variant">
+            <MetaItem label="Сезонов" value={stats.seasonsPlayed} />
+            <MetaItem label="Этапов" value={stats.stagesPlayed} />
+            <MetaItem label="Матчей" value={stats.matchesPlayed} />
+          </div>
+          <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
+            {divisionChips.map((d) => (
+              <Chip key={d.div}>Дивизион {d.div}{d.place ? ` · #${d.place}` : ""}</Chip>
+            ))}
+            <a href={model.player.rankedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1.5 font-mono text-xs text-primary">
+              <span className="min-w-0 break-all">{model.player.rid}</span> <ExternalLink className="size-3 shrink-0" />
+            </a>
+          </div>
         </div>
       </div>
+      <ActivityBadge active={model.active} />
+      <StrengthRatingBadge stats={stats} rank={model.strengthRatingRank} />
     </div>
   );
 }
