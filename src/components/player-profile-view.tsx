@@ -1672,7 +1672,11 @@ function OpponentRow({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (rid: stri
       <td className="px-2 py-2 text-center font-mono text-[12.5px] tabular">{formatPercent(o.h2hFiveGameWinRatePct)}</td>
       <td className="whitespace-nowrap px-2 py-2 text-center font-mono text-[12.5px] tabular">{formatDuration(o.h2hAvgMatchDurationSec).replace(" мин", "м")}</td>
       <td className="whitespace-nowrap px-2 py-2 pr-4 text-center">
-        <span className={cn("inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold", statusBadgeClass(o.matchupStatus))}>{formatMatchupStatus(o.matchupStatus)}</span>
+        <span className={cn("inline-flex flex-col items-center rounded-full px-2.5 py-1 text-[11.5px] font-semibold leading-tight", statusBadgeClass(o.matchupStatus))}>
+          {formatMatchupStatus(o.matchupStatus).split(" ").map((word, i) => (
+            <span key={i}>{word}</span>
+          ))}
+        </span>
       </td>
     </tr>
   );
