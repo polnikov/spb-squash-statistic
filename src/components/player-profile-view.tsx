@@ -64,7 +64,8 @@ export type PlayerProfileChartType =
 export type PlayerProfileChartProps = {
   type: PlayerProfileChartType;
   data: unknown;
-  height?: number;
+  /** Number of px, or a CSS length (e.g. "100%") to fill a flex parent. */
+  height?: number | string;
 };
 
 type FilterValue = {
@@ -647,7 +648,7 @@ function statBar(won: number, lost: number, wrPct: number | null): { pct: number
 
 function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" } }) {
   return (
-    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
+    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>{label}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{value}</NumberPop></div>
@@ -683,7 +684,7 @@ function FormIndexCard({ formIndex }: { formIndex: number | null }) {
   const tier = formIndex === null ? { color: "var(--color-on-surface-variant)", label: "нет данных" } : formIndexTier(formIndex);
   const pct = formIndex === null ? 0 : Math.max(0, Math.min(100, formIndex));
   return (
-    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:px-[15px] md:py-[13px]")}>
+    <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>Индекс формы</div>
       <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{formIndex === null ? "x" : formIndex.toFixed(1)}</NumberPop></div>
@@ -765,7 +766,6 @@ function scopedKpis(stats: PlayerProfileStats) {
     { label: "Матчи", value: formatRecord(stats.matchesWon, stats.matchesLost), sub: formatPercent(stats.matchWinRatePct), bar: statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct) },
     { label: "Геймы", value: formatRecord(stats.gamesWon, stats.gamesLost), sub: formatPercent(stats.gameWinRatePct), bar: statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct) },
     { label: "Розыгрыши", value: formatRecord(stats.ralliesWon, stats.ralliesLost), sub: formatPercent(stats.rallyWinRatePct), bar: statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct) },
-    { label: "Индекс формы", value: stats.formIndex === null ? "x" : stats.formIndex.toFixed(1), sub: formatSampleSizeLevel(stats.sampleSizeLevel) },
   ];
 }
 
@@ -773,6 +773,7 @@ function ScopedKpiGrid({ stats, className }: { stats: PlayerProfileStats; classN
   return (
     <div className={cn("grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3", className)}>
       {scopedKpis(stats).map((item) => <KpiCard key={item.label} {...item} />)}
+      <FormIndexCard formIndex={stats.formIndex} />
     </div>
   );
 }
@@ -808,8 +809,8 @@ function ActivityBadge({ active }: { active: boolean }) {
   return (
     <span
       className={cn(
-        "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold",
-        active ? "bg-win/18 text-win" : "bg-loss/18 text-loss",
+        "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[rgba(22,22,22,0.72)] px-2.5 py-1 text-[10.5px] font-semibold shadow-[0_1px_6px_rgba(0,0,0,0.4)] backdrop-blur-sm",
+        active ? "text-win" : "text-loss",
       )}
     >
       <span className={cn("size-1.5 rounded-full", active ? "bg-win" : "bg-loss")} />
@@ -966,9 +967,9 @@ function PlayerSwitcher({ roster }: { roster: { rid: string; name: string }[] })
   );
 }
 
-function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; seasonId: string }) {
+/** Square identity card: avatar background, name, meta and division chips. */
+function HeroPhotoCard({ model, stats, seasonId, className }: { model: PlayerProfileModel; stats: PlayerProfileStats; seasonId: string; className?: string }) {
   const avatar = usePlayerAvatar(model.player.rid);
-  const stats = model.careerStats;
   // With no season picked the header spans the career, and a place would be
   // meaningless: list the divisions the player has ever played instead. Pick a
   // season and the chips narrow to that season's divisions and places.
@@ -977,60 +978,81 @@ function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; se
       ? model.player.divisions.map((div) => ({ div, place: null }))
       : model.divisionPlacesBySeason[seasonId] ?? [];
   return (
-    <div className="grid gap-2 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-stretch md:gap-5">
-      {/* hero — stretches to the right column's height */}
+    <div
+      className={cn(
+        "relative aspect-square min-h-0 overflow-hidden rounded-xl bg-card",
+        avatar ? "bg-cover bg-center" : "border border-outline-variant",
+        className,
+      )}
+      style={avatar ? avatarBackgroundStyle(avatar) : undefined}
+    >
+      <ActivityBadge active={model.active} />
+      <StrengthRatingBadge stats={stats} rank={model.strengthRatingRank} />
+      {avatar ? (
+        <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
+      ) : null}
       <div
         className={cn(
-          "relative aspect-square min-h-0 rounded-xl border border-outline-variant bg-card md:aspect-auto md:min-h-[176px] md:h-full",
-          avatar && "bg-cover bg-center",
+          "absolute z-10 flex flex-col items-center gap-2.5 px-7 text-center",
+          avatar ? "inset-x-0 bottom-0 pb-6" : "inset-0 justify-center",
         )}
-        style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
-        <ActivityBadge active={model.active} />
-        <StrengthRatingBadge stats={stats} rank={model.strengthRatingRank} />
-        {avatar ? (
-          <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-[#161616] via-[#161616]/55 to-transparent" />
+        {!avatar ? (
+          <PlayerAvatar rid={model.player.rid} initials={model.player.initials} color={model.player.color} className="size-[84px] text-3xl" />
         ) : null}
-        <div
-          className={cn(
-            "absolute z-10 flex flex-col items-center gap-2.5 px-7 text-center",
-            avatar ? "inset-x-0 bottom-0 pb-6" : "inset-0 justify-center",
-          )}
-        >
-          {!avatar ? (
-            <PlayerAvatar rid={model.player.rid} initials={model.player.initials} color={model.player.color} className="size-[84px] text-3xl" />
-          ) : null}
-          <h1 className="max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]">{model.player.name}</h1>
-          <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px] text-on-surface-variant">
-            <MetaItem label="Сезонов" value={stats.seasonsPlayed} />
-            <MetaItem label="Этапов" value={stats.stagesPlayed} />
-            <MetaItem label="Матчей" value={stats.matchesPlayed} />
-          </div>
-          <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
-            {divisionChips.map((d) => (
-              <Chip key={d.div}>Дивизион {d.div}{d.place ? ` · #${d.place}` : ""}</Chip>
-            ))}
-            <a href={model.player.rankedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1.5 font-mono text-xs text-primary">
-              <span className="min-w-0 break-all">{model.player.rid}</span> <ExternalLink className="size-3 shrink-0" />
-            </a>
+        <h1 className="max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]">{model.player.name}</h1>
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px] text-on-surface-variant">
+          <MetaItem label="Сезонов" value={stats.seasonsPlayed} />
+          <MetaItem label="Этапов" value={stats.stagesPlayed} />
+          <MetaItem label="Матчей" value={stats.matchesPlayed} />
+        </div>
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
+          {divisionChips.map((d) => (
+            <Chip key={d.div}>Дивизион {d.div}{d.place ? ` · #${d.place}` : ""}</Chip>
+          ))}
+          <a href={model.player.rankedInUrl} target="_blank" rel="noreferrer" className="inline-flex min-w-0 max-w-full items-center gap-1.5 font-mono text-xs text-primary">
+            <span className="min-w-0 break-all">{model.player.rid}</span> <ExternalLink className="size-3 shrink-0" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; seasonId: string }) {
+  const stats = model.careerStats;
+  const kpis = (
+    <>
+      <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
+      <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
+      <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
+      <FormIndexCard formIndex={stats.formIndex} />
+    </>
+  );
+  return (
+    <>
+      {/* Desktop: a row of four tiles, then a square photo (= two tiles wide)
+          beside Форма and Надёжность that share its height. */}
+      <div className="hidden flex-col gap-3 md:flex">
+        <div className="grid grid-cols-4 gap-3">{kpis}</div>
+        <div className="grid grid-cols-2 items-stretch gap-3">
+          <HeroPhotoCard model={model} stats={stats} seasonId={seasonId} />
+          <div className="flex min-w-0 flex-col gap-3">
+            <ResultsTimeline matches={model.contexts.career.matches} longestWinStreak={stats.longestWinStreak} />
+            <StrengthHistoryCard stats={stats} history={model.strengthHistory} fill className="min-h-0 flex-1" />
+            <ReliabilityCard stats={stats} />
           </div>
         </div>
       </div>
 
-      {/* right column: KPI tiles + timeline */}
-      <div className="min-w-0 flex flex-col gap-2 lg:gap-3">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 lg:gap-3">
-          <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
-          <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
-          <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
-          <FormIndexCard formIndex={stats.formIndex} />
-        </div>
+      {/* Mobile: identity card, KPI 2x2, Форма, Strength curve. */}
+      <div className="grid gap-2 md:hidden">
+        <HeroPhotoCard model={model} stats={stats} seasonId={seasonId} />
+        <div className="grid grid-cols-2 gap-2">{kpis}</div>
         <ResultsTimeline matches={model.contexts.career.matches} longestWinStreak={stats.longestWinStreak} />
-        {/* Mobile only: on desktop this card lives at the top of the left content
-            column (next to Графики), not in the header. */}
-        <StrengthHistoryCard stats={stats} history={model.strengthHistory} className="md:hidden" />
+        <StrengthHistoryCard stats={stats} history={model.strengthHistory} />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1437,9 +1459,9 @@ function ResultConversionCard({ stats }: { stats: PlayerProfileStats }) {
   );
 }
 
-function ReliabilityCard({ stats }: { stats: PlayerProfileStats }) {
+function ReliabilityCard({ stats, className }: { stats: PlayerProfileStats; className?: string }) {
   return (
-    <div className={cardClass("relative p-4")}>
+    <div className={cardClass(cn("relative p-4", className))}>
       <InfoPopover items={RELIABILITY_INFO} stats={stats} placement="up" />
       <h2 className="text-base font-semibold tracking-tight">Надёжность</h2>
       <div className="mt-2 flex items-center justify-between gap-3">
@@ -2124,7 +2146,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
  * Desktop W/L history timeline: wins on the top track (green W), losses on the
  * bottom track (red L). Newest match on the left, older scroll off to the right.
  */
-function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem[]; longestWinStreak: number }) {
+function ResultsTimeline({ matches, longestWinStreak, className }: { matches: MatchListItem[]; longestWinStreak: number; className?: string }) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   // Desktop: translate a vertical wheel into horizontal scroll while the cursor is
   // over the timeline. Each notch nudges a target and a rAF loop eases scrollLeft
@@ -2165,8 +2187,8 @@ function ResultsTimeline({ matches, longestWinStreak }: { matches: MatchListItem
   if (matches.length === 0) return null;
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-sans text-[11px] font-semibold";
   return (
-    <div className="min-w-0">
-      <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
+    <div className={cn("min-w-0", className)}>
+      <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <div className="flex min-w-0 items-baseline gap-2">
             <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
@@ -2208,18 +2230,21 @@ function StrengthHistoryCard({
   history,
   chartHeight = 128,
   className,
+  fill = false,
 }: {
   stats: PlayerProfileStats;
   history: PlayerProfileStrengthPoint[];
   chartHeight?: number;
   className?: string;
+  /** Stretch to a flex parent: card fills its height, chart takes the leftover. */
+  fill?: boolean;
 }) {
   const rating = stats.strengthRating;
   if (rating === null || history.length < 2) return null;
   const peak = Math.max(...history.map((p) => p.rating));
   return (
     <div className={cn("min-w-0", className)}>
-      <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
+      <div className={cn("min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3", fill && "flex h-full flex-col")}>
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
             <Snail className="size-3.5 text-[color:var(--rating-badge-hue)]" />
@@ -2230,7 +2255,13 @@ function StrengthHistoryCard({
             <span className="tabular">пик {peak}</span>
           </span>
         </div>
-        <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height={chartHeight} />
+        {fill ? (
+          <div className="min-h-0 flex-1">
+            <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height="100%" />
+          </div>
+        ) : (
+          <PlayerProfileChart type="strengthHistory" data={{ strengthHistory: history }} height={chartHeight} />
+        )}
       </div>
     </div>
   );
@@ -2357,9 +2388,6 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
       <PlayerCareerHeader model={model} seasonId={filter.seasonId} />
 
-      {/* Career-wide Strength Rating: full-width, above the filter tabs on desktop. */}
-      <StrengthHistoryCard stats={model.careerStats} history={model.strengthHistory} chartHeight={300} className="hidden md:block" />
-
       <Filters model={model} value={filter} onChange={applyFilter} />
 
       <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} className="hidden md:grid" />
@@ -2378,7 +2406,6 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
           <ComebacksCard stats={active.scopedStats} />
           <TimeLoadCard stats={active.scopedStats} />
           <ResultConversionCard stats={active.scopedStats} />
-          <ReliabilityCard stats={active.scopedStats} />
         </div>
       </div>
 
