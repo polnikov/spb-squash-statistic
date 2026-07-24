@@ -19,12 +19,12 @@ import {
   Megaphone,
   Merge,
   Plus,
-  RotateCcw,
   Search,
   Sparkles,
   Swords,
   TableProperties,
   Timer,
+  Trash2,
   TrendingDown,
   TrendingUp,
   Trophy,
@@ -2642,8 +2642,12 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
 
   const divisions = ops.divisions.map((d) => d.division);
   const missingSet = new Set(ops.missing.map((m) => `${m.division}:${m.stage}`));
-  // Audit rows newest upload first; unknown parse time sinks to the bottom.
-  const audit = [...imported].sort((a, b) => (b.parsedAt ?? "").localeCompare(a.parsedAt ?? ""));
+  // Audit is scoped to the season chosen in the header (ops.season); the action
+  // lists every season's uploads, so filter here. Newest upload first; unknown
+  // parse time sinks to the bottom.
+  const audit = imported
+    .filter((s) => s.season === ops.season)
+    .sort((a, b) => (b.parsedAt ?? "").localeCompare(a.parsedAt ?? ""));
   const auditDivs = [...new Set(audit.map((s) => s.division))].sort((a, b) => a - b);
   const cleanData =
     ops.missing.length === 0 && ops.noScoreCount === 0 && ops.noTimeCount === 0 && ops.playersNoId.length === 0 && duplicatesCount === 0;
@@ -2823,7 +2827,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
           Аудит загрузок · {audit.length}
         </div>
         <p className="text-[11.5px] leading-snug text-on-surface-variant">
-          «Откатить» удаляет загруженный этап дивизиона: его матчи и результаты стираются, рейтинги и агрегаты пересчитываются. Отменить нельзя, поэтому кнопка требует второго клика.
+          «Удалить» стирает загруженный этап дивизиона: его матчи и результаты удаляются, рейтинги и агрегаты пересчитываются. Отменить нельзя, поэтому кнопка требует второго клика.
         </p>
         {audit.length === 0 ? (
           <div className="rounded-lg border border-outline-variant bg-card px-4 py-8 text-center text-sm text-on-surface-variant">Нет загруженных этапов</div>
@@ -2858,8 +2862,8 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
                             confirming ? "bg-error text-on-error" : "text-error hover:bg-error-container/40",
                           )}
                         >
-                          <RotateCcw className="size-3.5" />
-                          {busyKey === key ? "…" : confirming ? "Точно?" : "Откат"}
+                          <Trash2 className="size-3.5" />
+                          {busyKey === key ? "…" : confirming ? "Точно?" : "Удалить"}
                         </button>
                       </div>
                     );

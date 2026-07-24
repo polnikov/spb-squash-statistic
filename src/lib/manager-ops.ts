@@ -114,7 +114,11 @@ export function buildManagerOps(league: League): ManagerOps {
   }
 
   // Match completeness. Sample list is capped; per-division counts are exact.
-  const playerName = (idx: number) => league.players[idx]?.name ?? "?";
+  // Resolve by the player's own `idx` field, not array position: the admin page
+  // replaces league.players with the full name-sorted roster, so array index no
+  // longer equals the per-season match idx.
+  const playerByIdx = new Map(league.players.map((p) => [p.idx, p]));
+  const playerName = (idx: number) => playerByIdx.get(idx)?.name ?? "?";
   const badMatches: OpsBadMatch[] = [];
   let noScoreCount = 0;
   let noTimeCount = 0;
