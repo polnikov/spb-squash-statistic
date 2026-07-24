@@ -1627,7 +1627,7 @@ function WinRing({ pct, color, small = false }: { pct: number | null; color: str
 
 function MobileOppTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-surface-container-high px-2 py-1.5 text-center">
+    <div className="rounded-md border border-outline-variant bg-surface-container-high px-2 py-1.5 text-center">
       <div className="text-[10px] leading-tight text-on-surface-variant">{label}</div>
       <div className="mt-0.5 font-mono text-[12.5px] font-semibold tabular">{value}</div>
     </div>
@@ -1751,7 +1751,12 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
             className="w-full"
           />
         )}
-        <MatchSearch value={query} onChange={setQuery} className={cn("w-full", !hideModeTabs && "mt-3")} />
+        <div className={cn("flex items-center gap-2", !hideModeTabs && "mt-3")}>
+          <MatchSearch value={query} onChange={setQuery} className="min-w-0 flex-1" />
+          <span className="flex h-9 shrink-0 items-center rounded-full border border-outline-variant bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
+            {(mode === "career" ? active.h2h.career : active.h2h.scoped).length}
+          </span>
+        </div>
         <div className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {H2H_SORT_OPTIONS.map((o) => (
             <button
@@ -2094,7 +2099,12 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     const mRest = rows.slice(5);
     return (
       <div className={cardClass("p-4")}>
-        <MatchSearch value={query} onChange={setQuery} className="mb-3 w-full" />
+        <div className="mb-3 flex items-center gap-2">
+          <MatchSearch value={query} onChange={setQuery} className="min-w-0 flex-1" />
+          <span className="flex h-9 shrink-0 items-center rounded-full border border-outline-variant bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
+            {active.matches.length}
+          </span>
+        </div>
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {MATCH_FILTER_ITEMS.map((o) => (
             <button
