@@ -2022,8 +2022,8 @@ function rateProfileMatch(m: MatchListItem): MatchRating {
   const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.for - g.against), 0) / games.length : 0;
 
   if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
-  if (total === 5) return { label: "5 геймов", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]" };
-  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]" };
+  if (total === 5) return { label: "5 геймов", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
+  if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-secondary/30 bg-secondary/15 text-secondary" };
   if (Math.min(m.gamesFor, m.gamesAgainst) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
   return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
 }

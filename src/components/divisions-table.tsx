@@ -133,7 +133,7 @@ function HighlightTile({
             "x"
           )}
         </span>
-        <span className="shrink-0 text-right font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-white md:text-2xl">
+        <span className="shrink-0 text-right font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl">
           <NumberPop>{player ? value : "x"}</NumberPop>
         </span>
       </div>

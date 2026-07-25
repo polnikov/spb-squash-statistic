@@ -24,7 +24,7 @@ export function RatingPinButton({
       className={cn(
         "inline-flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors",
         pinned
-          ? "border-transparent bg-[#dff7a5] text-black"
+          ? "border-primary bg-transparent text-primary"
           : "border-outline-variant text-on-surface-variant hover:text-on-surface",
         className,
       )}
