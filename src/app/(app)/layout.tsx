@@ -1,11 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { BookOpen } from "lucide-react";
 import { Sidebar } from "@/components/shell/sidebar";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileMenu } from "@/components/shell/mobile-menu";
 import { listSeasonsWithData } from "@/lib/db/league";
 
 // The whole app shell reads the DB (season list) at request time, so keep every
@@ -34,14 +32,7 @@ export default async function AppLayout({
             <span className="font-brand truncate text-[1.5rem] font-semibold tracking-tight">SPB Squash Statistic</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Link
-              href="/guide"
-              aria-label="Памятка по метрикам"
-              className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <BookOpen className="size-[18px]" />
-            </Link>
-            <ThemeToggle />
+            <MobileMenu />
             <Suspense fallback={null}>
               <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />
             </Suspense>
