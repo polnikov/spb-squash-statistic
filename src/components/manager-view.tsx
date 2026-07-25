@@ -615,7 +615,10 @@ function PlayersManager({ league }: { league: League }) {
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-3">
                         <span
-                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cover bg-center text-xs font-semibold text-white"
+                          className={cn(
+                            "flex size-8 shrink-0 items-center justify-center rounded-full bg-cover bg-center text-xs font-semibold text-white",
+                            avatar && "ring-1 ring-outline-variant",
+                          )}
                           style={avatar ? avatarBackgroundStyle(avatar) : { background: player.color }}
                         >
                           {avatar ? null : player.initials}

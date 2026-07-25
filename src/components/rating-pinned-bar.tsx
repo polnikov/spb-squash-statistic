@@ -46,6 +46,7 @@ export function RatingPinnedBar({
   onJump,
   onUnpin,
   revision,
+  mobileHidden = false,
 }: {
   row: PinnedBarRow | undefined;
   onJump: (node: HTMLElement | null) => void;
@@ -54,6 +55,9 @@ export function RatingPinnedBar({
    *  sort the pinned row can hop lists (visible <-> collapsed) and get a fresh DOM
    *  node, leaving the observer bound to a stale, detached one. */
   revision?: string | number;
+  /** Hide the floating bar below md while keeping it on desktop. The players page
+   *  passes this when a non-leaderboard mobile tab is active. */
+  mobileHidden?: boolean;
 }) {
   const rid = row?.rid;
   const [rowVisible, setRowVisible] = React.useState(true);
@@ -112,7 +116,12 @@ export function RatingPinnedBar({
   }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6">
+    <div
+      className={cn(
+        "pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 justify-center px-4 md:bottom-6",
+        mobileHidden ? "hidden md:flex" : "flex",
+      )}
+    >
       <div
         className={cn(
           "flex w-full max-w-[420px] items-center gap-2.5 rounded-full border-2 border-primary bg-[var(--chrome-bg-strong)] py-2 pl-2.5 pr-2 shadow-[0_6px_28px_rgba(0,0,0,0.5),0_0_0_4px_rgba(244,114,182,0.12)] backdrop-blur-[6px]",
@@ -132,8 +141,8 @@ export function RatingPinnedBar({
             {row.place}
           </span>
           {row.positionDelta !== undefined ? <RatingPositionDelta delta={row.positionDelta} className="shrink-0" /> : null}
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">{row.name}</span>
-          <span className="shrink-0 font-mono text-[15px] font-semibold tabular text-white">{row.points}</span>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-on-surface">{row.name}</span>
+          <span className="shrink-0 font-mono text-[15px] font-semibold tabular text-on-surface">{row.points}</span>
           <ChevronsDown className="size-4 shrink-0 text-muted-foreground" />
         </button>
         <button
@@ -141,7 +150,7 @@ export function RatingPinnedBar({
           onClick={onUnpin}
           aria-label="Снять закрепление"
           className={cn(
-            "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-white",
+            "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-on-surface",
           )}
         >
           <X className="size-4" />

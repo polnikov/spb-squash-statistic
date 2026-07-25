@@ -189,7 +189,7 @@ function MobileLeaderboardSort({
 function StrengthMiniBadge({ value }: { value: number | null }) {
   if (value === null) return null;
   return (
-    <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
+    <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full border border-black/15 bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular">{value}</span>
     </span>
@@ -768,6 +768,7 @@ export function PlayersList({
       {pinnedBarRow ? (
         <RatingPinnedBar
           row={pinnedBarRow}
+          mobileHidden={mobileView === "profiles"}
           revision={`${scope}-${leaderboardSort}-${leaderboardDirection}-${expanded}-${q}`}
           onUnpin={() => toggle(pinnedBarRow.rid)}
           onJump={(node) => {
