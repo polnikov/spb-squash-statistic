@@ -482,7 +482,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
 function StrengthPill({ value }: { value: number | null | undefined }) {
   if (value == null) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
+    <span className="inline-flex items-center gap-1 rounded-full border border-black/15 bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)] backdrop-blur-md">
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular">{value}</span>
     </span>

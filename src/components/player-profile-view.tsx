@@ -1027,7 +1027,7 @@ function HeroPhotoCard({ model, stats, seasonId, className }: { model: PlayerPro
           {!avatar ? (
             <PlayerAvatar rid={model.player.rid} initials={model.player.initials} color={model.player.color} className="size-[84px] text-3xl" />
           ) : null}
-          <h1 className="max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]">{model.player.name}</h1>
+          <h1 className={cn("max-w-full break-words text-[26px] font-semibold leading-[1.12] tracking-tight md:text-[28px]", avatar && "text-white")}>{model.player.name}</h1>
           <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px] text-on-surface-variant">
             <MetaItem label="Сезонов" value={stats.seasonsPlayed} />
             <MetaItem label="Этапов" value={stats.stagesPlayed} />
