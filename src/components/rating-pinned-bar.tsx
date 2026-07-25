@@ -115,7 +115,7 @@ export function RatingPinnedBar({
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6">
       <div
         className={cn(
-          "flex w-full max-w-[420px] items-center gap-2.5 rounded-full border-2 border-[#f472b6] bg-[rgba(22,22,22,0.96)] py-2 pl-2.5 pr-2 shadow-[0_6px_28px_rgba(0,0,0,0.5),0_0_0_4px_rgba(244,114,182,0.12)] backdrop-blur-[6px]",
+          "flex w-full max-w-[420px] items-center gap-2.5 rounded-full border-2 border-primary bg-[var(--chrome-bg-strong)] py-2 pl-2.5 pr-2 shadow-[0_6px_28px_rgba(0,0,0,0.5),0_0_0_4px_rgba(244,114,182,0.12)] backdrop-blur-[6px]",
           "transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[opacity,transform]",
           shown
             ? "translate-y-0 scale-100 opacity-100 pointer-events-auto"

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import { fmtDate, matchesLabel, pluralRu } from "@/lib/format";
 import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
@@ -81,17 +82,29 @@ type FilterValue = {
   divisionId: string;
 };
 
+/** Read a CSS custom property off :root (falls back on the server / if unset).
+ *  ECharts needs concrete colors, not var(), so the theme palette is read live. */
+function cssVar(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
+/** Chart palette backed by CSS vars so it flips with the light/dark theme. Getters
+ *  read live at option-build time; PlayerProfileChart rebuilds on theme change. */
 const CHART_COLORS = {
-  primary: "#f472b6",
-  secondary: "#7eeaf5",
-  tertiary: "#ffa52a",
-  error: "#ff6b63",
+  get primary() { return cssVar("--chart-primary", "#f472b6"); },
+  get secondary() { return cssVar("--chart-secondary", "#7eeaf5"); },
+  get tertiary() { return cssVar("--chart-tertiary", "#ffa52a"); },
+  get error() { return cssVar("--chart-error", "#ff6b63"); },
   /** Wins. Paired with `error` wherever a chart splits a result into won/lost. */
-  success: "#22c55e",
+  get success() { return cssVar("--chart-success", "#22c55e"); },
   /** Strength Rating (Elo) curve. Matches the lime rating badge. */
-  strength: "#dff7a5",
-  text: "#b6b6b6",
-  grid: "rgba(255,255,255,0.09)",
+  get strength() { return cssVar("--chart-strength", "#dff7a5"); },
+  get text() { return cssVar("--chart-text", "#b6b6b6"); },
+  get grid() { return cssVar("--chart-grid", "rgba(255,255,255,0.09)"); },
+  get tooltipBg() { return cssVar("--chart-tooltip-bg", "#1e1e1f"); },
+  get tooltipInk() { return cssVar("--chart-tooltip-ink", "#ededed"); },
 };
 
 const DESKTOP_CHARTS: Record<PlayerProfileStatsScope, { key: PlayerProfileChartType; label: string }[]> = {
@@ -199,10 +212,10 @@ function baseChartOption(): EChartsOption {
       // escapes, so an unconfined tooltip near the left edge is cut in half on a
       // phone.
       confine: true,
-      backgroundColor: "#1e1e1f",
+      backgroundColor: CHART_COLORS.tooltipBg,
       borderColor: CHART_COLORS.grid,
       borderRadius: 12,
-      textStyle: { color: "#ededed", fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
+      textStyle: { color: CHART_COLORS.tooltipInk, fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
       extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: CHART_COLORS.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
@@ -317,7 +330,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
           label: {
             show: true,
             position: "top",
-            color: "#ffffff",
+            color: CHART_COLORS.text,
             fontWeight: 700,
             formatter: (params: { data?: unknown }) => {
               const item = params.data as { place?: number } | undefined;
@@ -558,7 +571,10 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
-  const option = React.useMemo(() => chartOption(type, data, isMobile), [type, data, isMobile]);
+  // resolvedTheme is a dep so the option rebuilds on theme switch and the CSS-var
+  // driven CHART_COLORS getters are re-read for the new palette.
+  const { resolvedTheme } = useTheme();
+  const option = React.useMemo(() => chartOption(type, data, isMobile), [type, data, isMobile, resolvedTheme]);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const [canRender, setCanRender] = React.useState(false);
 

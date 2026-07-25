@@ -178,10 +178,10 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
-  /* win/loss semantics (match results, deltas, W/L badges) */
-  --color-win: #04a45a;
-  --color-loss: #ff4747;
-  --color-loss-soft: #ff6b63;
+  /* win/loss semantics (match results, deltas, W/L badges) - theme-aware */
+  --color-win: var(--m3-win);
+  --color-loss: var(--m3-loss);
+  --color-loss-soft: var(--m3-loss-soft);
 
   /* type + shape + motion */
   --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system,
@@ -243,6 +243,23 @@
   --m3-inverse-primary: #f9a8d4;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
+  --m3-win: #04a45a;
+  --m3-loss: #ff4747;
+  --m3-loss-soft: #ff6b63;
+  /* Translucent chrome fill (sticky header/sidebar/bottom-nav over the app bg). */
+  --chrome-bg: rgba(22, 22, 22, 0.94);
+  --chrome-bg-strong: rgba(22, 22, 22, 0.96);
+  /* ECharts palette (read live in JS; ECharts can't use var()). */
+  --chart-primary: #f472b6;
+  --chart-secondary: #7eeaf5;
+  --chart-tertiary: #ffa52a;
+  --chart-error: #ff6b63;
+  --chart-success: #22c55e;
+  --chart-strength: #dff7a5;
+  --chart-text: #b6b6b6;
+  --chart-grid: rgba(255, 255, 255, 0.09);
+  --chart-tooltip-bg: #1e1e1f;
+  --chart-tooltip-ink: #ededed;
 }
 
 /* Rating badge (Strength Rating snail chip). Fixed lime brand chip: dark ink on
@@ -254,45 +271,68 @@
   --rating-badge-ink: #26320b;
 }
 
-/* Keep optional light mode close to the same neutral system if toggled later. */
+/* Light theme - "warm paper": soft off-white surfaces, deep-pink accent so
+   text-primary keeps contrast on light. Kept in the same neutral M3 system. */
 .light {
   color-scheme: light;
-  --m3-primary: #f472b6;
+  /* Accent deepened from the brand pink so text/links/active tabs pass contrast
+     on light; white on-primary keeps fills (pills, rings) legible. */
+  --m3-primary: #d61f76;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: rgba(244, 114, 182, 0.14);
+  --m3-primary-container: rgba(214, 31, 118, 0.12);
   --m3-on-primary-container: #9d174d;
-  --m3-secondary: #1dafe8;
+  --m3-secondary: #0891b2;
   --m3-on-secondary: #ffffff;
-  --m3-secondary-container: rgba(29, 175, 232, 0.14);
-  --m3-on-secondary-container: #116f94;
-  --m3-tertiary: #ffa52a;
-  --m3-on-tertiary: #171717;
-  --m3-tertiary-container: rgba(255, 165, 42, 0.18);
+  --m3-secondary-container: rgba(8, 145, 178, 0.14);
+  --m3-on-secondary-container: #0e6a83;
+  --m3-tertiary: #d97706;
+  --m3-on-tertiary: #ffffff;
+  --m3-tertiary-container: rgba(217, 119, 6, 0.16);
   --m3-on-tertiary-container: #8a5100;
   --m3-error: #d83b35;
   --m3-on-error: #ffffff;
-  --m3-error-container: rgba(216, 59, 53, 0.14);
+  --m3-error-container: rgba(216, 59, 53, 0.13);
   --m3-on-error-container: #8a1712;
-  --m3-background: #f4f4f4;
-  --m3-on-background: #212121;
-  --m3-surface: #f4f4f4;
-  --m3-on-surface: #212121;
-  --m3-surface-variant: #dedede;
-  --m3-on-surface-variant: #616161;
-  --m3-surface-dim: #d0d0d0;
+  --m3-background: #f6f5f2;
+  --m3-on-background: #1d1c1a;
+  --m3-surface: #f6f5f2;
+  --m3-on-surface: #1d1c1a;
+  --m3-surface-variant: #e7e5df;
+  --m3-on-surface-variant: #5c5a55;
+  --m3-surface-dim: #d9d7d0;
   --m3-surface-bright: #ffffff;
   --m3-surface-container-lowest: #ffffff;
-  --m3-surface-container-low: #eeeeee;
-  --m3-surface-container: #e8e8e8;
-  --m3-surface-container-high: #dedede;
-  --m3-surface-container-highest: #d2d2d2;
-  --m3-outline: #747474;
-  --m3-outline-variant: rgba(0, 0, 0, 0.11);
-  --m3-inverse-surface: #212121;
-  --m3-inverse-on-surface: #ededed;
-  --m3-inverse-primary: #fbcfe8;
+  --m3-surface-container-low: #f1f0ec;
+  --m3-surface-container: #efeee9;
+  --m3-surface-container-high: #e7e5df;
+  --m3-surface-container-highest: #dedcd5;
+  --m3-outline: #8a877f;
+  --m3-outline-variant: rgba(0, 0, 0, 0.10);
+  --m3-inverse-surface: #1d1c1a;
+  --m3-inverse-on-surface: #f6f5f2;
+  --m3-inverse-primary: #f9a8d4;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
+  --m3-win: #06935a;
+  --m3-loss: #e11d48;
+  --m3-loss-soft: #e5544b;
+  --chrome-bg: rgba(246, 245, 242, 0.90);
+  --chrome-bg-strong: rgba(246, 245, 242, 0.94);
+  /* Light counterpart of the dark app background gradient. */
+  --app-bg-image:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.35) 20%, transparent 58%),
+    linear-gradient(180deg, #faf9f6 0%, #f2f0ea 52%, #eceae3 100%);
+  /* ECharts palette - deepened for contrast on light surfaces. */
+  --chart-primary: #d61f76;
+  --chart-secondary: #0891b2;
+  --chart-tertiary: #d97706;
+  --chart-error: #d83b35;
+  --chart-success: #06935a;
+  --chart-strength: #7a9e00;
+  --chart-text: #5c5a55;
+  --chart-grid: rgba(0, 0, 0, 0.10);
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-ink: #1d1c1a;
 }
 
 @layer base {

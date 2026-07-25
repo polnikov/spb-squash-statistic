@@ -3,6 +3,7 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, Cross, Snail, X } from "lucide-react";
 import type {
@@ -45,14 +46,25 @@ const EChart = dynamic(
 
 /* ---------------------------------------------------------------- atoms --- */
 
+/** Read a CSS custom property off :root (falls back on the server / if unset).
+ *  ECharts needs concrete colors, not var(), so the theme palette is read live. */
+function cssVar(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
+/** Chart palette backed by CSS vars so it flips with the light/dark theme. */
 const C = {
-  primary: "#f472b6",
-  tertiary: "#ffa52a",
-  secondary: "#7eeaf5",
-  success: "#22c55e",
-  error: "#ff6b63",
-  text: "#b6b6b6",
-  grid: "rgba(255,255,255,0.09)",
+  get primary() { return cssVar("--chart-primary", "#f472b6"); },
+  get tertiary() { return cssVar("--chart-tertiary", "#ffa52a"); },
+  get secondary() { return cssVar("--chart-secondary", "#7eeaf5"); },
+  get success() { return cssVar("--chart-success", "#22c55e"); },
+  get error() { return cssVar("--chart-error", "#ff6b63"); },
+  get text() { return cssVar("--chart-text", "#b6b6b6"); },
+  get grid() { return cssVar("--chart-grid", "rgba(255,255,255,0.09)"); },
+  get tooltipBg() { return cssVar("--chart-tooltip-bg", "#1e1e1f"); },
+  get tooltipInk() { return cssVar("--chart-tooltip-ink", "#ededed"); },
 };
 
 function cardClass(className?: string) {
@@ -222,10 +234,10 @@ function chartBase(): EChartsOption {
       // half off-screen. Cap the width too: the meeting tooltip is several lines
       // of Russian text and would otherwise be wider than the chart.
       confine: true,
-      backgroundColor: "#1e1e1f",
+      backgroundColor: C.tooltipBg,
       borderColor: C.grid,
       borderRadius: 12,
-      textStyle: { color: "#ededed", fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
+      textStyle: { color: C.tooltipInk, fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
       extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
     },
     legend: { top: 0, right: 0, textStyle: { color: C.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
@@ -331,6 +343,9 @@ function chartOptionFor(tab: ChartKey, meetings: Meeting[], stats: PlayerProfile
 }
 
 function ChartView({ tab, meetings, stats, height }: { tab: ChartKey; meetings: Meeting[]; stats: PlayerProfileStats; height: number }) {
+  // Subscribe to the theme so the chart re-renders (and rebuilds its option with
+  // the new CSS-var palette) when the user toggles light/dark.
+  useTheme();
   if (tab === "timeline") return <MeetingTimeline meetings={meetings} />;
   const option = chartOptionFor(tab, meetings, stats);
   return option ? (

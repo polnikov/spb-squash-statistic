@@ -5,6 +5,7 @@ import { BookOpen } from "lucide-react";
 import { Sidebar } from "@/components/shell/sidebar";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { listSeasonsWithData } from "@/lib/db/league";
 
 // The whole app shell reads the DB (season list) at request time, so keep every
@@ -27,7 +28,7 @@ export default async function AppLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Sticky over the scroll: keep the backdrop blur narrow and the fill nearly
             opaque, a wide blur is re-sampled on every scroll frame. */}
-        <header data-app-header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-[rgba(22,22,22,0.94)] px-2 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] shadow-[0_4px_18px_rgba(0,0,0,0.5)] backdrop-blur-[6px] md:hidden">
+        <header data-app-header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-[var(--chrome-bg)] px-2 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] shadow-[0_4px_18px_rgba(0,0,0,0.5)] backdrop-blur-[6px] md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
             <Image src="/icons/icon-192x192.png" alt="SPB Squash Statistic" width={32} height={32} className="size-8 shrink-0 rounded-[9px] object-contain" />
             <span className="font-brand truncate text-[1.5rem] font-semibold tracking-tight">SPB Squash Statistic</span>
@@ -40,6 +41,7 @@ export default async function AppLayout({
             >
               <BookOpen className="size-[18px]" />
             </Link>
+            <ThemeToggle />
             <Suspense fallback={null}>
               <SeasonSwitcher hideOnPlayerDetail variant="header" seasons={seasons} />
             </Suspense>
