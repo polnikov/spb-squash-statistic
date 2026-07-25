@@ -199,7 +199,7 @@ function StrengthMiniBadge({ value }: { value: number | null }) {
 function StrengthInlineBadge({ value, className }: { value: number | null; className?: string }) {
   if (value === null) return null;
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border border-[color:var(--rating-badge-border)] bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)]", className)}>
+    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border border-black/15 bg-[color:var(--rating-badge-bg)] px-1.5 py-0.5 text-[10.5px] font-semibold text-[color:var(--rating-badge-ink)]", className)}>
       <Snail className="size-3 shrink-0" />
       <span className="font-mono tabular">{value}</span>
     </span>

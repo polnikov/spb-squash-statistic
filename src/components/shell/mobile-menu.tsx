@@ -45,68 +45,59 @@ export function MobileMenu() {
 
   return (
     <div className="relative flex items-center">
-      <motion.button
+      <button
         type="button"
-        layoutId="mobile-menu-wrapper"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((o) => !o)}
         aria-label="Меню"
-        style={{ borderRadius: 9999 }}
-        className="grid size-8 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+        className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
       >
         <CircleEllipsis className="size-[18px]" />
-      </motion.button>
+      </button>
 
       <AnimatePresence>
         {open ? (
           <motion.div
             ref={ref}
-            layoutId="mobile-menu-wrapper"
-            style={{ borderRadius: 12 }}
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[210px] overflow-hidden bg-muted p-1 shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_8px_28px_rgba(0,0,0,0.28)]"
+            initial={{ opacity: 0, y: -6, filter: "blur(3px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -4, filter: "blur(3px)" }}
+            transition={{ type: "spring", duration: 0.28, bounce: 0 }}
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[210px] space-y-1 rounded-lg border border-border bg-card p-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
           >
-            <motion.div
-              initial={{ opacity: 0, y: -6, filter: "blur(3px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -4, filter: "blur(3px)" }}
-              transition={{ type: "spring", duration: 0.35, bounce: 0 }}
-              style={{ borderRadius: 10 }}
-              className="space-y-1 border border-border bg-card p-1.5"
+            <Link
+              href="/guide"
+              onClick={() => setOpen(false)}
+              className={cn(rowClass, "text-on-surface hover:bg-surface-container-high")}
             >
-              <Link
-                href="/guide"
-                onClick={() => setOpen(false)}
-                className={cn(rowClass, "text-on-surface hover:bg-surface-container-high")}
-              >
-                <BookOpen className="size-4" />
-                Памятка
-              </Link>
+              <BookOpen className="size-4" />
+              Памятка
+            </Link>
 
-              <div className="my-1 h-px bg-border" />
+            <div className="my-1 h-px bg-border" />
 
-              {themes.map((t) => {
-                const Icon = t.icon;
-                const selected = mounted && resolvedTheme === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => {
-                      setTheme(t.key);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      rowClass,
-                      selected
-                        ? "bg-primary text-on-primary"
-                        : "text-on-surface hover:bg-surface-container-high",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </motion.div>
+            {themes.map((t) => {
+              const Icon = t.icon;
+              const selected = mounted && resolvedTheme === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => {
+                    setTheme(t.key);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    rowClass,
+                    selected
+                      ? "bg-primary text-on-primary"
+                      : "text-on-surface hover:bg-surface-container-high",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {t.label}
+                </button>
+              );
+            })}
           </motion.div>
         ) : null}
       </AnimatePresence>
