@@ -571,10 +571,18 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
-  // resolvedTheme is a dep so the option rebuilds on theme switch and the CSS-var
-  // driven CHART_COLORS getters are re-read for the new palette.
+  // next-themes flips the html theme class in a post-render effect, so reading the
+  // CSS palette synchronously off resolvedTheme races: the option rebuilds while the
+  // class is still the OLD theme, baking in stale colors (washed-out charts on
+  // switch). Bump a tick on the next frame - after the class is committed - so the
+  // CHART_COLORS getters re-read the applied palette.
   const { resolvedTheme } = useTheme();
-  const option = React.useMemo(() => chartOption(type, data, isMobile), [type, data, isMobile, resolvedTheme]);
+  const [themeTick, setThemeTick] = React.useState(0);
+  React.useEffect(() => {
+    const raf = requestAnimationFrame(() => setThemeTick((t) => t + 1));
+    return () => cancelAnimationFrame(raf);
+  }, [resolvedTheme]);
+  const option = React.useMemo(() => chartOption(type, data, isMobile), [type, data, isMobile, themeTick]);
   const hostRef = React.useRef<HTMLDivElement>(null);
   const [canRender, setCanRender] = React.useState(false);
 
