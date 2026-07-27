@@ -62,7 +62,7 @@ export function MobileMenu() {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -4, filter: "blur(3px)" }}
             transition={{ type: "spring", duration: 0.28, bounce: 0 }}
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[210px] space-y-1 rounded-lg border border-border bg-card p-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-max space-y-1 rounded-lg border border-border bg-card p-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
           >
             <Link
               href="/guide"

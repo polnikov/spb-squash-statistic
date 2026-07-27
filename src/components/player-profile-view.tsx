@@ -216,7 +216,10 @@ function baseChartOption(): EChartsOption {
       borderColor: CHART_COLORS.grid,
       borderRadius: 12,
       textStyle: { color: CHART_COLORS.tooltipInk, fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
-      extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;",
+      // echarts hardcodes `z-index:9999999` on the tooltip DOM node, so it would
+      // paint over the sticky app header (z-40). extraCssText is appended last,
+      // so it wins: keep the tooltip above page content but under the chrome.
+      extraCssText: "border-radius:12px;overflow:hidden;max-width:min(260px,72vw);white-space:normal;z-index:35;",
     },
     legend: { top: 0, right: 0, textStyle: { color: CHART_COLORS.text, fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
     grid: { left: 38, right: 18, top: 38, bottom: 34 },
@@ -248,13 +251,23 @@ function lineSeries(name: string, data: (number | null)[], color?: string) {
   };
 }
 
-function barSeries(name: string, data: (number | null)[], color?: string, stack?: string) {
+type BarRadius = [number, number, number, number];
+
+/** Bars are rounded on top only by default. `radius` overrides it for charts that
+ *  cross zero (balance): a bar hanging below the axis needs both ends rounded. */
+function barSeries(
+  name: string,
+  data: (number | null)[],
+  color?: string,
+  stack?: string,
+  radius: BarRadius = [5, 5, 0, 0],
+) {
   return {
     name,
     type: "bar" as const,
     stack,
     barMaxWidth: 22,
-    itemStyle: { borderRadius: [5, 5, 0, 0] as [number, number, number, number], color },
+    itemStyle: { borderRadius: radius, color },
     data,
   };
 }
@@ -464,8 +477,8 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       ...option,
       xAxis: { ...option.xAxis, data: stages.map((p) => `Э${p.stage}`) },
       series: [
-        barSeries("Геймы/матч", stages.map((p) => numericValue(p.gameBalancePerMatch)), CHART_COLORS.primary),
-        barSeries("Розыгрыши/матч", stages.map((p) => numericValue(p.rallyBalancePerMatch)), CHART_COLORS.tertiary),
+        barSeries("Геймы/матч", stages.map((p) => numericValue(p.gameBalancePerMatch)), CHART_COLORS.primary, undefined, [5, 5, 5, 5]),
+        barSeries("Розыгрыши/матч", stages.map((p) => numericValue(p.rallyBalancePerMatch)), CHART_COLORS.tertiary, undefined, [5, 5, 5, 5]),
       ],
     };
   }
@@ -764,6 +777,7 @@ function SegmentedControl<T extends string>({
   className,
   equal = false,
   compact = false,
+  dense = false,
 }: {
   items: { key: T; label: string }[];
   value: T;
@@ -772,10 +786,19 @@ function SegmentedControl<T extends string>({
   equal?: boolean;
   /** Tighter horizontal padding so more options fit on one row without scroll. */
   compact?: boolean;
+  /** Squeezes gaps, padding and type so a long row (7 chart tabs) fits the phone
+   *  width without a horizontal scroll. */
+  dense?: boolean;
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
-    <div className={cn("relative flex gap-1 overflow-x-auto rounded-[16px] border border-outline-variant bg-surface-container-low p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
+    <div
+      className={cn(
+        "relative flex overflow-x-auto rounded-[16px] border border-outline-variant bg-surface-container-low [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        dense ? "gap-0.5 p-0.5" : "gap-1 p-1",
+        className,
+      )}
+    >
       <TabSliderPill ind={ind} />
       {items.map((item) => (
         <button
@@ -785,7 +808,9 @@ function SegmentedControl<T extends string>({
           onClick={() => onChange(item.key)}
           className={cn(
             "relative z-10 h-9 whitespace-nowrap rounded-[12px] text-xs font-semibold transition-colors duration-200 ease-m3-standard",
-            equal ? "min-w-0 flex-1 px-2" : compact ? "shrink-0 px-2" : "shrink-0 px-3.5",
+            dense
+              ? "flex-1 px-0.5 text-[11px] tracking-tight"
+              : equal ? "min-w-0 flex-1 px-2" : compact ? "shrink-0 px-2" : "shrink-0 px-3.5",
             value === item.key ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
           )}
         >
@@ -2544,7 +2569,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
                 <InfoPopover items={CHARTS_INFO} stats={active.scopedStats} mobileSafe />
                 <div className="mb-3 flex flex-col gap-2">
                   <h2 className="text-base font-semibold tracking-tight">Графики</h2>
-                  <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} />
+                  <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} dense />
                 </div>
                 <PlayerProfileChart type={chartType} data={chartPayload(active)} height={260} />
                 <p className="mt-3 text-[11.5px] text-on-surface-variant">{active.context.description}</p>
