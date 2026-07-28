@@ -6,16 +6,18 @@
  * folds the whole match history left-to-right in canonical order and writes the
  * cached columns on `players` plus the `player_rating_history` audit trail.
  *
- * Squash adaptation (best-of-5): the base score S is a binary win/loss (Elo
- * core); the bo5 structure enters only as magnitude multipliers — `scoreFactor`
- * (games won by the loser) and `marginFactor` (rally margin) — so the
- * probabilistic core stays intact while decisiveness is rewarded.
+ * Squash adaptation: the base score S is a binary win/loss (Elo core); the
+ * match structure enters only as magnitude multipliers — `scoreFactor` (games
+ * won by the loser, read against the match format) and `marginFactor` (rally
+ * margin) — so the probabilistic core stays intact while decisiveness is
+ * rewarded. Both best-of-5 and best-of-3 matches are rated on the same scale.
  */
 
 import { eq } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import { matches, players, playerRatingHistory, seasons, stages, type NewPlayerRatingHistory } from "@/lib/db/schema";
 import { seasonStart } from "@/lib/league";
+import { matchGamesToWin } from "@/lib/stats/compute";
 
 export const STRENGTH_RATING = {
   base: 1500,
@@ -41,9 +43,15 @@ export function kFactor(games: number): number {
   return 16;
 }
 
-/** Decisiveness by games won by the loser: 0 → 1.15, 1 → 1.08, 2 → 1.00. */
-export function scoreFactor(loserGames: number): number {
+/**
+ * Decisiveness by games won by the loser, relative to the match format.
+ * best-of-5: 0 → 1.15, 1 → 1.08, 2 → 1.00.
+ * best-of-3: 0 → 1.15, 1 → 1.00 — a 2:1 went to the decider, same as a 3:2,
+ * so it must not be paid like a 3:1.
+ */
+export function scoreFactor(loserGames: number, gamesToWin: 2 | 3 = 3): number {
   if (loserGames <= 0) return 1.15;
+  if (gamesToWin === 2) return 1.0;
   if (loserGames === 1) return 1.08;
   return 1.0;
 }
@@ -69,6 +77,8 @@ export type StrengthMatch = {
   winnerIsA: boolean;
   /** Games won by the losing player (0, 1 or 2). */
   loserGames: number;
+  /** Games the winner needed: 3 (best-of-5) or 2 (best-of-3). */
+  gamesToWin: 2 | 3;
   winnerRallies: number;
   loserRallies: number;
 };
@@ -95,7 +105,7 @@ export function applyMatch(state: Map<number, RatingState>, m: StrengthMatch): M
   const eB = 1 - eA;
   const sA = m.winnerIsA ? 1 : 0;
   const sB = 1 - sA;
-  const sf = scoreFactor(m.loserGames);
+  const sf = scoreFactor(m.loserGames, m.gamesToWin);
   const mf = marginFactor(m.winnerRallies, m.loserRallies);
 
   const rawA = kFactor(a.games) * (sA - eA) * sf * mf;
@@ -150,6 +160,7 @@ function toStrengthMatch(r: OrderedMatchRow): StrengthMatch | null {
     playerBId: r.playerBId,
     winnerIsA,
     loserGames,
+    gamesToWin: matchGamesToWin(r.gamesA, r.gamesB),
     winnerRallies: winnerIsA ? aRallies : bRallies,
     loserRallies: winnerIsA ? bRallies : aRallies,
   };

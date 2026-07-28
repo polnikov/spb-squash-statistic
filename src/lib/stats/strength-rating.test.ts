@@ -43,6 +43,11 @@ describe("scoreFactor", () => {
     expect(scoreFactor(1)).toBe(1.08);
     expect(scoreFactor(2)).toBe(1.0);
   });
+
+  it("reads best-of-3 scores against their own format", () => {
+    expect(scoreFactor(0, 2)).toBe(1.15); // 2:0 sweep
+    expect(scoreFactor(1, 2)).toBe(1.0); // 2:1 went to the decider
+  });
 });
 
 describe("marginFactor", () => {
@@ -69,6 +74,7 @@ describe("applyMatch", () => {
     playerBId: 2,
     winnerIsA: true,
     loserGames: 2, // scoreFactor 1.0
+    gamesToWin: 3,
     winnerRallies: 33,
     loserRallies: 31, // marginFactor 1 + 2/120
   };
@@ -105,6 +111,7 @@ describe("applyMatch", () => {
       playerBId: 2,
       winnerIsA: true,
       loserGames: 1,
+      gamesToWin: 3,
       winnerRallies: 44,
       loserRallies: 38,
     });
@@ -115,11 +122,11 @@ describe("applyMatch", () => {
 
 describe("recompute determinism", () => {
   const history: StrengthMatch[] = [
-    { matchId: 1, playerAId: 1, playerBId: 2, winnerIsA: true, loserGames: 0, winnerRallies: 33, loserRallies: 20 },
-    { matchId: 2, playerAId: 2, playerBId: 3, winnerIsA: true, loserGames: 2, winnerRallies: 44, loserRallies: 41 },
-    { matchId: 3, playerAId: 1, playerBId: 3, winnerIsA: false, loserGames: 1, winnerRallies: 39, loserRallies: 33 },
-    { matchId: 4, playerAId: 3, playerBId: 2, winnerIsA: true, loserGames: 0, winnerRallies: 33, loserRallies: 18 },
-    { matchId: 5, playerAId: 1, playerBId: 2, winnerIsA: true, loserGames: 1, winnerRallies: 41, loserRallies: 36 },
+    { matchId: 1, playerAId: 1, playerBId: 2, winnerIsA: true, loserGames: 0, gamesToWin: 3, winnerRallies: 33, loserRallies: 20 },
+    { matchId: 2, playerAId: 2, playerBId: 3, winnerIsA: true, loserGames: 2, gamesToWin: 3, winnerRallies: 44, loserRallies: 41 },
+    { matchId: 3, playerAId: 1, playerBId: 3, winnerIsA: false, loserGames: 1, gamesToWin: 3, winnerRallies: 39, loserRallies: 33 },
+    { matchId: 4, playerAId: 3, playerBId: 2, winnerIsA: true, loserGames: 0, gamesToWin: 3, winnerRallies: 33, loserRallies: 18 },
+    { matchId: 5, playerAId: 1, playerBId: 2, winnerIsA: true, loserGames: 1, gamesToWin: 3, winnerRallies: 41, loserRallies: 36 },
   ];
 
   function fold(): Map<number, RatingState> {

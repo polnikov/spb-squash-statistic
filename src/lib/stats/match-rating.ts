@@ -1,10 +1,11 @@
-import type { RealMatch } from "@/lib/league";
+import { wentToDecider, type RealMatch } from "@/lib/league";
 
 /**
  * Match rating: the single most notable trait of a match, shown as a badge.
  * Priority: retirement > comeback (won after dropping the first two games) >
- * five games > tight (two+ games decided by <=2, or a long match of small
- * margins) > blowout (3:0 with wide margins) > plain competitive.
+ * decider (5th game in best-of-5, 3rd in best-of-3) > tight (two+ games decided
+ * by <=2, or a long match of small margins) > blowout (a sweep with wide
+ * margins) > plain competitive.
  *
  * `className` carries a tone-matched Tailwind pill style (border + bg + text).
  */
@@ -21,7 +22,7 @@ export function rateMatch(m: RealMatch): MatchRating {
   const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.a - g.b), 0) / games.length : 0;
 
   if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
-  if (total === 5) return { label: "5 геймов", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
+  if (wentToDecider(m.gamesA, m.gamesB)) return { label: "Решающий", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
   if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-secondary/30 bg-secondary/15 text-secondary" };
   if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
   return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
@@ -30,7 +31,7 @@ export function rateMatch(m: RealMatch): MatchRating {
 /** Priority weight of a rating label; higher = more notable for a "match of the stage" pick. */
 const RATING_PRIORITY: Record<string, number> = {
   "Камбэк": 5,
-  "5 геймов": 4,
+  "Решающий": 4,
   "Плотный": 3,
   "Ровный": 1,
   "Разгром": 0,

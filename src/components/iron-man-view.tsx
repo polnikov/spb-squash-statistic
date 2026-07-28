@@ -173,7 +173,7 @@ function PartTabs({ half, setHalf }: { half: 1 | 2; setHalf: (h: 1 | 2) => void 
   );
 }
 
-type IronSortKey = "court" | "stages" | "matches" | "perMatch" | "games" | "fiveGameMatches" | "longestMatchMin";
+type IronSortKey = "court" | "stages" | "matches" | "perMatch" | "games" | "deciderMatches" | "longestMatchMin";
 type IronSort = { key: IronSortKey; direction: "asc" | "desc" };
 
 const TABLE_COLUMNS: { label: string; sortKey?: IronSortKey; className?: string }[] = [
@@ -184,7 +184,7 @@ const TABLE_COLUMNS: { label: string; sortKey?: IronSortKey; className?: string 
   { label: "Матчи", sortKey: "matches" },
   { label: "Среднее время матча", sortKey: "perMatch" },
   { label: "Геймы", sortKey: "games" },
-  { label: "Пятигеймовые матчи", sortKey: "fiveGameMatches" },
+  { label: "Матчи до решающего", sortKey: "deciderMatches" },
   { label: "Самый длинный матч", sortKey: "longestMatchMin" },
 ];
 
@@ -375,7 +375,7 @@ export function IronManView({ league }: { league: League }) {
                       <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.matches}</td>
                       <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{fmtCourt(r.perMatch)}</td>
                       <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.gamesWon + r.gamesLost}</td>
-                      <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.fiveGameMatches}</td>
+                      <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.deciderMatches}</td>
                       <td className="px-4 py-3 text-center font-mono tabular text-on-surface-variant">{fmtCourt(r.longestMatchMin)}</td>
                     </tr>
                   ))}

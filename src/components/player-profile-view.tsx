@@ -29,6 +29,7 @@ import {
   formatRecord,
   formatSampleSizeLevel,
   formatSignedNumber,
+  scoreDistributionRows,
 } from "@/lib/player-profile-format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar, usePlayerAvatar } from "@/components/player-avatar";
@@ -522,19 +523,18 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
 
   if (type === "scoreDistribution" && stats) {
     // Single series, so the win/loss split has to be carried per bar.
-    const wins = [stats.wins3_0, stats.wins3_1, stats.wins3_2];
-    const losses = [stats.losses2_3, stats.losses1_3, stats.losses0_3];
-    const bars = [
-      ...wins.map((value) => ({ value, itemStyle: { color: CHART_COLORS.success } })),
-      ...losses.map((value) => ({ value, itemStyle: { color: CHART_COLORS.error } })),
-    ];
+    const rows = scoreDistributionRows(stats);
+    const bars = rows.map((r) => ({
+      value: r.value,
+      itemStyle: { color: r.win ? CHART_COLORS.success : CHART_COLORS.error },
+    }));
     const total = bars.reduce((sum, b) => sum + b.value, 0);
     return {
       ...option,
       legend: { show: false },
       // Percent label sits above each bar (desktop only); leave headroom for it.
       grid: { ...option.grid, top: isMobile ? 16 : 24 },
-      xAxis: { ...option.xAxis, data: ["3:0", "3:1", "3:2", "2:3", "1:3", "0:3"] },
+      xAxis: { ...option.xAxis, data: rows.map((r) => r.label) },
       series: [
         {
           ...barSeries("Матчи", []),
@@ -560,7 +560,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       ...option,
       legend: { show: false },
       grid: { ...option.grid, top: 16 },
-      xAxis: { ...option.xAxis, data: ["0:2", "Пятый", "Камбэк", "2:0", "Потеря"] },
+      xAxis: { ...option.xAxis, data: ["0:2", "Решающий", "Камбэк", "2:0", "Потеря"] },
       series: [
         barSeries(
           "Матчи",
@@ -1326,8 +1326,8 @@ const GAME_ADVANTAGE_INFO: InfoItem[] = [
 
 const DECISION_INFO: InfoItem[] = [
   {
-    label: "Пятый гейм",
-    desc: "Победы в матчах, дошедших до решающего 5-го гейма.",
+    label: "Решающий гейм",
+    desc: "Победы в матчах, дошедших до решающего гейма: 5-го при игре до трёх побед, 3-го при игре до двух.",
     scale: ["> 60% - отлично тянет концовки", "45-60% - средне", "< 45% - теряет решающие"],
     match: (s) => lvl(s.fiveGameWinRatePct, [45, 60]),
   },
@@ -1344,8 +1344,8 @@ const DECISION_INFO: InfoItem[] = [
     match: (s) => (s.overtimeGameWinRatePct == null ? null : s.overtimeGameWinRatePct > 55 ? 0 : s.overtimeGameWinRatePct < 45 ? 1 : null),
   },
   {
-    label: "Rally WR в 5 геймах",
-    desc: "Доля выигранных очков в пятых геймах.",
+    label: "Rally WR в решающих",
+    desc: "Доля выигранных очков в решающих геймах матчей, дошедших до предела.",
     scale: ["> 50% - держит темп под давлением", "< 50% - садится в концовке"],
     match: (s) => (s.fifthGameRallyWinRatePct == null ? null : s.fifthGameRallyWinRatePct >= 50 ? 0 : 1),
   },
@@ -1478,10 +1478,10 @@ function DecisionMomentsCard({ stats }: { stats: PlayerProfileStats }) {
       <InfoPopover items={DECISION_INFO} stats={stats} />
       <h2 className="text-base font-semibold tracking-tight">Решающие моменты</h2>
       <div className="mt-2">
-        <ProgressMetric label="Пятый гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
+        <ProgressMetric label="Решающий гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
         <ProgressMetric label="Плотные геймы" record={formatRecord(stats.closeGamesWon, stats.closeGamesLost)} percent={stats.closeGameWinRatePct} />
         <ProgressMetric label="Овертайм-геймы" record={formatRecord(stats.overtimeGamesWon, stats.overtimeGamesLost)} percent={stats.overtimeGameWinRatePct} />
-        <ProgressMetric label="Rally WR в 5 геймах" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} />
+        <ProgressMetric label="Rally WR в решающих" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} />
       </div>
     </div>
   );
@@ -1552,34 +1552,27 @@ function ReliabilityCard({ stats, className }: { stats: PlayerProfileStats; clas
 const SCORE_DISTRIBUTION_INFO: InfoItem[] = [
   {
     label: "Распределение счёта",
-    desc: "Количество матчей с каждым итоговым счётом по геймам в выбранном контексте.",
-    scale: ["3:0 / 3:1 - уверенные победы", "3:2 / 2:3 - плотные матчи", "1:3 / 0:3 - уверенные поражения"],
+    desc: "Количество матчей с каждым итоговым счётом по геймам в выбранном контексте. Счета 2:0 / 2:1 - матчи коротких этапов (до двух побед).",
+    scale: ["3:0 / 3:1 / 2:0 - уверенные победы", "3:2 / 2:1 - плотные матчи", "1:3 / 0:3 / 0:2 - уверенные поражения"],
   },
 ];
 
 function ScoreDistributionCard({ stats, compact = false }: { stats: PlayerProfileStats; compact?: boolean }) {
-  const rows = [
-    ["3:0", stats.wins3_0],
-    ["3:1", stats.wins3_1],
-    ["3:2", stats.wins3_2],
-    ["2:3", stats.losses2_3],
-    ["1:3", stats.losses1_3],
-    ["0:3", stats.losses0_3],
-  ] as const;
+  const rows = scoreDistributionRows(stats);
   if (compact) {
-    const total = rows.reduce((sum, [, value]) => sum + value, 0);
+    const total = rows.reduce((sum, r) => sum + r.value, 0);
     return (
       <div className={cardClass("relative p-4")}>
         <InfoPopover items={SCORE_DISTRIBUTION_INFO} stats={stats} />
         <h2 className="text-base font-semibold tracking-tight">Распределение счёта</h2>
         <div className="mt-2">
-          {rows.map(([label, value], i) => (
+          {rows.map((row) => (
             <ProgressMetric
-              key={label}
-              label={label}
-              record={String(value)}
-              percent={total ? (value / total) * 100 : 0}
-              tone={i < 3 ? "win" : "loss"}
+              key={row.label}
+              label={row.label}
+              record={String(row.value)}
+              percent={total ? (row.value / total) * 100 : 0}
+              tone={row.win ? "win" : "loss"}
             />
           ))}
         </div>
@@ -1767,7 +1760,7 @@ function OppCols() {
 const OPPONENTS_INFO: InfoItem[] = [
   { label: "GWR", desc: "Game WR — доля выигранных геймов.", scale: [] },
   { label: "RWR", desc: "Rally WR — доля выигранных розыгрышей (очков).", scale: [] },
-  { label: "WR5", desc: "Доля побед в матчах, дошедших до пятого гейма.", scale: [] },
+  { label: "WR5", desc: "Доля побед в матчах, дошедших до решающего гейма.", scale: [] },
   { label: "Статус", desc: "Оценка удобства соперника по совокупности матчей, геймов и розыгрышей.", scale: [] },
 ];
 
@@ -1941,7 +1934,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
 function filterMatches(list: MatchListItem[], filter: MatchFilter) {
   if (filter === "wins") return list.filter((m) => m.result === "W");
   if (filter === "losses") return list.filter((m) => m.result === "L");
-  if (filter === "five") return list.filter((m) => m.isFiveGameMatch);
+  if (filter === "five") return list.filter((m) => m.isDeciderMatch);
   if (filter === "comebacks") return list.filter((m) => m.isReverseSweep);
   if (filter === "close") return list.filter((m) => m.isCloseMatch);
   return list;
@@ -2031,7 +2024,7 @@ const MATCH_FILTER_ITEMS: { key: MatchFilter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "wins", label: "Победы" },
   { key: "losses", label: "Поражения" },
-  { key: "five", label: "5 геймов" },
+  { key: "five", label: "Решающий" },
   { key: "comebacks", label: "Камбэки" },
   { key: "close", label: "Плотные" },
 ];
@@ -2055,7 +2048,7 @@ function rateProfileMatch(m: MatchListItem): MatchRating {
   const avgMargin = games.length ? games.reduce((sum, g) => sum + Math.abs(g.for - g.against), 0) / games.length : 0;
 
   if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
-  if (total === 5) return { label: "5 геймов", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
+  if (m.isDeciderMatch) return { label: "Решающий", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
   if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-secondary/30 bg-secondary/15 text-secondary" };
   if (Math.min(m.gamesFor, m.gamesAgainst) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
   return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };

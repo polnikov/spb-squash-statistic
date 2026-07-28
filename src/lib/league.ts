@@ -7,7 +7,12 @@
  * `points` come from the configured `points_table`.
  */
 
-import { calculateSkillIndex } from "@/lib/stats/compute";
+import { calculateSkillIndex, deciderGameCount, matchGamesToWin } from "@/lib/stats/compute";
+
+/** Match went the distance: 3:2 in best-of-5, 2:1 in best-of-3. */
+export function wentToDecider(gamesA: number, gamesB: number): boolean {
+  return gamesA + gamesB === deciderGameCount(matchGamesToWin(gamesA, gamesB));
+}
 
 export type MockPlayer = {
   idx: number;
@@ -103,7 +108,8 @@ export type Aggregate = {
   court: number;
   stages: number;
   best: number | null;
-  fiveGameMatches: number;
+  /** Matches that went to the decider: 5th game in best-of-5, 3rd in best-of-3. */
+  deciderMatches: number;
 };
 
 function ratingPoints(results: MockResult[]): number {
@@ -129,7 +135,7 @@ export function aggregate(
   );
   const a: Aggregate = {
     points: 0, matches: 0, wonM: 0, games: 0, wonG: 0, balls: 0, wonB: 0, court: 0,
-    stages: 0, best: null, fiveGameMatches: 0,
+    stages: 0, best: null, deciderMatches: 0,
   };
   const stagesSet = new Set<number>();
   for (const r of rs) {
@@ -145,12 +151,12 @@ export function aggregate(
   }
   a.points = ratingPoints(rs);
   a.stages = stagesSet.size;
-  a.fiveGameMatches = league.matches.filter(
+  a.deciderMatches = league.matches.filter(
     (m) =>
       m.stage <= maxStage &&
       (division == null ? true : m.division === division) &&
       (m.aIdx === playerIdx || m.bIdx === playerIdx) &&
-      m.gamesA + m.gamesB === 5,
+      wentToDecider(m.gamesA, m.gamesB),
   ).length;
   return a;
 }
@@ -175,7 +181,7 @@ export type RatingRow = {
   points: number;
   stages: number;
   best: number | null;
-  fiveGameMatches: number;
+  deciderMatches: number;
   /** Points scored at the player's latest played stage (within scope). */
   lastStagePoints: number;
 };
@@ -277,7 +283,7 @@ function getRatingRowsAtStage(
         // at RATING_MAX_STAGE; the count reflects real participation.
         stages: playerStagesParticipated(league, p.idx, division, TOTAL_STAGES),
         best: a.best,
-        fiveGameMatches: a.fiveGameMatches,
+        deciderMatches: a.deciderMatches,
       };
     })
     .filter((r) => r.matches > 0)
@@ -341,7 +347,7 @@ export type IronRow = {
   perMatch: number;
   gamesWon: number;
   gamesLost: number;
-  fiveGameMatches: number;
+  deciderMatches: number;
   longestMatchMin: number;
 };
 
@@ -377,13 +383,13 @@ export function getIronManRows(league: League, half: 1 | 2, scope: DivisionScope
   const inScope = (div: number) => scope === "all" || div === scope;
   const acc = new Map<
     number,
-    { court: number; matches: number; gamesWon: number; gamesLost: number; stages: Set<number>; five: number; longest: number }
+    { court: number; matches: number; gamesWon: number; gamesLost: number; stages: Set<number>; decider: number; longest: number }
   >();
   for (const r of league.results) {
     if (!inRange(r.stage) || !inScope(r.div)) continue;
     const cur =
       acc.get(r.playerIdx) ??
-      { court: 0, matches: 0, gamesWon: 0, gamesLost: 0, stages: new Set<number>(), five: 0, longest: 0 };
+      { court: 0, matches: 0, gamesWon: 0, gamesLost: 0, stages: new Set<number>(), decider: 0, longest: 0 };
     cur.court += r.court;
     cur.matches += r.matches;
     cur.gamesWon += r.wonG;
@@ -391,14 +397,14 @@ export function getIronManRows(league: League, half: 1 | 2, scope: DivisionScope
     cur.stages.add(r.stage);
     acc.set(r.playerIdx, cur);
   }
-  // match-derived per player: five-game count + longest match
+  // match-derived per player: decider count + longest match
   for (const m of league.matches) {
     if (!inRange(m.stage) || !inScope(m.division)) continue;
-    const isFive = m.gamesA + m.gamesB === 5 ? 1 : 0;
+    const isDecider = wentToDecider(m.gamesA, m.gamesB) ? 1 : 0;
     for (const idx of [m.aIdx, m.bIdx]) {
       const cur = acc.get(idx);
       if (!cur) continue;
-      cur.five += isFive;
+      cur.decider += isDecider;
       if (m.durationMin > cur.longest) cur.longest = m.durationMin;
     }
   }
@@ -420,7 +426,7 @@ export function getIronManRows(league: League, half: 1 | 2, scope: DivisionScope
         perMatch: v.matches ? Math.round(v.court / v.matches) : 0,
         gamesWon: v.gamesWon,
         gamesLost: v.gamesLost,
-        fiveGameMatches: v.five,
+        deciderMatches: v.decider,
         longestMatchMin: v.longest,
       };
     })

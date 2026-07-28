@@ -22,6 +22,7 @@ import {
   formatRecord,
   formatSampleSizeLevel,
   formatSignedNumber,
+  scoreDistributionRows,
 } from "@/lib/player-profile-format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -312,7 +313,7 @@ function chartOptionFor(tab: ChartKey, meetings: Meeting[], stats: PlayerProfile
       legend: { show: false },
       grid: { ...chartBase().grid, top: 16 },
       tooltip: { ...chartBase().tooltip, trigger: "item" },
-      xAxis: { ...chartBase().xAxis, data: ["3:0", "3:1", "3:2", "2:3", "1:3", "0:3"] },
+      xAxis: { ...chartBase().xAxis, data: scoreDistributionRows(stats).map((r) => r.label) },
       series: [
         {
           name: "Матчи",
@@ -320,14 +321,10 @@ function chartOptionFor(tab: ChartKey, meetings: Meeting[], stats: PlayerProfile
           barMaxWidth: 22,
           itemStyle: { borderRadius: [5, 5, 0, 0] as [number, number, number, number] },
           // wins green, losses red
-          data: [
-            { value: stats.wins3_0, itemStyle: { color: C.success } },
-            { value: stats.wins3_1, itemStyle: { color: C.success } },
-            { value: stats.wins3_2, itemStyle: { color: C.success } },
-            { value: stats.losses2_3, itemStyle: { color: C.error } },
-            { value: stats.losses1_3, itemStyle: { color: C.error } },
-            { value: stats.losses0_3, itemStyle: { color: C.error } },
-          ],
+          data: scoreDistributionRows(stats).map((r) => ({
+            value: r.value,
+            itemStyle: { color: r.win ? C.success : C.error },
+          })),
         },
       ],
     };
@@ -607,10 +604,10 @@ function DecisiveCard({ stats }: { stats: PlayerProfileStats }) {
     <div className={cardClass("flex h-full flex-col p-4")}>
       <CardTitle>Решающие моменты</CardTitle>
       <div className="mt-2 flex flex-1 flex-col justify-evenly">
-        <ProgressMetric label="Пятый гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
+        <ProgressMetric label="Решающий гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
         <ProgressMetric label="Плотные геймы" record={formatRecord(stats.closeGamesWon, stats.closeGamesLost)} percent={stats.closeGameWinRatePct} />
         <ProgressMetric label="Овертайм-геймы" record={formatRecord(stats.overtimeGamesWon, stats.overtimeGamesLost)} percent={stats.overtimeGameWinRatePct} />
-        <ProgressMetric label="Розыгрыши в 5 геймах" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} />
+        <ProgressMetric label="Розыгрыши в решающих" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} />
       </div>
     </div>
   );
@@ -646,15 +643,8 @@ function TimeLoadCard({ stats }: { stats: PlayerProfileStats }) {
 }
 
 function ScoreDistCard({ stats }: { stats: PlayerProfileStats }) {
-  const rows = [
-    { label: "3:0", count: stats.wins3_0, win: true },
-    { label: "3:1", count: stats.wins3_1, win: true },
-    { label: "3:2", count: stats.wins3_2, win: true },
-    { label: "2:3", count: stats.losses2_3, win: false },
-    { label: "1:3", count: stats.losses1_3, win: false },
-    { label: "0:3", count: stats.losses0_3, win: false },
-  ];
-  const max = Math.max(1, ...rows.map((r) => r.count));
+  const rows = scoreDistributionRows(stats);
+  const max = Math.max(1, ...rows.map((r) => r.value));
   return (
     <div className={cardClass("p-4")}>
       <CardTitle>Распределение счёта</CardTitle>
@@ -663,9 +653,9 @@ function ScoreDistCard({ stats }: { stats: PlayerProfileStats }) {
           <div key={r.label} className="flex items-center gap-3">
             <span className="w-8 shrink-0 font-mono text-[12px] tabular text-on-surface-variant">{r.label}</span>
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-container-high">
-              <div className={cn("h-full rounded-full", r.win ? "bg-win" : "bg-loss")} style={{ width: `${(r.count / max) * 100}%` }} />
+              <div className={cn("h-full rounded-full", r.win ? "bg-win" : "bg-loss")} style={{ width: `${(r.value / max) * 100}%` }} />
             </div>
-            <span className="w-5 shrink-0 text-right font-mono text-[12px] font-semibold tabular">{r.count}</span>
+            <span className="w-5 shrink-0 text-right font-mono text-[12px] font-semibold tabular">{r.value}</span>
           </div>
         ))}
       </div>
@@ -694,7 +684,7 @@ function DetailMetrics({ stats }: { stats: PlayerProfileStats }) {
         <MetricRow label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} />
         <MetricRow label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} />
         <MetricRow label="Сухие победы / поражения" value={`${stats.cleanWins} / ${stats.cleanLosses}`} />
-        <MetricRow label="Матчи в 5 геймов" value={`${stats.fiveGameMatches} (${formatPercent(stats.fiveGameMatchRatePct)})`} />
+        <MetricRow label="Матчи до решающего" value={`${stats.fiveGameMatches} (${formatPercent(stats.fiveGameMatchRatePct)})`} />
         <MetricRow label="Плотные геймы" value={`${stats.closeGamesPlayed} (${formatPercent(stats.closeGameRatePct)})`} />
         <MetricRow label="Овертайм-геймы" value={`${stats.overtimeGamesPlayed} (${formatPercent(stats.overtimeGameRatePct)})`} />
         <MetricRow label="Ср. геймов выиграно / матч" value={stats.avgGamesWonPerMatch === null ? "x" : stats.avgGamesWonPerMatch.toFixed(1)} />
@@ -709,7 +699,7 @@ type H2hFilter = "all" | "wins" | "losses" | "five" | "comebacks" | "close";
 function filterH2hMatches(list: MatchListItem[], filter: H2hFilter) {
   if (filter === "wins") return list.filter((m) => m.result === "W");
   if (filter === "losses") return list.filter((m) => m.result === "L");
-  if (filter === "five") return list.filter((m) => m.isFiveGameMatch);
+  if (filter === "five") return list.filter((m) => m.isDeciderMatch);
   if (filter === "comebacks") return list.filter((m) => m.isReverseSweep);
   if (filter === "close") return list.filter((m) => m.isCloseMatch);
   return list;
@@ -722,7 +712,7 @@ const H2H_MATCH_FILTERS: { key: H2hFilter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "wins", label: "Победы" },
   { key: "losses", label: "Поражения" },
-  { key: "five", label: "5 геймов" },
+  { key: "five", label: "Решающий" },
   { key: "comebacks", label: "Камбэки" },
   { key: "close", label: "Плотные" },
 ];

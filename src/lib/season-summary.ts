@@ -2,6 +2,7 @@ import {
   TOTAL_STAGES,
   getRatingRows,
   getStageResults,
+  wentToDecider,
   type DivisionScope,
   type League,
   type RealMatch,
@@ -42,7 +43,7 @@ export type SeasonSummary = {
   totalStages: number;
   /** Final stage loaded for every division in scope. */
   seasonFinished: boolean;
-  metrics: { players: number; matches: number; totalTime: number; fiveGame: number };
+  metrics: { players: number; matches: number; totalTime: number; decider: number };
   /** Top-3 of the season rating. Division scopes only. */
   podium: (SeasonPerson & { place: number; points: number; wins: number; losses: number })[];
   promotion: SeasonPerson[];
@@ -65,8 +66,8 @@ export type SeasonSummary = {
     top: (SeasonPerson & { played: number; total: number; pct: number })[];
   };
   derby: {
-    frequent: { a: SeasonPerson; b: SeasonPerson; matches: number; aWins: number; bWins: number; fiveGames: number } | null;
-    closest: { a: SeasonPerson; b: SeasonPerson; matches: number; aWins: number; bWins: number; avgGameDiff: number; fiveGames: number } | null;
+    frequent: { a: SeasonPerson; b: SeasonPerson; matches: number; aWins: number; bWins: number; deciders: number } | null;
+    closest: { a: SeasonPerson; b: SeasonPerson; matches: number; aWins: number; bWins: number; avgGameDiff: number; deciders: number } | null;
   };
 };
 
@@ -107,7 +108,7 @@ export function buildSeasonSummary(
     stagesDone,
     totalStages: TOTAL_STAGES,
     seasonFinished,
-    metrics: { players: 0, matches: 0, totalTime: 0, fiveGame: 0 },
+    metrics: { players: 0, matches: 0, totalTime: 0, decider: 0 },
     podium: [],
     promotion: [],
     mvp: null,
@@ -123,7 +124,7 @@ export function buildSeasonSummary(
     players: rows.length,
     matches: matches.length,
     totalTime: matches.reduce((s, m) => s + m.durationMin, 0),
-    fiveGame: matches.filter((m) => m.gamesA + m.gamesB === 5).length,
+    decider: matches.filter((m) => wentToDecider(m.gamesA, m.gamesB)).length,
   };
 
   /* ------------------------------------------------ podium + zones (div) --- */
@@ -290,16 +291,16 @@ export function buildSeasonSummary(
   };
 
   /* ---------------------------------------------------------------- derby --- */
-  type Pair = { aIdx: number; bIdx: number; matches: number; aWins: number; bWins: number; fiveGames: number; gameDiffSum: number };
+  type Pair = { aIdx: number; bIdx: number; matches: number; aWins: number; bWins: number; deciders: number; gameDiffSum: number };
   const pairs = new Map<string, Pair>();
   for (const m of matches) {
     const [lo, hi] = m.aIdx < m.bIdx ? [m.aIdx, m.bIdx] : [m.bIdx, m.aIdx];
     const key = `${lo}-${hi}`;
-    const pair = pairs.get(key) ?? { aIdx: lo, bIdx: hi, matches: 0, aWins: 0, bWins: 0, fiveGames: 0, gameDiffSum: 0 };
+    const pair = pairs.get(key) ?? { aIdx: lo, bIdx: hi, matches: 0, aWins: 0, bWins: 0, deciders: 0, gameDiffSum: 0 };
     pair.matches += 1;
     if (m.winnerIdx === lo) pair.aWins += 1;
     else pair.bWins += 1;
-    if (m.gamesA + m.gamesB === 5) pair.fiveGames += 1;
+    if (wentToDecider(m.gamesA, m.gamesB)) pair.deciders += 1;
     pair.gameDiffSum += Math.abs(m.gamesA - m.gamesB);
     pairs.set(key, pair);
   }
@@ -312,14 +313,14 @@ export function buildSeasonSummary(
       matches: p.matches,
       aWins: p.aWins,
       bWins: p.bWins,
-      fiveGames: p.fiveGames,
+      deciders: p.deciders,
       avgGameDiff: p.gameDiffSum / p.matches,
     };
   };
   let frequent: Pair | null = null;
   let closest: Pair | null = null;
   for (const p of pairs.values()) {
-    if (!frequent || p.matches > frequent.matches || (p.matches === frequent.matches && p.fiveGames > frequent.fiveGames)) {
+    if (!frequent || p.matches > frequent.matches || (p.matches === frequent.matches && p.deciders > frequent.deciders)) {
       frequent = p;
     }
     if (p.matches >= 2) {
@@ -406,13 +407,17 @@ export function seasonSummaryCaption(s: SeasonSummary): string {
   }
   if (s.derby.closest) {
     const d = s.derby.closest;
-    lines.push(`Самое упорное: ${d.a.name} - ${d.b.name} (средняя разница ${d.avgGameDiff.toFixed(1)} гейма, пятигеймовых: ${d.fiveGames})`);
+    lines.push(`Самое упорное: ${d.a.name} - ${d.b.name} (средняя разница ${d.avgGameDiff.toFixed(1)} гейма, до решающего: ${d.deciders})`);
   }
   lines.push("");
 
-  const fiveWord = pluralRu(s.metrics.fiveGame, ["пятигеймовый матч", "пятигеймовых матча", "пятигеймовых матчей"]);
+  const deciderWord = pluralRu(s.metrics.decider, [
+    "матч до решающего гейма",
+    "матча до решающего гейма",
+    "матчей до решающего гейма",
+  ]);
   lines.push(
-    `Цифры сезона: ${playersLabel(s.metrics.players)} · ${matchesLabel(s.metrics.matches)} · ${fmtCourt(s.metrics.totalTime)} на корте · ${s.metrics.fiveGame} ${fiveWord}`,
+    `Цифры сезона: ${playersLabel(s.metrics.players)} · ${matchesLabel(s.metrics.matches)} · ${fmtCourt(s.metrics.totalTime)} на корте · ${s.metrics.decider} ${deciderWord}`,
   );
   return lines.join("\n");
 }

@@ -6,6 +6,7 @@ import { ChevronDown, Cross, Search, Swords, X } from "lucide-react";
 import {
   FINAL_STAGE,
   getStageResults,
+  wentToDecider,
   type DivisionScope,
   type League,
   type RealMatch,
@@ -188,7 +189,7 @@ export function StageSummary({ league }: { league: League }) {
       matches: allStageMatches.length,
       totalTime,
       avgTime: allStageMatches.length ? Math.round(totalTime / allStageMatches.length) : 0,
-      fiveGameMatches: allStageMatches.filter((m) => m.gamesA + m.gamesB === 5).length,
+      deciderMatches: allStageMatches.filter((m) => wentToDecider(m.gamesA, m.gamesB)).length,
       longest,
     };
   }, [rows.length, allStageMatches]);
@@ -275,7 +276,7 @@ export function StageSummary({ league }: { league: League }) {
         <div className="grid grid-cols-3 gap-2 md:hidden">
           <MetricTile compact label="Игроков на этапе" value={stageMetrics.players} />
           <MetricTile compact label="Матчей сыграно" value={stageMetrics.matches} />
-          <MetricTile compact label="Пятигеймовых матчей" value={stageMetrics.fiveGameMatches} />
+          <MetricTile compact label="Матчей до решающего" value={stageMetrics.deciderMatches} />
           <MetricTile compact label="Суммарное время" value={fmtCourt(stageMetrics.totalTime)} />
           <MetricTile compact label="Среднее время матча" value={fmtCourt(stageMetrics.avgTime)} />
           <MetricTile compact label="Самый длинный матч" value={fmtCourt(stageMetrics.longest)} />
@@ -286,7 +287,7 @@ export function StageSummary({ league }: { league: League }) {
         <div className="hidden grid-cols-3 gap-3 xl:grid-cols-6 md:grid">
           <MetricTile label="Игроков на этапе" value={stageMetrics.players} />
           <MetricTile label="Матчей сыграно" value={stageMetrics.matches} />
-          <MetricTile label="Пятигеймовых матчей" value={stageMetrics.fiveGameMatches} />
+          <MetricTile label="Матчей до решающего" value={stageMetrics.deciderMatches} />
           <MetricTile label="Суммарное время" value={fmtCourt(stageMetrics.totalTime)} />
           <MetricTile label="Среднее время матча" value={fmtCourt(stageMetrics.avgTime)} />
           <MetricTile label="Самый длинный матч" value={fmtCourt(stageMetrics.longest)} />

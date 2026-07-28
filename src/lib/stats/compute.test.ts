@@ -12,6 +12,7 @@ import {
   getSkillIndexShortLabelRu,
   getSkillIndexStatus,
   matchComebackFlags,
+  matchGamesToWin,
   pct,
   perspective,
   recentForm,
@@ -44,6 +45,80 @@ const m2: MatchForStats = {
   ],
   playedAt: new Date("2026-02-20"),
 };
+
+/** Best-of-3: A wins 2:1, the 3rd game is the decider. */
+const bo3Win: MatchForStats = {
+  gamesA: 2,
+  gamesB: 1,
+  games: [
+    { a: 11, b: 6 },
+    { a: 8, b: 11 },
+    { a: 11, b: 9 },
+  ],
+  playedAt: new Date("2026-04-04"),
+};
+
+/** Best-of-3: A loses 0:2 — a sweep, not a blown comeback. */
+const bo3Loss: MatchForStats = {
+  gamesA: 0,
+  gamesB: 2,
+  games: [
+    { a: 7, b: 11 },
+    { a: 9, b: 11 },
+  ],
+  playedAt: new Date("2026-04-11"),
+};
+
+describe("matchGamesToWin", () => {
+  it("reads the format off the winner's game tally", () => {
+    expect(matchGamesToWin(3, 0)).toBe(3);
+    expect(matchGamesToWin(2, 3)).toBe(3);
+    expect(matchGamesToWin(2, 0)).toBe(2);
+    expect(matchGamesToWin(1, 2)).toBe(2);
+  });
+});
+
+describe("best-of-3 matches", () => {
+  it("marks 2:1 as a decider and reads its rallies", () => {
+    const p = perspective(bo3Win, true);
+    expect(p.gamesToWin).toBe(2);
+    expect(p.wentToDecider).toBe(true);
+    expect(p.matchScore).toBe("2:1");
+    expect(p.deciderRalliesWon).toBe(11);
+    expect(p.deciderRalliesLost).toBe(9);
+  });
+
+  it("keeps 2:0 out of the comeback counters", () => {
+    // A best-of-3 that ends 0:2 is a sweep: nobody trailed, nobody blew a lead.
+    const loser = perspective(bo3Loss, true);
+    const winner = perspective(bo3Loss, false);
+    expect(loser.wentToDecider).toBe(false);
+    expect(loser.trailed0_2).toBe(false);
+    expect(winner.led2_0).toBe(false);
+    expect(matchComebackFlags(bo3Loss.games, 0, 2)).toMatchObject({
+      playerATrailed0_2: false,
+      playerBLed2_0: false,
+      isReverseSweep: false,
+    });
+  });
+
+  it("fills the best-of-3 score buckets and folds them into clean counts", () => {
+    const a = computeAggregate([
+      perspective(bo3Win, true),
+      perspective(bo3Loss, true),
+      perspective(m1, true), // 3:0
+    ]);
+    expect(a.wins2_1).toBe(1);
+    expect(a.losses0_2).toBe(1);
+    expect(a.wins2_0).toBe(0);
+    expect(a.wins3_0).toBe(1);
+    expect(a.cleanWins).toBe(1); // 3:0 only
+    expect(a.cleanLosses).toBe(1); // 0:2
+    expect(a.fiveGameMatches).toBe(1); // the 2:1 decider
+    expect(a.fiveGameMatchesWon).toBe(1);
+    expect(a.matchesTrailed0_2).toBe(0);
+  });
+});
 
 describe("pct", () => {
   it("returns null on zero denominator", () => {

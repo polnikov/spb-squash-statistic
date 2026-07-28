@@ -10,7 +10,9 @@ import {
 } from "@/lib/league";
 import {
   calculateSkillIndex,
+  deciderGameCount,
   getSkillIndexStatus,
+  matchGamesToWin,
   type SkillIndexStatus,
 } from "@/lib/stats/compute";
 
@@ -62,10 +64,17 @@ export type PlayerProfileStats = {
   losses2_3: number;
   losses1_3: number;
   losses0_3: number;
+  // best-of-3 half of the distribution (stages that play to two wins)
+  wins2_0: number;
+  wins2_1: number;
+  losses1_2: number;
+  losses0_2: number;
   cleanWins: number;
   cleanLosses: number;
   cleanWinRatePct: number | null;
   cleanLossRatePct: number | null;
+  // "five game" counters below mean "went to the decider": 5th game in
+  // best-of-5, 3rd in best-of-3
   fiveGameMatches: number;
   fiveGameMatchesWon: number;
   fiveGameMatchesLost: number;
@@ -225,7 +234,10 @@ export type MatchListItem = {
   gamesAgainst: number;
   ralliesFor: number;
   ralliesAgainst: number;
-  isFiveGameMatch: boolean;
+  /** Games the winner needed: 3 (best-of-5) or 2 (best-of-3). */
+  gamesToWin: 2 | 3;
+  /** Went the distance: 3:2 in best-of-5, 2:1 in best-of-3. */
+  isDeciderMatch: boolean;
   isReverseSweep: boolean;
   isCloseMatch: boolean;
   retired: boolean;
@@ -411,6 +423,10 @@ export function emptyStats(): PlayerProfileStats {
     losses2_3: 0,
     losses1_3: 0,
     losses0_3: 0,
+    wins2_0: 0,
+    wins2_1: 0,
+    losses1_2: 0,
+    losses0_2: 0,
     cleanWins: 0,
     cleanLosses: 0,
     cleanWinRatePct: null,
@@ -566,15 +582,21 @@ function aggregateStats(
     if (!won && m.gamesFor === 2 && m.gamesAgainst === 3) stats.losses2_3 += 1;
     if (!won && m.gamesFor === 1 && m.gamesAgainst === 3) stats.losses1_3 += 1;
     if (!won && m.gamesFor === 0 && m.gamesAgainst === 3) stats.losses0_3 += 1;
+    if (won && m.gamesFor === 2 && m.gamesAgainst === 0) stats.wins2_0 += 1;
+    if (won && m.gamesFor === 2 && m.gamesAgainst === 1) stats.wins2_1 += 1;
+    if (!won && m.gamesFor === 1 && m.gamesAgainst === 2) stats.losses1_2 += 1;
+    if (!won && m.gamesFor === 0 && m.gamesAgainst === 2) stats.losses0_2 += 1;
 
-    if (m.gamesFor + m.gamesAgainst === 5) {
+    const gamesToWin = matchGamesToWin(m.gamesFor, m.gamesAgainst);
+    const totalGames = m.gamesFor + m.gamesAgainst;
+    if (totalGames === deciderGameCount(gamesToWin)) {
       stats.fiveGameMatches += 1;
       if (won) stats.fiveGameMatchesWon += 1;
       else stats.fiveGameMatchesLost += 1;
-      const fifth = m.detail[4];
-      if (fifth) {
-        stats.fifthGameRalliesWon += fifth.for;
-        stats.fifthGameRalliesLost += fifth.against;
+      const decider = m.detail[totalGames - 1];
+      if (decider) {
+        stats.fifthGameRalliesWon += decider.for;
+        stats.fifthGameRalliesLost += decider.against;
       }
     }
 
@@ -595,7 +617,9 @@ function aggregateStats(
       if (!gameWon && Math.abs(margin) >= 5) stats.heavyGamesLost += 1;
     }
 
-    const firstTwo = m.detail.slice(0, 2);
+    // Comeback signals only exist in best-of-5: a best-of-3 match is already
+    // over at 2:0, so neither side ever "trailed" or "blew a lead" there.
+    const firstTwo = gamesToWin === 3 ? m.detail.slice(0, 2) : [];
     const trailed0_2 = firstTwo.length === 2 && firstTwo.every((g) => g.for < g.against);
     const led2_0 = firstTwo.length === 2 && firstTwo.every((g) => g.for > g.against);
     if (trailed0_2) {
@@ -619,8 +643,8 @@ function aggregateStats(
   stats.ralliesPlayed = stats.ralliesWon + stats.ralliesLost;
   stats.gameBalance = stats.gamesWon - stats.gamesLost;
   stats.rallyBalance = stats.ralliesWon - stats.ralliesLost;
-  stats.cleanWins = stats.wins3_0;
-  stats.cleanLosses = stats.losses0_3;
+  stats.cleanWins = stats.wins3_0 + stats.wins2_0;
+  stats.cleanLosses = stats.losses0_3 + stats.losses0_2;
 
   stats.matchWinRatePct = pct(stats.matchesWon, stats.matchesPlayed);
   stats.gameWinRatePct = pct(stats.gamesWon, stats.gamesPlayed);
@@ -731,7 +755,9 @@ function toMatchRecord(
   const ralliesFor = detail.reduce((sum, g) => sum + g.for, 0);
   const ralliesAgainst = detail.reduce((sum, g) => sum + g.against, 0);
   const result = match.winnerIdx === playerIdx || gamesFor > gamesAgainst ? "W" : "L";
-  const trailed0_2 = detail.slice(0, 2).length === 2 && detail.slice(0, 2).every((g) => g.for < g.against);
+  const gamesToWin = matchGamesToWin(gamesFor, gamesAgainst);
+  const trailed0_2 =
+    gamesToWin === 3 && detail.slice(0, 2).length === 2 && detail.slice(0, 2).every((g) => g.for < g.against);
   const isReverseSweep = trailed0_2 && result === "W" && detail.length >= 5;
   const playedAt = stageDate(league, match.stage);
   const closeGamesCount = detail.filter((g) => Math.abs(g.for - g.against) === 2).length;
@@ -757,7 +783,8 @@ function toMatchRecord(
     gamesAgainst,
     ralliesFor,
     ralliesAgainst,
-    isFiveGameMatch: gamesFor + gamesAgainst === 5,
+    gamesToWin,
+    isDeciderMatch: gamesFor + gamesAgainst === deciderGameCount(gamesToWin),
     isReverseSweep,
     isCloseMatch,
     retired: Boolean(match.retired),

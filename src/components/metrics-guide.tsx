@@ -233,18 +233,18 @@ const SECTIONS: GuideSection[] = [
     id: "clutch",
     title: "Решающие моменты",
     chip: "Решающие",
-    intro: "Игра под давлением: концовки, овертаймы, пятые геймы.",
+    intro: "Игра под давлением: концовки, овертаймы, решающие геймы.",
     metrics: [
       {
-        name: "Пятый гейм",
-        desc: "Победы в матчах, дошедших до решающего 5-го гейма.",
+        name: "Решающий гейм",
+        desc: "Победы в матчах, дошедших до решающего гейма: 5-го при игре до трёх побед, 3-го при игре до двух.",
         scale: [
           { text: "> 60% - отлично тянет концовки", color: TIER.green },
           { text: "45-60% - средне", color: TIER.yellow },
           { text: "< 45% - теряет решающие", color: TIER.red },
         ],
         example: {
-          value: "Пятый гейм = 67%",
+          value: "Решающий гейм = 67%",
           read: "из трёх матчей, дошедших до решающего гейма, игрок берёт два - надёжен под давлением.",
         },
       },
@@ -320,7 +320,7 @@ const SECTIONS: GuideSection[] = [
         ],
         example: {
           value: "Довёл до пятого = 45%",
-          read: "почти в половине безнадёжных матчей (0:2) дотягивает до пятого гейма - не разваливается, а борется.",
+          read: "почти в половине безнадёжных матчей (0:2) дотягивает до пятого гейма - не разваливается, а борется. Считается только в матчах до трёх побед.",
         },
       },
       {
@@ -447,7 +447,7 @@ const SECTIONS: GuideSection[] = [
 const MATCH_BADGES: { label: string; className: string; desc: string }[] = [
   { label: "Отказ", className: "border-error/30 bg-error-container text-on-error-container", desc: "Матч не доигран - один из игроков снялся." },
   { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary", desc: "Победа после проигранных двух первых геймов." },
-  { label: "5 геймов", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]", desc: "Матч дошёл до решающего пятого гейма." },
+  { label: "Решающий", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]", desc: "Матч дошёл до решающего гейма: 5-го при игре до трёх побед, 3-го при игре до двух." },
   { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]", desc: "Два и более геймов с разницей ≤ 2 очка либо матч сплошь из малых отрывов." },
   { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant", desc: "3:0 с крупным средним отрывом в геймах." },
   { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant", desc: "Обычный конкурентный матч без ярких особенностей." },

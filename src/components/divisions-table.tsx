@@ -284,8 +284,8 @@ export function DivisionsTable({
     const court = bestBy(rows, (row) => row.court);
     const activity = bestBy(rows, (row) => row.matches);
     const rallyWr = bestBy(rows.filter((row) => row.balls > 0), (row) => pct(row.ballsWon, row.balls));
-    const fiveGameMatches = bestBy(rows, (row) => row.fiveGameMatches);
-    return { rating, form, court, activity, rallyWr, fiveGameMatches };
+    const deciderMatches = bestBy(rows, (row) => row.deciderMatches);
+    return { rating, form, court, activity, rallyWr, deciderMatches };
   }, [rows]);
   const highlightTiles = [
     {
@@ -314,12 +314,12 @@ export function DivisionsTable({
       value: highlights.rallyWr ? pctText(highlights.rallyWr.ballsWon, highlights.rallyWr.balls) : "x",
     },
     {
-      label: "Пятигеймовые матчи",
-      player: highlights.fiveGameMatches,
-      value: highlights.fiveGameMatches ? fmtNum(highlights.fiveGameMatches.fiveGameMatches) : "x",
+      label: "Матчи до решающего",
+      player: highlights.deciderMatches,
+      value: highlights.deciderMatches ? fmtNum(highlights.deciderMatches.deciderMatches) : "x",
     },
   ] satisfies { label: string; player: RatingRow | null; value: string }[];
-  // Second tile row: leader cards (form, court, rally WR, five-game matches).
+  // Second tile row: leader cards (form, court, rally WR, decider matches).
   const secondRowTiles = [highlightTiles[1], highlightTiles[2], highlightTiles[4], highlightTiles[5]];
   const summary = summaries[div];
   const setSortKey = React.useCallback((key: SortKey) => {

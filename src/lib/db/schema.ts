@@ -381,12 +381,17 @@ export const playerStatsAggregate = pgTable(
     losses2_3: integer("losses_2_3").notNull().default(0),
     losses1_3: integer("losses_1_3").notNull().default(0),
     losses0_3: integer("losses_0_3").notNull().default(0),
+    // best-of-3 score distribution (short format played at some stages)
+    wins2_0: integer("wins_2_0").notNull().default(0),
+    wins2_1: integer("wins_2_1").notNull().default(0),
+    losses1_2: integer("losses_1_2").notNull().default(0),
+    losses0_2: integer("losses_0_2").notNull().default(0),
     cleanWins: integer("clean_wins").notNull().default(0),
     cleanLosses: integer("clean_losses").notNull().default(0),
     cleanWinRatePct: numeric("clean_win_rate_pct", { precision: 6, scale: 3 }),
     cleanLossRatePct: numeric("clean_loss_rate_pct", { precision: 6, scale: 3 }),
 
-    // five-game matches
+    // matches that went to the decider (5th game in bo5, 3rd in bo3)
     fiveGameMatches: integer("five_game_matches").notNull().default(0),
     fiveGameMatchesWon: integer("five_game_matches_won").notNull().default(0),
     fiveGameMatchesLost: integer("five_game_matches_lost").notNull().default(0),
@@ -595,10 +600,14 @@ export const playerOpponentStats = pgTable(
     h2hLosses2_3: integer("h2h_losses_2_3").notNull().default(0),
     h2hLosses1_3: integer("h2h_losses_1_3").notNull().default(0),
     h2hLosses0_3: integer("h2h_losses_0_3").notNull().default(0),
+    h2hWins2_0: integer("h2h_wins_2_0").notNull().default(0),
+    h2hWins2_1: integer("h2h_wins_2_1").notNull().default(0),
+    h2hLosses1_2: integer("h2h_losses_1_2").notNull().default(0),
+    h2hLosses0_2: integer("h2h_losses_0_2").notNull().default(0),
     h2hCleanWins: integer("h2h_clean_wins").notNull().default(0),
     h2hCleanLosses: integer("h2h_clean_losses").notNull().default(0),
 
-    // five-game
+    // matches that went to the decider (5th game in bo5, 3rd in bo3)
     h2hFiveGameMatches: integer("h2h_five_game_matches").notNull().default(0),
     h2hFiveGameMatchesWon: integer("h2h_five_game_matches_won").notNull().default(0),
     h2hFiveGameMatchesLost: integer("h2h_five_game_matches_lost").notNull().default(0),

@@ -1,6 +1,7 @@
 import {
   getRatingRowsThroughStage,
   getStageResults,
+  wentToDecider,
   type League,
   type RealMatch,
 } from "@/lib/league";
@@ -40,7 +41,8 @@ export type StageDigest = {
     matches: number;
     totalTime: number;
     avgTime: number;
-    fiveGame: number;
+    /** Matches that went to the decider (5th game in bo5, 3rd in bo3). */
+    decider: number;
     longestTime: number;
   };
   winner: DigestPodiumRow | null;
@@ -84,7 +86,7 @@ export function buildStageDigest(league: League, division: 1 | 2 | 3, stage: num
     stage,
     date: rows[0]?.date ?? null,
     hasData: rows.length > 0,
-    metrics: { players: 0, matches: 0, totalTime: 0, avgTime: 0, fiveGame: 0, longestTime: 0 },
+    metrics: { players: 0, matches: 0, totalTime: 0, avgTime: 0, decider: 0, longestTime: 0 },
     winner: null,
     podium: [],
     climber: null,
@@ -104,7 +106,7 @@ export function buildStageDigest(league: League, division: 1 | 2 | 3, stage: num
     matches: matches.length,
     totalTime,
     avgTime: matches.length ? Math.round(totalTime / matches.length) : 0,
-    fiveGame: matches.filter((m) => m.gamesA + m.gamesB === 5).length,
+    decider: matches.filter((m) => wentToDecider(m.gamesA, m.gamesB)).length,
     longestTime: matches.reduce((max, m) => Math.max(max, m.durationMin), 0),
   };
 
@@ -218,9 +220,13 @@ export function stageDigestCaption(d: StageDigest): string {
   }
 
   lines.push("");
-  const fiveWord = pluralRu(d.metrics.fiveGame, ["пятигеймовый матч", "пятигеймовых матча", "пятигеймовых матчей"]);
+  const deciderWord = pluralRu(d.metrics.decider, [
+    "матч до решающего гейма",
+    "матча до решающего гейма",
+    "матчей до решающего гейма",
+  ]);
   lines.push(
-    `Цифры этапа: ${playersLabel(d.metrics.players)} · ${matchesLabel(d.metrics.matches)} · ${fmtCourt(d.metrics.totalTime)} на корте · ${d.metrics.fiveGame} ${fiveWord} · среднее ${fmtCourt(d.metrics.avgTime)}`,
+    `Цифры этапа: ${playersLabel(d.metrics.players)} · ${matchesLabel(d.metrics.matches)} · ${fmtCourt(d.metrics.totalTime)} на корте · ${d.metrics.decider} ${deciderWord} · среднее ${fmtCourt(d.metrics.avgTime)}`,
   );
 
   return lines.join("\n");

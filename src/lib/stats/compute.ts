@@ -4,12 +4,18 @@
  * rows into these shapes and serializes the result into the aggregate table.
  *
  * Phase 1 scope: volume counters, Match/Game/Rally WR, balances and the
- * best-of-5 score distribution. See the data-model brief sections 7.2–7.6.
+ * score distribution. See the data-model brief sections 7.2–7.6.
+ *
+ * Two match formats coexist in the league: the usual best-of-5 (three games to
+ * win) and a short best-of-3 (two games to win) played at some stages. Every
+ * formula below reads the format off the match itself, see `matchGamesToWin`.
  */
 
 export type GamePair = { a: number; b: number };
 
-export type MatchScoreCode = "3:0" | "3:1" | "3:2" | "2:3" | "1:3" | "0:3";
+export type MatchScoreCode =
+  | "3:0" | "3:1" | "3:2" | "2:3" | "1:3" | "0:3"
+  | "2:0" | "2:1" | "1:2" | "0:2";
 
 export type MatchResultCode = "W" | "L";
 
@@ -45,7 +51,10 @@ export type MatchPerspective = {
   ralliesLost: number;
   matchScore: MatchScoreCode;
   durationSec: number;
-  isFiveGame: boolean;
+  /** Games the winner needed: 3 (best-of-5) or 2 (best-of-3). */
+  gamesToWin: 2 | 3;
+  /** Match went the full distance: 5th game in best-of-5, 3rd in best-of-3. */
+  wentToDecider: boolean;
   // per-game tallies from this player's perspective
   closeGamesWon: number;
   closeGamesLost: number;
@@ -53,9 +62,10 @@ export type MatchPerspective = {
   overtimeGamesLost: number;
   dominantGamesWon: number;
   heavyGamesLost: number;
-  fifthGameRalliesWon: number;
-  fifthGameRalliesLost: number;
-  // comeback signals (0:2 trail / 2:0 lead) from this player's perspective
+  deciderRalliesWon: number;
+  deciderRalliesLost: number;
+  // comeback signals (0:2 trail / 2:0 lead), best-of-5 only: in best-of-3 the
+  // second game already ends the match, so neither signal carries a story
   trailed0_2: boolean;
   led2_0: boolean;
   reverseSweepWin: boolean;
@@ -89,6 +99,21 @@ export function avg(numerator: number, denominator: number): number | null {
   return numerator / denominator;
 }
 
+/**
+ * Games the winner of this match needed: 3 in the usual best-of-5, 2 in the
+ * short best-of-3 some stages play. A match stops the moment one side reaches
+ * the target, so the winner's game tally *is* the target — no per-stage config
+ * needed. Both formats live side by side inside one stage and division.
+ */
+export function matchGamesToWin(gamesA: number, gamesB: number): 2 | 3 {
+  return Math.max(gamesA, gamesB) >= 3 ? 3 : 2;
+}
+
+/** Total games a match runs when it goes the distance: 5 (bo5) or 3 (bo3). */
+export function deciderGameCount(gamesToWin: 2 | 3): number {
+  return gamesToWin * 2 - 1;
+}
+
 export function gameFlags(a: number, b: number): GameFlags {
   const margin = Math.abs(a - b);
   return {
@@ -103,7 +128,8 @@ export function gameFlags(a: number, b: number): GameFlags {
 /**
  * Match-level comeback flags from the per-game sequence. In squash best-of-5
  * the telling story is the 0:2 trail (and the symmetric 2:0 blown lead), not
- * the first game alone.
+ * the first game alone. Best-of-3 matches carry no such story — 2:0 there is a
+ * finished match, not a lead — so they get blank flags.
  */
 export type MatchComebackFlags = {
   playerATrailed0_2: boolean;
@@ -133,6 +159,7 @@ export function matchComebackFlags(
     reverseSweepWinnerIsA: null,
   };
   if (games.length < 2) return blank;
+  if (matchGamesToWin(gamesA, gamesB) === 2) return blank;
 
   const aWon0 = games[0].a > games[0].b;
   const aWon1 = games[1].a > games[1].b;
@@ -200,13 +227,15 @@ export function perspective(match: MatchForStats, asA: boolean): MatchPerspectiv
       if (margin >= 5) heavyGamesLost += 1;
     }
   }
-  const isFiveGame = gamesWon + gamesLost === 5;
-  let fifthGameRalliesWon = 0;
-  let fifthGameRalliesLost = 0;
-  if (isFiveGame && match.games.length === 5) {
-    const g = match.games[4];
-    fifthGameRalliesWon = asA ? g.a : g.b;
-    fifthGameRalliesLost = asA ? g.b : g.a;
+  const gamesToWin = matchGamesToWin(match.gamesA, match.gamesB);
+  const totalGames = gamesWon + gamesLost;
+  const wentToDecider = totalGames === deciderGameCount(gamesToWin);
+  let deciderRalliesWon = 0;
+  let deciderRalliesLost = 0;
+  if (wentToDecider && match.games.length === totalGames) {
+    const g = match.games[totalGames - 1];
+    deciderRalliesWon = asA ? g.a : g.b;
+    deciderRalliesLost = asA ? g.b : g.a;
   }
 
   const isWin = gamesWon > gamesLost;
@@ -229,20 +258,21 @@ export function perspective(match: MatchForStats, asA: boolean): MatchPerspectiv
     ralliesLost,
     matchScore: scoreCode(gamesWon, gamesLost),
     durationSec: match.durationSec ?? 0,
-    isFiveGame,
+    gamesToWin,
+    wentToDecider,
     closeGamesWon,
     closeGamesLost,
     overtimeGamesWon,
     overtimeGamesLost,
     dominantGamesWon,
     heavyGamesLost,
-    fifthGameRalliesWon,
-    fifthGameRalliesLost,
+    deciderRalliesWon,
+    deciderRalliesLost,
     trailed0_2,
     led2_0,
     reverseSweepWin: trailed0_2 && gamesWon === 3 && gamesLost === 2,
     reverseSweepLoss: led2_0 && gamesWon === 2 && gamesLost === 3,
-    forcedFifthAfterTrailing0_2: trailed0_2 && gamesWon + gamesLost === 5,
+    forcedFifthAfterTrailing0_2: trailed0_2 && totalGames === 5,
     lostAfterTrailing0_2: trailed0_2 && !isWin,
     winAfterLeading2_0: led2_0 && isWin,
     lossAfterLeading2_0: led2_0 && !isWin,
@@ -280,12 +310,20 @@ export type ComputedAggregate = {
   losses2_3: number;
   losses1_3: number;
   losses0_3: number;
+  // best-of-3 half of the same distribution
+  wins2_0: number;
+  wins2_1: number;
+  losses1_2: number;
+  losses0_2: number;
+  /** Wins without dropping a game: 3:0 and 2:0 together. */
   cleanWins: number;
+  /** Losses without taking a game: 0:3 and 0:2 together. */
   cleanLosses: number;
   cleanWinRatePct: number | null;
   cleanLossRatePct: number | null;
 
-  // five-game matches
+  // matches that went to the decider (5th game in bo5, 3rd in bo3); the
+  // `fiveGame`/`fifthGame` names are kept for the stored columns
   fiveGameMatches: number;
   fiveGameMatchesWon: number;
   fiveGameMatchesLost: number;
@@ -606,6 +644,10 @@ export function computeAggregate(perspectives: MatchPerspective[]): ComputedAggr
     losses2_3: 0,
     losses1_3: 0,
     losses0_3: 0,
+    wins2_0: 0,
+    wins2_1: 0,
+    losses1_2: 0,
+    losses0_2: 0,
     cleanWins: 0,
     cleanLosses: 0,
     cleanWinRatePct: null,
@@ -701,23 +743,33 @@ export function computeAggregate(perspectives: MatchPerspective[]): ComputedAggr
     a.ralliesWon += p.ralliesWon;
     a.ralliesLost += p.ralliesLost;
 
-    if (p.isWin) {
-      if (p.gamesLost === 0) a.wins3_0 += 1;
-      else if (p.gamesLost === 1) a.wins3_1 += 1;
-      else a.wins3_2 += 1;
+    if (p.gamesToWin === 3) {
+      if (p.isWin) {
+        if (p.gamesLost === 0) a.wins3_0 += 1;
+        else if (p.gamesLost === 1) a.wins3_1 += 1;
+        else a.wins3_2 += 1;
+      } else {
+        if (p.gamesWon === 2) a.losses2_3 += 1;
+        else if (p.gamesWon === 1) a.losses1_3 += 1;
+        else a.losses0_3 += 1;
+      }
     } else {
-      if (p.gamesWon === 2) a.losses2_3 += 1;
-      else if (p.gamesWon === 1) a.losses1_3 += 1;
-      else a.losses0_3 += 1;
+      if (p.isWin) {
+        if (p.gamesLost === 0) a.wins2_0 += 1;
+        else a.wins2_1 += 1;
+      } else {
+        if (p.gamesWon === 1) a.losses1_2 += 1;
+        else a.losses0_2 += 1;
+      }
     }
 
-    if (p.isFiveGame) {
+    if (p.wentToDecider) {
       a.fiveGameMatches += 1;
       if (p.isWin) a.fiveGameMatchesWon += 1;
       else a.fiveGameMatchesLost += 1;
     }
-    a.fifthGameRalliesWon += p.fifthGameRalliesWon;
-    a.fifthGameRalliesLost += p.fifthGameRalliesLost;
+    a.fifthGameRalliesWon += p.deciderRalliesWon;
+    a.fifthGameRalliesLost += p.deciderRalliesLost;
 
     a.closeGamesWon += p.closeGamesWon;
     a.closeGamesLost += p.closeGamesLost;
@@ -756,8 +808,8 @@ export function computeAggregate(perspectives: MatchPerspective[]): ComputedAggr
 
   a.gamesPlayed = a.gamesWon + a.gamesLost;
   a.ralliesPlayed = a.ralliesWon + a.ralliesLost;
-  a.cleanWins = a.wins3_0;
-  a.cleanLosses = a.losses0_3;
+  a.cleanWins = a.wins3_0 + a.wins2_0;
+  a.cleanLosses = a.losses0_3 + a.losses0_2;
   a.closeGamesPlayed = a.closeGamesWon + a.closeGamesLost;
   a.overtimeGamesPlayed = a.overtimeGamesWon + a.overtimeGamesLost;
 

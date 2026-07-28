@@ -2162,7 +2162,7 @@ function DigestManager({ league }: { league: League }) {
             <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
               <DigestMetric label="Матчей" value={digest.metrics.matches} />
               <DigestMetric label="Игроков" value={digest.metrics.players} />
-              <DigestMetric label="Пятигеймовых" value={digest.metrics.fiveGame} />
+              <DigestMetric label="До решающего" value={digest.metrics.decider} />
               <DigestMetric label="Время на корте" value={fmtCourt(digest.metrics.totalTime)} />
               <DigestMetric label="Среднее матча" value={fmtCourt(digest.metrics.avgTime)} />
               <DigestMetric label="Длиннейший" value={fmtCourt(digest.metrics.longestTime)} />
@@ -2377,7 +2377,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
               <SeasonMetric label="Игроков" value={summary.metrics.players} />
               <SeasonMetric label="Матчей" value={summary.metrics.matches} />
-              <SeasonMetric label="Пятигеймовых" value={summary.metrics.fiveGame} />
+              <SeasonMetric label="До решающего" value={summary.metrics.decider} />
               <SeasonMetric label="Время на корте" value={fmtCourt(summary.metrics.totalTime)} />
             </div>
 
@@ -2516,7 +2516,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                           </span>
                         </div>
                         <div className="mt-0.5 font-mono text-[12px] tabular text-on-surface-variant">
-                          средняя разница {summary.derby.closest.avgGameDiff.toFixed(1)} гейма · пятигеймовых {summary.derby.closest.fiveGames}
+                          средняя разница {summary.derby.closest.avgGameDiff.toFixed(1)} гейма · до решающего {summary.derby.closest.deciders}
                         </div>
                       </div>
                     ) : null}
