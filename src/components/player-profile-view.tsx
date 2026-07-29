@@ -670,7 +670,7 @@ function HintChip({ children, hint }: { children: React.ReactNode; hint: string 
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[190px] origin-top-left translate-y-1 scale-95 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-popover-foreground opacity-0 shadow-lg shadow-black/25",
+          "pointer-events-none absolute left-0 top-full z-[38] mt-2 w-max max-w-[190px] origin-top-left translate-y-1 scale-95 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-popover-foreground opacity-0 shadow-lg shadow-black/25 md:z-50",
           "transition-[opacity,transform] duration-75 ease-m3-standard",
           "group-hover/hint:translate-y-0 group-hover/hint:scale-100 group-hover/hint:opacity-100 group-hover/hint:delay-150",
           "group-focus-within/hint:translate-y-0 group-focus-within/hint:scale-100 group-focus-within/hint:opacity-100 group-focus-within/hint:delay-150",
@@ -897,7 +897,7 @@ function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank:
   if (rating === null) return null;
 
   return (
-    <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-50")}>
+    <div ref={ref} className={cn("absolute right-3 top-3 z-30", open && "z-[38] md:z-50")}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -1233,7 +1233,12 @@ function InfoPopover({
       className={cn(
         "block",
         inline ? "relative inline-block align-middle" : "absolute right-3 top-3",
-        open ? "z-[70] md:z-50" : "z-10 md:z-30",
+        // On mobile the app chrome is fixed/sticky: filter bar z-39, header z-40,
+        // tabbar z-50. The panel must stay UNDER all three (z-38) so it is
+        // occluded by them instead of painting over them. Desktop has no such
+        // chrome (header/tabbar are md:hidden, filter is md:static), so it keeps
+        // the higher layer there.
+        open ? "z-[38] md:z-50" : "z-10 md:z-30",
       )}
     >
       <button
@@ -1253,7 +1258,9 @@ function InfoPopover({
         className={cn(
           "rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-lg shadow-black/25 transition-all duration-300 ease-m3-emphasized-decel",
           mobileSafe
-            ? "fixed inset-x-2 bottom-[calc(76px+env(safe-area-inset-bottom))] z-[70] max-h-[calc(100dvh-120px)] w-auto origin-bottom-right overflow-y-auto overscroll-contain md:absolute md:inset-x-auto md:z-0 md:max-h-none md:w-[min(390px,calc(100vw-32px))] md:overflow-visible"
+            // Height cap keeps the sheet clear of the chrome it now sits under:
+            // 115px of stuck header + filter bar on top, 76px of tabbar below.
+            ? "fixed inset-x-2 bottom-[calc(76px+env(safe-area-inset-bottom))] z-0 max-h-[calc(100dvh-200px)] w-auto origin-bottom-right overflow-y-auto overscroll-contain md:absolute md:inset-x-auto md:max-h-none md:w-[min(390px,calc(100vw-32px))] md:overflow-visible"
             : "absolute z-0 w-[min(390px,calc(100vw-32px))]",
           mobileSafe ? (placement === "up" ? "md:bottom-11 md:top-auto" : "md:top-11 md:bottom-auto") : placement === "up" ? "bottom-11" : "top-11",
           mobileSafe
