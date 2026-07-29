@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { fmtDate, matchesLabel, pluralRu } from "@/lib/format";
+import { fmtDate, matchesLabel, playerHref, pluralRu } from "@/lib/format";
 import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import type {
@@ -2133,6 +2133,9 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
   }, [active.key, filter, nq]);
 
   const renderCard = (m: MatchListItem) => {
+    // opponentRid falls back to the bare match index when the opponent is not in
+    // the league roster (deleted profile); that id has no page, so skip the link.
+    const linkable = !/^\d+$/.test(m.opponentRid);
     return (
       <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
         <div className="flex items-start justify-between gap-3">
@@ -2150,7 +2153,16 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               )}
             </div>
             <div className="mt-1.5">
-              <span className="min-w-0 line-clamp-2 text-[13px] font-semibold md:line-clamp-1">{m.opponentName}</span>
+              {linkable ? (
+                <Link
+                  href={playerHref(m.opponentRid)}
+                  className="min-w-0 line-clamp-2 text-[13px] font-semibold transition-colors hover:text-primary md:line-clamp-1"
+                >
+                  {m.opponentName}
+                </Link>
+              ) : (
+                <span className="min-w-0 line-clamp-2 text-[13px] font-semibold md:line-clamp-1">{m.opponentName}</span>
+              )}
             </div>
           </div>
           {/* score details: top-right */}

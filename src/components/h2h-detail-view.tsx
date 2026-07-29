@@ -14,7 +14,7 @@ import type {
   PlayerProfileStats,
 } from "@/lib/player-profile";
 import { h2hStatsFromMatches } from "@/lib/player-profile";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, playerHref } from "@/lib/format";
 import {
   formatDuration,
   formatMatchupStatus,
@@ -520,7 +520,7 @@ function Hero({ player, opponent, stats, playerStrengthRating, lastMetAt, onClos
             <span className="text-on-surface-variant">:</span>
             <span className="text-on-surface">{stats.matchesLost}</span>
           </span>
-          <Link href={`/players/${encodeURIComponent(opponent.opponentRid)}`} className="line-clamp-2 whitespace-pre-line text-left text-[15px] font-semibold leading-tight text-on-surface hover:text-primary">{opponent.opponentName.replace(" ", "\n")}</Link>
+          <Link href={playerHref(opponent.opponentRid)} className="line-clamp-2 whitespace-pre-line text-left text-[15px] font-semibold leading-tight text-on-surface hover:text-primary">{opponent.opponentName.replace(" ", "\n")}</Link>
         </div>
       ) : (
         <div className={cn("grid grid-cols-[minmax(0,1fr)_88px_auto_88px_minmax(0,1fr)] items-center gap-4 text-center", onClose && "px-11")}>
@@ -537,7 +537,7 @@ function Hero({ player, opponent, stats, playerStrengthRating, lastMetAt, onClos
           <PlayerAvatar rid={opponent.opponentRid} initials={opponent.opponentInitials} color={opponent.opponentColor} className="size-[88px] text-2xl" />
           <span className="flex min-w-0 flex-col items-start gap-1">
             <StrengthPill value={opponent.opponentStrengthRating} />
-            <span className="min-w-0 max-w-full truncate text-left text-[15px] font-semibold">{opponent.opponentName}</span>
+            <Link href={playerHref(opponent.opponentRid)} className="min-w-0 max-w-full truncate text-left text-[15px] font-semibold transition-colors hover:text-primary">{opponent.opponentName}</Link>
           </span>
         </div>
       )}
