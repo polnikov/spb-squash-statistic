@@ -5,7 +5,7 @@ import type { MetadataRoute } from "next";
 // automatically by Next.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SPB Squash Statistic",
+    name: "SPB Squash Statistics",
     short_name: "SPB Squash",
     description: "Статистика сквош-лиги: рейтинги, дивизионы, этапы, Iron Man.",
     start_url: "/",

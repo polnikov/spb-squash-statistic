@@ -1,4 +1,4 @@
-# SPB Squash Statistic
+# SPB Squash Statistics
 
 Статистика сквош-лиги: официальные рейтинги, дивизионы, этапы, Iron Man,
 профили игроков со Strength Rating (Elo) и head-to-head. Результаты этапов

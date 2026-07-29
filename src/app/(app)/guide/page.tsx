@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { MetricsGuide } from "@/components/metrics-guide";
 
 export const metadata: Metadata = {
-  title: "Памятка по метрикам - SPB Squash Statistic",
+  title: "Памятка по метрикам - SPB Squash Statistics",
   description: "Как читать метрики лиги: winrate, индекс формы, рейтинг силы, реализация и решающие моменты.",
 };
 
