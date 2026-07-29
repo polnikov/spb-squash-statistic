@@ -4,7 +4,9 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
 import { MobileMenu } from "@/components/shell/mobile-menu";
+import { PlayerAvatarProvider } from "@/components/player-avatar";
 import { listSeasonsWithData } from "@/lib/db/league";
+import { getPlayerAvatarsByRid } from "@/lib/db/player-avatar-db";
 
 // The whole app shell reads the DB (season list) at request time, so keep every
 // route under (app) dynamic — otherwise `next build` prerenders them and fails
@@ -14,10 +16,19 @@ export const dynamic = "force-dynamic";
 export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const seasons = await listSeasonsWithData().catch((error) => {
-    console.error("Failed to load season list", error);
-    return [];
-  });
+  // Avatars ride the shell so every table under (app) can swap initials for a
+  // photo: URLs and crops only, the bytes come from /api/player-avatar. One
+  // query per request is fine here since the whole group is force-dynamic.
+  const [seasons, avatars] = await Promise.all([
+    listSeasonsWithData().catch((error) => {
+      console.error("Failed to load season list", error);
+      return [];
+    }),
+    getPlayerAvatarsByRid().catch((error) => {
+      console.error("Failed to load player avatars", error);
+      return {};
+    }),
+  ]);
   return (
     <div className="app-bg flex min-h-dvh">
       <Suspense fallback={null}>
@@ -39,7 +50,7 @@ export default async function AppLayout({
           </div>
         </header>
         <main className="mx-auto min-w-0 w-full max-w-[1280px] flex-1 px-2 pb-[calc(84px+env(safe-area-inset-bottom))] pt-5 md:px-8 md:pb-10 md:pt-24">
-          {children}
+          <PlayerAvatarProvider avatars={avatars}>{children}</PlayerAvatarProvider>
         </main>
         <Suspense fallback={null}>
           <BottomNav />

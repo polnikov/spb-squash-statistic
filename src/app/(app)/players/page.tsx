@@ -3,8 +3,6 @@ import { loadAllLeagues } from "@/lib/db/league";
 import { loadCareerStrengthRatingsByRid } from "@/lib/db/strength-rating";
 import { loadCareerLongestWinStreakByRid } from "@/lib/db/player-aggregate";
 import { PlayersList } from "@/components/players-list";
-import { PlayerAvatarProvider } from "@/components/player-avatar";
-import { getPlayerAvatarsByRid } from "@/lib/db/player-avatar-db";
 import { calculateSkillIndex } from "@/lib/stats/compute";
 
 export const dynamic = "force-dynamic";
@@ -128,13 +126,11 @@ export default async function PlayersPage() {
     loadCareerLongestWinStreakByRid(rids),
   ]);
   const players = applyLongestWinStreaks(applyStoredStrengthRatings(merged, stored), streaks);
-  const avatars = await getPlayerAvatarsByRid();
 
+  // Avatars come from PlayerAvatarProvider in the (app) layout.
   return (
-    <PlayerAvatarProvider avatars={avatars}>
-      <div className="flex flex-col gap-3 md:gap-8">
-        <PlayersList players={players} title="Игроки" />
-      </div>
-    </PlayerAvatarProvider>
+    <div className="flex flex-col gap-3 md:gap-8">
+      <PlayersList players={players} title="Игроки" />
+    </div>
   );
 }
