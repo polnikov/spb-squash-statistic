@@ -11,6 +11,7 @@ import { TabSliderPill, useTabSlider } from "@/components/ui/sliding-tabs";
 import { TabTransition } from "@/components/ui/tab-transition";
 import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
+import { BENCHMARK_METRIC_BY_KEY, median, MIN_QUALIFIED_PLAYERS } from "@/lib/stats/benchmarks";
 import { ChevronDown, Search, X } from "lucide-react";
 
 const MOBILE_PAGE = 10;
@@ -159,7 +160,48 @@ function MetaBadge({ label, value, color }: { label: string; value: string; colo
   );
 }
 
-function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number }) {
+/** Division medians of the three winrates - the tick on a card bar. */
+type DivisionMedians = { match: number | null; game: number | null; rally: number | null };
+
+/**
+ * Median of one winrate over the division roster. Counted off the same rows the
+ * page renders (not off `league_metric_benchmark`, whose denominators come from
+ * the aggregates), so the mark always sits where the visible list puts it.
+ * Qualification bars are the season ones from the benchmark config; too small a
+ * sample -> null and no tick at all.
+ */
+function medianWinrate(
+  rows: RatingRow[],
+  won: (r: RatingRow) => number,
+  total: (r: RatingRow) => number,
+  metricKey: string,
+): number | null {
+  const minDenom = BENCHMARK_METRIC_BY_KEY.get(metricKey)?.minDenom ?? 1;
+  const values = rows.filter((r) => total(r) >= minDenom).map((r) => pct(won(r), total(r)));
+  return values.length >= MIN_QUALIFIED_PLAYERS ? median(values) : null;
+}
+
+function divisionMedians(rows: RatingRow[]): DivisionMedians {
+  return {
+    match: medianWinrate(rows, (r) => r.wins, (r) => r.matches, "matchWinRatePct"),
+    game: medianWinrate(rows, (r) => r.gamesWon, (r) => r.games, "gameWinRatePct"),
+    rally: medianWinrate(rows, (r) => r.ballsWon, (r) => r.balls, "rallyWinRatePct"),
+  };
+}
+
+/** Scale marker standing proud of the bar. Sibling of the clipped track, with a
+ *  halo in the tile color so it stays legible over the fill. */
+function MedianTick({ position }: { position: number }) {
+  return (
+    <span
+      className="pointer-events-none absolute top-1/2 z-10 h-3 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-on-surface ring-2 ring-brand-surface-2"
+      style={{ left: `${Math.max(1, Math.min(99, position))}%` }}
+      aria-hidden
+    />
+  );
+}
+
+function StatTile({ label, record, wrLabel, wr, wrPct, median: medianPct = null }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number; median?: number | null }) {
   return (
     <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-1.5">
       <div className="flex items-center justify-between gap-3">
@@ -171,15 +213,18 @@ function StatTile({ label, record, wrLabel, wr, wrPct }: { label: string; record
       </div>
       <div className="mt-1 flex items-center gap-3">
         <span className="min-w-0 truncate font-mono text-[13px] font-semibold tabular text-on-surface"><NumberPop>{record}</NumberPop></span>
-        <div className="ml-auto h-1.5 w-1/2 shrink-0 overflow-hidden rounded-full bg-surface-container-high">
-          <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
+        <div className="relative ml-auto h-1.5 w-1/2 shrink-0">
+          <div className="h-full overflow-hidden rounded-full bg-surface-container-high">
+            <div className={cn("h-full rounded-full transition-[width] duration-500 ease-m3-emphasized-decel", wrPct > 50 ? "bg-win" : "bg-loss")} style={{ width: `${Math.max(0, Math.min(100, wrPct))}%` }} />
+          </div>
+          {medianPct != null ? <MedianTick position={medianPct} /> : null}
         </div>
       </div>
     </div>
   );
 }
 
-function DivisionMobileCard({ r }: { r: RatingRow }) {
+function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMedians }) {
   const [open, setOpen] = React.useState(false);
   const gamesLost = r.games - r.gamesWon;
   const ballsLost = r.balls - r.ballsWon;
@@ -217,9 +262,16 @@ function DivisionMobileCard({ r }: { r: RatingRow }) {
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
           <div className="flex flex-col gap-1.5 border-t border-outline-variant px-3 py-2.5">
-            <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} />
-            <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} />
-            <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} />
+            <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} median={medians.match} />
+            <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} median={medians.game} />
+            <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} median={medians.rally} />
+            {/* The tick alone is a riddle: name its base once for all three bars. */}
+            {medians.match != null || medians.game != null || medians.rally != null ? (
+              <div className="flex items-center gap-1.5 px-1 text-[10px] leading-none text-on-surface-variant">
+                <span className="inline-block h-2.5 w-[3px] shrink-0 rounded-full bg-on-surface" aria-hidden />
+                медиана дивизиона
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -278,6 +330,9 @@ export function DivisionsTable({
     () => (nq ? sortedRows.filter((r) => r.name.toLowerCase().includes(nq)) : sortedRows),
     [sortedRows, nq],
   );
+  // Off the whole division, never off the search result: the base must not move
+  // while the user types.
+  const medians = React.useMemo(() => divisionMedians(rows), [rows]);
   const highlights = React.useMemo(() => {
     const rating = bestBy(rows, (row) => row.points);
     const form = bestBy(rows, formIndex);
@@ -410,7 +465,7 @@ export function DivisionsTable({
       <div className="overflow-hidden md:hidden">
         <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
           {filteredRows.slice(0, mobileCount).map((r) => (
-            <DivisionMobileCard key={r.playerIdx} r={r} />
+            <DivisionMobileCard key={r.playerIdx} r={r} medians={medians} />
           ))}
           {filteredRows.length === 0 ? (
             <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-muted-foreground">
