@@ -753,14 +753,14 @@ function PreviewStatus({ row }: { row: StageImportPreview["players"][number] }) 
   if (row.status === "new") {
     return (
       <div className="flex flex-col items-center gap-1 text-center">
-        <span className="rounded-full bg-[#2563eb]/15 px-2.5 py-1 text-[11px] font-semibold text-[#93c5fd]">новый ID</span>
+        <span className="rounded-full bg-info-container px-2.5 py-1 text-[11px] font-semibold text-on-info-container">новый ID</span>
         {row.possibleMatches?.length ? (
           <span className="text-[10.5px] font-semibold text-on-secondary-container">есть совпадение по имени</span>
         ) : null}
       </div>
     );
   }
-  return <span className="rounded-full bg-[#16a34a]/15 px-2.5 py-1 text-[11px] font-semibold text-[#86efac]">совпадает</span>;
+  return <span className="rounded-full bg-success-container px-2.5 py-1 text-[11px] font-semibold text-on-success-container">совпадает</span>;
 }
 
 /** Accordion-style player link picker (app-styled), shown to the right of the
@@ -1999,7 +1999,7 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
                         </td>
                         <td className="w-px whitespace-nowrap px-5 py-3 text-right">
                           {keep ? (
-                            <span className="rounded-full bg-[#16a34a]/15 px-2.5 py-1 text-[11px] font-semibold text-[#86efac]">остаётся</span>
+                            <span className="rounded-full bg-success-container px-2.5 py-1 text-[11px] font-semibold text-on-success-container">остаётся</span>
                           ) : merged ? (
                             <span className="rounded-full bg-error-container px-2.5 py-1 text-[11px] font-semibold text-on-error-container">вливается</span>
                           ) : (

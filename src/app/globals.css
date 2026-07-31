@@ -178,6 +178,13 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
+  /* status chips (import preview: matched / new id) - theme-aware pairs in the
+     same shape as the M3 *-container roles */
+  --color-success-container: var(--m3-success-container);
+  --color-on-success-container: var(--m3-on-success-container);
+  --color-info-container: var(--m3-info-container);
+  --color-on-info-container: var(--m3-on-info-container);
+
   /* win/loss semantics (match results, deltas, W/L badges) - theme-aware */
   --color-win: var(--m3-win);
   --color-loss: var(--m3-loss);
@@ -243,6 +250,10 @@
   --m3-inverse-primary: #f9a8d4;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
+  --m3-success-container: rgba(22, 163, 74, 0.15);
+  --m3-on-success-container: #86efac;
+  --m3-info-container: rgba(37, 99, 235, 0.15);
+  --m3-on-info-container: #93c5fd;
   --m3-win: #04a45a;
   --m3-loss: #ff4747;
   --m3-loss-soft: #ff6b63;
@@ -313,6 +324,10 @@
   --m3-inverse-primary: #f9a8d4;
   --m3-scrim: #000000;
   --m3-shadow: #000000;
+  --m3-success-container: rgba(6, 147, 90, 0.13);
+  --m3-on-success-container: #056142;
+  --m3-info-container: rgba(37, 99, 235, 0.12);
+  --m3-on-info-container: #1d4ed8;
   --m3-win: #06935a;
   --m3-loss: #e11d48;
   --m3-loss-soft: #e5544b;
