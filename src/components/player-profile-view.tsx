@@ -989,11 +989,14 @@ function ActivityBadge({ active }: { active: boolean }) {
   return (
     <span
       className={cn(
-        "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[rgba(22,22,22,0.72)] px-2.5 py-1 text-[10.5px] font-semibold shadow-[0_1px_6px_rgba(0,0,0,0.4)] backdrop-blur-sm",
-        active ? "text-win" : "text-loss",
+        // Solid status fill, so the label and the dot go light; the border keeps
+        // the badge separated from the photo behind it.
+        // py-0.5 keeps it exactly as tall as the Strength Rating badge opposite.
+        "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/30 px-2.5 py-0.5 text-[10.5px] font-semibold text-white",
+        active ? "bg-win" : "bg-loss",
       )}
     >
-      <span className={cn("size-1.5 rounded-full", active ? "bg-win" : "bg-loss")} />
+      <span className="size-1.5 rounded-full bg-white/90" />
       {active ? "Активен" : "Неактивен"}
     </span>
   );
