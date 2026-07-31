@@ -12,7 +12,7 @@ import {
 import { attachRankedinIdToPlayer, findPlayersByRankedinIds } from "@/lib/db/player-identity";
 import { isFakeRankedinId } from "@/lib/rankedin-id";
 import { matchComebackFlags } from "@/lib/stats/compute";
-import { recalcPlayer, recalcStageDivision } from "@/lib/stats/recalc";
+import { recalcBenchmarks, recalcPlayer, recalcStageDivision } from "@/lib/stats/recalc";
 
 const API_BASE_URL = "https://api.rankedin.com/v1";
 const SITE_BASE_URL = "https://www.rankedin.com";
@@ -293,6 +293,8 @@ export async function deleteImportedStage(
   });
 
   for (const playerId of affected) await recalcPlayer(playerId);
+  // Removing a stage changes other players' aggregates, so the medians shift too.
+  await recalcBenchmarks();
   return { ok: true };
 }
 
@@ -510,6 +512,8 @@ export async function importRankedinStage(input: StageImportInput): Promise<{
   });
 
   await recalcStageDivision(result.stageId, preview.division);
+  // Same reason: an import moves everyone's aggregates in that scope.
+  await recalcBenchmarks();
 
   return {
     ok: true,

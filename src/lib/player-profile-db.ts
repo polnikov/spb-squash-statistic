@@ -9,6 +9,7 @@
 import { eq } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
+  leagueMetricBenchmark,
   matches,
   players,
   playerOpponentStats,
@@ -16,10 +17,16 @@ import {
   playerStatsAggregate,
   seasons,
   stages,
+  type LeagueMetricBenchmarkRow,
   type PlayerOpponentStatsRow,
   type PlayerStatsAggregateRow,
 } from "@/lib/db/schema";
 import { currentSeasonOf, seasonStart, type League } from "@/lib/league";
+import {
+  BENCHMARK_METRICS,
+  resolveBenchmark,
+  type BenchmarkScope,
+} from "@/lib/stats/benchmarks";
 import {
   buildDivisionsBySeason,
   buildPlayerProfileModel,
@@ -40,6 +47,7 @@ import {
   type PlayerProfileContextData,
   type PlayerProfileModel,
   type PlayerProfilePlacePoint,
+  type PlayerProfileBenchmarks,
   type PlayerProfileSeriesPoint,
   type PlayerProfileStats,
   type PlayerProfileStrengthPoint,
@@ -225,7 +233,7 @@ export async function buildPlayerProfileModelFromDb(
 
   // The reads below are independent of each other — one parallel wave instead of
   // sequential round trips.
-  const [seasonRows, stageRows, playerRows, aggRows, oppRows, ratingRows] = await Promise.all([
+  const [seasonRows, stageRows, playerRows, aggRows, oppRows, ratingRows, benchmarkRows] = await Promise.all([
     database.select({ id: seasons.id, label: seasons.label }).from(seasons),
     database.select({ id: stages.id, number: stages.number }).from(stages),
     database
@@ -254,6 +262,9 @@ export async function buildPlayerProfileModelFromDb(
       .innerJoin(stages, eq(stages.id, matches.stageId))
       .innerJoin(seasons, eq(seasons.id, stages.seasonId))
       .where(eq(playerRatingHistory.playerId, playerId)),
+    // ~200 rows for the whole league: read it whole and index in memory, no
+    // extra round trip since it rides along in this wave.
+    database.select().from(leagueMetricBenchmark),
   ]);
 
   // Same canonical order as the rating engine: season year → stage number →
@@ -282,6 +293,52 @@ export async function buildPlayerProfileModelFromDb(
 
   // season id (int) <-> label
   const labelById = new Map(seasonRows.map((s) => [s.id, s.label]));
+  const idByLabel = new Map(seasonRows.map((s) => [s.label, s.id]));
+
+  // league medians, indexed by the scope key they were computed for
+  const benchmarkGroupKey = (scope: BenchmarkScope, seasonId: number | null, division: number | null) =>
+    `${scope}:${seasonId ?? ""}:${division ?? ""}`;
+  const benchmarksByGroup = new Map<string, Map<string, LeagueMetricBenchmarkRow>>();
+  for (const row of benchmarkRows) {
+    const key = benchmarkGroupKey(row.scope as BenchmarkScope, row.seasonId, row.division);
+    const group = benchmarksByGroup.get(key) ?? benchmarksByGroup.set(key, new Map()).get(key)!;
+    group.set(row.metricKey, row);
+  }
+
+  /**
+   * Benchmarks visible for one context. Per metric: the player's own
+   * denominator is judged by the picked scope, while the median itself may
+   * come from a wider scope through the cascade (see resolveBenchmark).
+   */
+  function benchmarksFor(
+    scope: BenchmarkScope,
+    seasonId: number | null,
+    division: number | null,
+    seasonLabel: string | null,
+    row: PlayerStatsAggregateRow | undefined,
+  ): PlayerProfileBenchmarks {
+    if (!row) return {};
+    const out: PlayerProfileBenchmarks = {};
+    for (const metric of BENCHMARK_METRICS) {
+      const resolved = resolveBenchmark({
+        metric,
+        scope,
+        seasonId,
+        division,
+        seasonLabel,
+        row,
+        lookup: (candidateScope, candidateSeasonId, candidateDivision) => {
+          const group = benchmarksByGroup.get(
+            benchmarkGroupKey(candidateScope, candidateSeasonId, candidateDivision),
+          );
+          const stored = group?.get(metric.key);
+          return stored ? { median: Number(stored.median), qualifiedPlayers: stored.qualifiedPlayers } : null;
+        },
+      });
+      if (resolved) out[metric.key] = resolved;
+    }
+    return out;
+  }
 
   // stage id -> number
   const stageNumberById = new Map(stageRows.map((s) => [s.id, s.number]));
@@ -389,15 +446,20 @@ export async function buildPlayerProfileModelFromDb(
   function buildContext(seasonId: string | null, division: number | null): PlayerProfileContextData {
     const normalizedDivision = seasonId ? division : null;
     const context = makeContext(seasonId, normalizedDivision);
+    // The same branch picks the stats row and its benchmarks, so the scope is
+    // resolved once instead of twice.
+    const scopedRow: PlayerStatsAggregateRow | undefined = !seasonId
+      ? careerRow
+      : normalizedDivision == null
+        ? seasonByLabel.get(seasonId)
+        : seasonDivByKey.get(`${seasonId}::${normalizedDivision}`);
     const scoped: PlayerProfileStats = !seasonId
       ? careerStats
-      : normalizedDivision == null
-        ? seasonByLabel.has(seasonId)
-          ? mapAggregate(seasonByLabel.get(seasonId)!)
-          : emptyStats()
-        : seasonDivByKey.has(`${seasonId}::${normalizedDivision}`)
-          ? mapAggregate(seasonDivByKey.get(`${seasonId}::${normalizedDivision}`)!)
-          : emptyStats();
+      : scopedRow
+        ? mapAggregate(scopedRow)
+        : emptyStats();
+    const scopedSeasonId = seasonId ? idByLabel.get(seasonId) ?? null : null;
+    const benchmarks = benchmarksFor(context.scope, scopedSeasonId, normalizedDivision, seasonId, scopedRow);
     const scopedH2h = !seasonId
       ? h2hCareer
       : normalizedDivision == null
@@ -408,6 +470,7 @@ export async function buildPlayerProfileModelFromDb(
       key: contextKey(seasonId, normalizedDivision),
       context,
       scopedStats: scoped,
+      benchmarks,
       chartSeries: seasonId
         ? { stages: stageSeries(seasonId, normalizedDivision), places: placeSeries(seasonId, normalizedDivision) }
         : { careerBySeason: seasonSeries(), places: placeSeries(null, null) },

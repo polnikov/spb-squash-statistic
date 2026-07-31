@@ -526,6 +526,39 @@ export const playerStatsAggregate = pgTable(
 );
 
 /**
+ * League median of a metric within one scope: the comparison base shown next
+ * to a player's own value. Only players past the metric's own qualification
+ * bar enter the sample (see src/lib/stats/benchmarks.ts). Roughly 200 rows.
+ */
+export const leagueMetricBenchmark = pgTable(
+  "league_metric_benchmark",
+  {
+    id: serial("id").primaryKey(),
+    scope: playerStatsScope("scope").notNull(),
+    seasonId: integer("season_id").references(() => seasons.id, { onDelete: "cascade" }),
+    division: smallint("division"),
+    metricKey: text("metric_key").notNull(),
+    median: numeric("median", { precision: 8, scale: 3 }).notNull(),
+    qualifiedPlayers: integer("qualified_players").notNull(),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Same reason as psa_*_uq above: NULL season/division make a plain composite
+    // unique useless, so one row per scope is enforced by partial indexes.
+    uniqueIndex("lmb_career_uq")
+      .on(t.metricKey)
+      .where(sql`${t.scope} = 'career'`),
+    uniqueIndex("lmb_season_uq")
+      .on(t.seasonId, t.metricKey)
+      .where(sql`${t.scope} = 'season'`),
+    uniqueIndex("lmb_season_division_uq")
+      .on(t.seasonId, t.division, t.metricKey)
+      .where(sql`${t.scope} = 'season_division'`),
+    index("lmb_scope_idx").on(t.scope),
+  ],
+);
+
+/**
  * Per-match Strength Rating (Elo) audit trail. One row per player per match,
  * written by the global chronological recompute. Source for the rating
  * progression chart and reproducibility checks.
@@ -821,6 +854,8 @@ export type MatchGame = typeof matchGames.$inferSelect;
 export type NewMatchGame = typeof matchGames.$inferInsert;
 export type PlayerStatsAggregateRow = typeof playerStatsAggregate.$inferSelect;
 export type NewPlayerStatsAggregate = typeof playerStatsAggregate.$inferInsert;
+export type LeagueMetricBenchmarkRow = typeof leagueMetricBenchmark.$inferSelect;
+export type NewLeagueMetricBenchmark = typeof leagueMetricBenchmark.$inferInsert;
 export type PlayerRatingHistoryRow = typeof playerRatingHistory.$inferSelect;
 export type NewPlayerRatingHistory = typeof playerRatingHistory.$inferInsert;
 export type PlayerOpponentStatsRow = typeof playerOpponentStats.$inferSelect;

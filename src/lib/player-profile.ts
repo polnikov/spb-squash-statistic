@@ -8,6 +8,7 @@ import {
   type MockResult,
   type RealMatch,
 } from "@/lib/league";
+import type { BenchmarkRender } from "@/lib/stats/benchmarks";
 import {
   calculateSkillIndex,
   deciderGameCount,
@@ -251,10 +252,28 @@ export type PlayerProfileContext = {
   description: string;
 };
 
+/**
+ * League median of one metric for the context's scope, plus how the profile
+ * shows it. Present only when the metric passed both censuses: the player's
+ * own denominator and a league sample somewhere up the fallback cascade.
+ */
+export type PlayerProfileBenchmark = {
+  median: number;
+  qualifiedPlayers: number;
+  render: BenchmarkRender;
+  /** Scope the median actually came from - may be wider than the picked one. */
+  resolvedScope: PlayerProfileStatsScope;
+  /** Caption of the base, always matching `resolvedScope`. */
+  baseLabel: string;
+};
+export type PlayerProfileBenchmarks = Partial<Record<string, PlayerProfileBenchmark>>;
+
 export type PlayerProfileContextData = {
   key: string;
   context: PlayerProfileContext;
   scopedStats: PlayerProfileStats;
+  /** Metric key -> league median for THIS context's scope. Empty when unknown. */
+  benchmarks: PlayerProfileBenchmarks;
   chartSeries: {
     careerBySeason?: PlayerProfileSeriesPoint[];
     stages?: PlayerProfileSeriesPoint[];
@@ -1052,6 +1071,8 @@ function buildContextData(
     key: contextKey(seasonId, normalizedDivision),
     context,
     scopedStats: aggregateStats(scopedMatches, scopedResults),
+    // League medians live in the DB; the pure builder has no access to them.
+    benchmarks: {},
     chartSeries: seasonId
       ? {
           stages: buildStageSeries(leagues[seasonId], seasonId, normalizedDivision, matches, results),

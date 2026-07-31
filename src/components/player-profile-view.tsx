@@ -9,9 +9,11 @@ import { useTheme } from "next-themes";
 import { fmtDate, matchesLabel, playerHref, pluralRu } from "@/lib/format";
 import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
+import { benchmarkBaseLabelDative, type BenchmarkRender } from "@/lib/stats/benchmarks";
 import type {
   MatchListItem,
   PlayerOpponentStats,
+  PlayerProfileBenchmarks,
   PlayerProfileContextData,
   PlayerProfileModel,
   PlayerProfilePlacePoint,
@@ -252,6 +254,34 @@ function lineSeries(name: string, data: (number | null)[], color?: string) {
   };
 }
 
+/**
+ * Grey reference line across a chart: the league median of the metric in the
+ * selected scope. A markLine instead of a series - no legend entry, no tooltip
+ * row, so the player's own curves stay the subject.
+ */
+function medianMarkLine(value: number, label: string) {
+  return {
+    silent: true,
+    symbol: "none" as const,
+    lineStyle: { color: CHART_COLORS.text, width: 1.5, type: "dashed" as const, opacity: 0.85 },
+    label: {
+      show: true,
+      position: "insideEndTop" as const,
+      // Chip, not bare text: the line crosses the player's own curves, and grey
+      // text on top of them is unreadable.
+      color: CHART_COLORS.tooltipInk,
+      backgroundColor: CHART_COLORS.tooltipBg,
+      borderColor: CHART_COLORS.grid,
+      borderWidth: 1,
+      borderRadius: 4,
+      padding: [3, 5, 2, 5],
+      fontSize: 10,
+      formatter: `${label} ${value.toFixed(1)}%`,
+    },
+    data: [{ yAxis: value }],
+  };
+}
+
 type BarRadius = [number, number, number, number];
 
 /** Bars are rounded on top only by default. `radius` overrides it for charts that
@@ -280,8 +310,15 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
     stages?: PlayerProfileSeriesPoint[];
     places?: PlayerProfilePlacePoint[];
     strengthHistory?: PlayerProfileStrengthPoint[];
+    benchmarks?: PlayerProfileBenchmarks;
   };
   const stats = payload.stats;
+  // Match WR is the headline winrate, so its median is the one the Winrate
+  // chart references; game and rally medians sit within a point of it anyway.
+  // The caption travels with the entry, so a fallback median names its own scope.
+  const matchWrBenchmark = payload.benchmarks?.matchWinRatePct ?? null;
+  const matchWrMedian = matchWrBenchmark?.median ?? null;
+  const medianLabel = matchWrBenchmark?.baseLabel ?? "";
   const career = payload.careerBySeason ?? [];
   const stages = payload.stages ?? [];
   const places = payload.places ?? [];
@@ -415,7 +452,10 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       xAxis: { ...option.xAxis, data: career.map((p) => p.label) },
       yAxis: { ...option.yAxis, min: 0, max: 100, axisLabel: { formatter: "{value}%" } },
       series: [
-        lineSeries("Матчи", career.map((p) => pctValue(p.matchWinRatePct)), CHART_COLORS.primary),
+        {
+          ...lineSeries("Матчи", career.map((p) => pctValue(p.matchWinRatePct)), CHART_COLORS.primary),
+          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian, medianLabel) }),
+        },
         lineSeries("Геймы", career.map((p) => pctValue(p.gameWinRatePct)), CHART_COLORS.tertiary),
         lineSeries("Розыгрыши", career.map((p) => pctValue(p.rallyWinRatePct)), CHART_COLORS.secondary),
       ],
@@ -465,7 +505,10 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       xAxis: { ...option.xAxis, data: stages.map((p) => `Э${p.stage}`) },
       yAxis: { ...option.yAxis, min: 0, max: 100, axisLabel: { formatter: "{value}%" } },
       series: [
-        lineSeries("Матчи", stages.map((p) => (p.matchesPlayed ? pctValue(p.matchWinRatePct) : null)), CHART_COLORS.primary),
+        {
+          ...lineSeries("Матчи", stages.map((p) => (p.matchesPlayed ? pctValue(p.matchWinRatePct) : null)), CHART_COLORS.primary),
+          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian, medianLabel) }),
+        },
         lineSeries("Геймы", stages.map((p) => (p.gamesPlayed ? pctValue(p.gameWinRatePct) : null)), CHART_COLORS.tertiary),
         lineSeries("Розыгрыши", stages.map((p) => (p.ralliesPlayed ? pctValue(p.rallyWinRatePct) : null)), CHART_COLORS.secondary),
       ],
@@ -691,7 +734,10 @@ function statBar(won: number, lost: number, wrPct: number | null): { pct: number
   return { tone: lead > 0 ? "win" : lead < 0 ? "loss" : "accent", pct: lead === 0 ? 50 : lead > 0 ? wr : 100 - wr };
 }
 
-function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" } }) {
+function KpiCard({ label, value, sub, bar, percent = null, benchmark = null }: { label: string; value: string; sub: string; bar?: { pct: number; tone: "win" | "loss" | "accent" }; percent?: number | null; benchmark?: MetricBenchmark | null }) {
+  // Text under the bar, not a tick: `statBar` inverts its axis when the player
+  // is behind, so a tick there would sit in the wrong place.
+  const delta = benchmark != null && benchmark.render === "delta" && percent != null ? percent - benchmark.median : null;
   return (
     <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>{label}</div>
@@ -710,6 +756,7 @@ function KpiCard({ label, value, sub, bar }: { label: string; value: string; sub
       ) : (
         <div className="mt-1 min-w-0 truncate text-[10px] text-on-surface-variant md:text-[10.5px]"><NumberPop>{sub}</NumberPop></div>
       )}
+      {delta != null && benchmark != null ? <BenchmarkDelta delta={delta} benchmark={benchmark} /> : null}
     </div>
   );
 }
@@ -725,19 +772,28 @@ function formIndexTier(value: number): { color: string; label: string } {
 /** Header KPI tile for the Form Index: label + value, then a linear gauge that
  *  mirrors the neighboring KPI bars. Fill width tracks the index, its color the
  *  tier; the status word (not a percent) sits inside the bar, left-aligned. */
-function FormIndexCard({ formIndex }: { formIndex: number | null }) {
+function FormIndexCard({ formIndex, benchmark = null }: { formIndex: number | null; benchmark?: MetricBenchmark | null }) {
   const tier = formIndex === null ? { color: "var(--color-on-surface-variant)", label: "нет данных" } : formIndexTier(formIndex);
   const pct = formIndex === null ? 0 : Math.max(0, Math.min(100, formIndex));
+  // Fill equals the index on a 0-100 axis, so a tick lands where it should.
+  const tick =
+    benchmark != null && benchmark.render === "tick" && formIndex !== null
+      ? Math.max(1, Math.min(99, benchmark.median))
+      : null;
   return (
     <div className={cardClass("min-w-0 overflow-hidden px-3 py-2.5 md:px-[15px] md:py-[13px]")}>
       <div className={labelClass()}>Индекс формы</div>
       <div className="mt-1 flex items-baseline justify-between gap-2 md:mt-1.5">
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{formIndex === null ? "x" : formIndex.toFixed(1)}</NumberPop></div>
       </div>
-      <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
-        <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, backgroundColor: tier.color }} />
-        <span className="absolute inset-y-0 left-1.5 z-10 flex items-center text-[10px] font-semibold text-on-surface">{tier.label}</span>
+      <div className="relative mt-1.5">
+        <div className="relative h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+          <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, backgroundColor: tier.color }} />
+          <span className="absolute inset-y-0 left-1.5 z-10 flex items-center text-[10px] font-semibold text-on-surface">{tier.label}</span>
+        </div>
+        {tick != null ? <BenchmarkTick position={tick} tall /> : null}
       </div>
+      {tick != null && benchmark != null ? <BenchmarkTickCaption benchmark={benchmark} /> : null}
     </div>
   );
 }
@@ -755,17 +811,79 @@ function MetricRow({ label, value, sign, noBorder = false, noBorderDesktop = fal
   );
 }
 
-function ProgressMetric({ label, record, percent, tone = "accent" }: { label: string; record: string; percent: number | null; tone?: "win" | "loss" | "accent" }) {
+/** League median next to the player's own value: a tick on the bar for metrics
+ *  spread over the whole axis, a signed delta line for the ones squeezed
+ *  around 50%. Comparison only - no verdict either way. */
+type MetricBenchmark = { median: number; label: string; render: BenchmarkRender };
+
+/** Benchmark for one metric key, ready to hand to a metric component. The
+ *  caption comes with the entry: after a fallback it names the scope the median
+ *  really came from, not the one the user picked. */
+function benchmarkOf(benchmarks: PlayerProfileBenchmarks | undefined, metricKey: string): MetricBenchmark | null {
+  const found = benchmarks?.[metricKey];
+  return found ? { median: found.median, label: found.baseLabel, render: found.render } : null;
+}
+
+/** Signed delta line shown under a bar: arithmetic difference, no interpretation. */
+function BenchmarkDelta({ delta, benchmark }: { delta: number; benchmark: MetricBenchmark }) {
+  return (
+    <div className="mt-1 text-[10px] text-on-surface-variant">
+      <span className={cn("font-mono font-semibold", delta > 0 ? "text-win" : delta < 0 ? "text-loss" : "")}>
+        {formatSignedNumber(delta, 1)}
+      </span>{" "}
+      к {benchmarkBaseLabelDative(benchmark.label)} ({benchmark.median.toFixed(1)})
+    </div>
+  );
+}
+
+/** The tick itself: a scale marker standing proud of the bar, with a halo in the
+ *  card color so it stays legible over the fill and over the empty track alike.
+ *  Rendered as a sibling of the (clipped) track, not inside it. */
+function BenchmarkTick({ position, tall = false }: { position: number; tall?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none absolute top-1/2 z-10 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-on-surface ring-2 ring-card",
+        tall ? "h-[23px]" : "h-3.5",
+      )}
+      style={{ left: `${position}%` }}
+      aria-hidden
+    />
+  );
+}
+
+/** Caption for a tick: the tick alone is a riddle, so it gets its base named.
+ *  Repeats the marker so the line and the mark on the bar read as one thing. */
+function BenchmarkTickCaption({ benchmark }: { benchmark: MetricBenchmark }) {
+  return (
+    <div className="mt-1 flex items-center gap-1.5 truncate text-[10px] text-on-surface-variant">
+      <span className="inline-block h-2.5 w-[3px] shrink-0 rounded-full bg-on-surface" aria-hidden />
+      {benchmark.label} <span className="font-mono font-semibold tabular text-on-surface">{benchmark.median.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function ProgressMetric({ label, record, percent, tone = "accent", benchmark = null }: { label: string; record: string; percent: number | null; tone?: "win" | "loss" | "accent"; benchmark?: MetricBenchmark | null }) {
   const width = Math.max(0, Math.min(100, percent ?? 0));
+  const show = benchmark != null && percent != null;
+  // The marker sits outside the clipped track, so it only needs to stay clear
+  // of the rounded ends.
+  const tick = show && benchmark.render === "tick" ? Math.max(1, Math.min(99, benchmark.median)) : null;
+  const delta = show && benchmark.render === "delta" ? percent - benchmark.median : null;
   return (
     <div className="py-2.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] text-on-surface-variant">{label}</span>
         <span className="font-mono text-[12.5px] font-semibold tabular"><NumberPop>{`${record} · ${formatPercent(percent)}`}</NumberPop></span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-container-high">
-        <div className={cn("h-full rounded-full", tone === "win" ? "bg-win" : tone === "loss" ? "bg-loss" : "bg-primary")} style={{ width: `${width}%` }} />
+      <div className="relative mt-2">
+        <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+          <div className={cn("h-full rounded-full", tone === "win" ? "bg-win" : tone === "loss" ? "bg-loss" : "bg-primary")} style={{ width: `${width}%` }} />
+        </div>
+        {tick != null ? <BenchmarkTick position={tick} /> : null}
       </div>
+      {delta != null && benchmark != null ? <BenchmarkDelta delta={delta} benchmark={benchmark} /> : null}
+      {tick != null && benchmark != null ? <BenchmarkTickCaption benchmark={benchmark} /> : null}
     </div>
   );
 }
@@ -821,19 +939,19 @@ function SegmentedControl<T extends string>({
   );
 }
 
-function scopedKpis(stats: PlayerProfileStats) {
+function scopedKpis(stats: PlayerProfileStats, benchmarks?: PlayerProfileBenchmarks) {
   return [
-    { label: "Матчи", value: formatRecord(stats.matchesWon, stats.matchesLost), sub: formatPercent(stats.matchWinRatePct), bar: statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct) },
-    { label: "Геймы", value: formatRecord(stats.gamesWon, stats.gamesLost), sub: formatPercent(stats.gameWinRatePct), bar: statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct) },
-    { label: "Розыгрыши", value: formatRecord(stats.ralliesWon, stats.ralliesLost), sub: formatPercent(stats.rallyWinRatePct), bar: statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct) },
+    { label: "Матчи", value: formatRecord(stats.matchesWon, stats.matchesLost), sub: formatPercent(stats.matchWinRatePct), bar: statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct), percent: stats.matchWinRatePct, benchmark: benchmarkOf(benchmarks, "matchWinRatePct") },
+    { label: "Геймы", value: formatRecord(stats.gamesWon, stats.gamesLost), sub: formatPercent(stats.gameWinRatePct), bar: statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct), percent: stats.gameWinRatePct, benchmark: benchmarkOf(benchmarks, "gameWinRatePct") },
+    { label: "Розыгрыши", value: formatRecord(stats.ralliesWon, stats.ralliesLost), sub: formatPercent(stats.rallyWinRatePct), bar: statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct), percent: stats.rallyWinRatePct, benchmark: benchmarkOf(benchmarks, "rallyWinRatePct") },
   ];
 }
 
-function ScopedKpiGrid({ stats, className }: { stats: PlayerProfileStats; className?: string }) {
+function ScopedKpiGrid({ stats, benchmarks, className }: { stats: PlayerProfileStats; benchmarks?: PlayerProfileBenchmarks; className?: string }) {
   return (
     <div className={cn("grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3", className)}>
-      {scopedKpis(stats).map((item) => <KpiCard key={item.label} {...item} />)}
-      <FormIndexCard formIndex={stats.formIndex} />
+      {scopedKpis(stats, benchmarks).map((item) => <KpiCard key={item.label} {...item} />)}
+      <FormIndexCard formIndex={stats.formIndex} benchmark={benchmarkOf(benchmarks, "formIndex")} />
     </div>
   );
 }
@@ -841,10 +959,12 @@ function ScopedKpiGrid({ stats, className }: { stats: PlayerProfileStats; classN
 function ScopedKpiAccordion({
   show,
   stats,
+  benchmarks,
   className,
 }: {
   show: boolean;
   stats: PlayerProfileStats;
+  benchmarks?: PlayerProfileBenchmarks;
   className?: string;
 }) {
   return (
@@ -858,7 +978,7 @@ function ScopedKpiAccordion({
           transition={{ duration: 0.42, ease: [0.2, 0, 0, 1] }}
           className={cn("overflow-hidden", className)}
         >
-          <ScopedKpiGrid stats={stats} />
+          <ScopedKpiGrid stats={stats} benchmarks={benchmarks} />
         </motion.div>
       ) : null}
     </AnimatePresence>
@@ -1084,12 +1204,13 @@ function HeroPhotoCard({ model, stats, seasonId, className }: { model: PlayerPro
 
 function PlayerCareerHeader({ model, seasonId }: { model: PlayerProfileModel; seasonId: string }) {
   const stats = model.careerStats;
+  // The header always shows career numbers, whatever the filter says, so its
+  // base is the career median - not the one of the selected context.
+  const benchmarks = model.contexts.career?.benchmarks;
   const kpis = (
     <>
-      <KpiCard label="Матчи" value={formatRecord(stats.matchesWon, stats.matchesLost)} sub={formatPercent(stats.matchWinRatePct)} bar={statBar(stats.matchesWon, stats.matchesLost, stats.matchWinRatePct)} />
-      <KpiCard label="Геймы" value={formatRecord(stats.gamesWon, stats.gamesLost)} sub={formatPercent(stats.gameWinRatePct)} bar={statBar(stats.gamesWon, stats.gamesLost, stats.gameWinRatePct)} />
-      <KpiCard label="Розыгрыши" value={formatRecord(stats.ralliesWon, stats.ralliesLost)} sub={formatPercent(stats.rallyWinRatePct)} bar={statBar(stats.ralliesWon, stats.ralliesLost, stats.rallyWinRatePct)} />
-      <FormIndexCard formIndex={stats.formIndex} />
+      {scopedKpis(stats, benchmarks).map((item) => <KpiCard key={item.label} {...item} />)}
+      <FormIndexCard formIndex={stats.formIndex} benchmark={benchmarkOf(benchmarks, "formIndex")} />
     </>
   );
   return (
@@ -1331,6 +1452,18 @@ const GAME_ADVANTAGE_INFO: InfoItem[] = [
   },
 ];
 
+/** Same wording in both cards that show league medians: a tick or a delta is a
+ *  comparison base, never a verdict about the player. */
+const BENCHMARK_INFO: InfoItem = {
+  label: "Медиана лиги",
+  desc: "Засечка на полосе - медиана лиги среди игроков, сыгравших достаточно матчей этого типа. Показывает, где проходит типичный уровень, а не оценку игрока. Для метрик, прижатых к 50%, вместо засечки показана дельта к медиане.",
+  scale: [
+    "значение выше медианы - выше типичного уровня",
+    "ниже медианы - ниже типичного",
+    "подпись рядом говорит, с чем идёт сравнение: дивизион, сезон или вся лига",
+  ],
+};
+
 const DECISION_INFO: InfoItem[] = [
   {
     label: "Решающий гейм",
@@ -1356,6 +1489,7 @@ const DECISION_INFO: InfoItem[] = [
     scale: ["> 50% - держит темп под давлением", "< 50% - садится в концовке"],
     match: (s) => (s.fifthGameRallyWinRatePct == null ? null : s.fifthGameRallyWinRatePct >= 50 ? 0 : 1),
   },
+  BENCHMARK_INFO,
 ];
 
 const COMEBACKS_INFO: InfoItem[] = [
@@ -1377,6 +1511,7 @@ const COMEBACKS_INFO: InfoItem[] = [
     scale: ["< 10% - надёжно закрывает", "10-25% - иногда отпускает", "> 25% - проблемы с реализацией"],
     match: (s) => (s.blownTwoGameLeadRatePct == null ? null : s.blownTwoGameLeadRatePct < 10 ? 0 : s.blownTwoGameLeadRatePct <= 25 ? 1 : 2),
   },
+  BENCHMARK_INFO,
 ];
 
 const TIME_INFO: InfoItem[] = [
@@ -1479,30 +1614,32 @@ function GameAdvantageCard({ stats }: { stats: PlayerProfileStats }) {
   );
 }
 
-function DecisionMomentsCard({ stats }: { stats: PlayerProfileStats }) {
+function DecisionMomentsCard({ stats, benchmarks }: { stats: PlayerProfileStats; benchmarks?: PlayerProfileBenchmarks }) {
+  const bm = (key: string) => benchmarkOf(benchmarks, key);
   return (
     <div className={cardClass("relative p-4")}>
       <InfoPopover items={DECISION_INFO} stats={stats} />
       <h2 className="text-base font-semibold tracking-tight">Решающие моменты</h2>
       <div className="mt-2">
-        <ProgressMetric label="Решающий гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} />
-        <ProgressMetric label="Плотные геймы" record={formatRecord(stats.closeGamesWon, stats.closeGamesLost)} percent={stats.closeGameWinRatePct} />
-        <ProgressMetric label="Овертайм-геймы" record={formatRecord(stats.overtimeGamesWon, stats.overtimeGamesLost)} percent={stats.overtimeGameWinRatePct} />
-        <ProgressMetric label="Rally WR в решающих" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} />
+        <ProgressMetric label="Решающий гейм" record={formatRecord(stats.fiveGameMatchesWon, stats.fiveGameMatchesLost)} percent={stats.fiveGameWinRatePct} benchmark={bm("fiveGameWinRatePct")} />
+        <ProgressMetric label="Плотные геймы" record={formatRecord(stats.closeGamesWon, stats.closeGamesLost)} percent={stats.closeGameWinRatePct} benchmark={bm("closeGameWinRatePct")} />
+        <ProgressMetric label="Овертайм-геймы" record={formatRecord(stats.overtimeGamesWon, stats.overtimeGamesLost)} percent={stats.overtimeGameWinRatePct} benchmark={bm("overtimeGameWinRatePct")} />
+        <ProgressMetric label="Rally WR в решающих" record={formatRecord(stats.fifthGameRalliesWon, stats.fifthGameRalliesLost)} percent={stats.fifthGameRallyWinRatePct} benchmark={bm("fifthGameRallyWinRatePct")} />
       </div>
     </div>
   );
 }
 
-function ComebacksCard({ stats }: { stats: PlayerProfileStats }) {
+function ComebacksCard({ stats, benchmarks }: { stats: PlayerProfileStats; benchmarks?: PlayerProfileBenchmarks }) {
+  const bm = (key: string) => benchmarkOf(benchmarks, key);
   return (
     <div className={cardClass("relative p-4")}>
       <InfoPopover items={COMEBACKS_INFO} stats={stats} />
       <h2 className="text-base font-semibold tracking-tight">Камбэки 0:2 / 2:0</h2>
       <div className="mt-2">
-        <ProgressMetric label="Камбэки с 0:2" record={`${stats.reverseSweepWins} из ${stats.matchesTrailed0_2}`} percent={stats.reverseSweepWinRatePct} />
-        <ProgressMetric label="Довёл до пятого после 0:2" record={`${stats.forcedFifthAfterTrailing0_2} из ${stats.matchesTrailed0_2}`} percent={stats.forcedFifthRateAfterTrailing0_2Pct} />
-        <ProgressMetric label="Потеря преимущества 2:0" record={`${stats.lossesAfterLeading2_0} из ${stats.matchesLed2_0}`} percent={stats.blownTwoGameLeadRatePct} />
+        <ProgressMetric label="Камбэки с 0:2" record={`${stats.reverseSweepWins} из ${stats.matchesTrailed0_2}`} percent={stats.reverseSweepWinRatePct} benchmark={bm("reverseSweepWinRatePct")} />
+        <ProgressMetric label="Довёл до пятого после 0:2" record={`${stats.forcedFifthAfterTrailing0_2} из ${stats.matchesTrailed0_2}`} percent={stats.forcedFifthRateAfterTrailing0_2Pct} benchmark={bm("forcedFifthRateAfterTrailing0_2Pct")} />
+        <ProgressMetric label="Потеря преимущества 2:0" record={`${stats.lossesAfterLeading2_0} из ${stats.matchesLed2_0}`} percent={stats.blownTwoGameLeadRatePct} benchmark={bm("blownTwoGameLeadRatePct")} />
       </div>
     </div>
   );
@@ -1597,7 +1734,8 @@ function ScoreDistributionCard({ stats, compact = false }: { stats: PlayerProfil
 
 function ChartPanel({ active, chartType, setChartType }: { active: PlayerProfileContextData; chartType: PlayerProfileChartType; setChartType: (type: PlayerProfileChartType) => void }) {
   const items = DESKTOP_CHARTS[active.context.scope];
-  const chartData = { ...active.chartSeries, stats: active.scopedStats };
+  // Same payload builder as the mobile tab, so both carry the benchmarks.
+  const chartData = chartPayload(active);
   return (
     <div className={cardClass("p-4")}>
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -2439,7 +2577,11 @@ function EmptyContext({ stats }: { stats: PlayerProfileStats }) {
 }
 
 function chartPayload(active: PlayerProfileContextData) {
-  return { ...active.chartSeries, stats: active.scopedStats };
+  return {
+    ...active.chartSeries,
+    stats: active.scopedStats,
+    benchmarks: active.benchmarks,
+  };
 }
 
 export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
@@ -2527,11 +2669,11 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
   const overviewBlocks = (
     <>
-      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} />
+      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} benchmarks={active.benchmarks} />
       <EmptyContext stats={active.scopedStats} />
       <GameAdvantageCard stats={active.scopedStats} />
-      <DecisionMomentsCard stats={active.scopedStats} />
-      <ComebacksCard stats={active.scopedStats} />
+      <DecisionMomentsCard stats={active.scopedStats} benchmarks={active.benchmarks} />
+      <ComebacksCard stats={active.scopedStats} benchmarks={active.benchmarks} />
       <TimeLoadCard stats={active.scopedStats} />
       <ResultConversionCard stats={active.scopedStats} />
       <ScoreDistributionCard stats={active.scopedStats} compact />
@@ -2552,7 +2694,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
 
       <Filters model={model} value={filter} onChange={applyFilter} />
 
-      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} className="hidden md:grid" />
+      <ScopedKpiAccordion show={showScopedKpi} stats={active.scopedStats} benchmarks={active.benchmarks} className="hidden md:grid" />
 
       <div className="hidden grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-5 md:grid">
         <div className="flex min-w-0 flex-col gap-5">
@@ -2564,8 +2706,8 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
           <OpponentsSection active={active} onOpen={openH2h} lastMetByRid={lastMetByRid} hideModeTabs={singleContext} />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
-          <DecisionMomentsCard stats={active.scopedStats} />
-          <ComebacksCard stats={active.scopedStats} />
+          <DecisionMomentsCard stats={active.scopedStats} benchmarks={active.benchmarks} />
+          <ComebacksCard stats={active.scopedStats} benchmarks={active.benchmarks} />
           <TimeLoadCard stats={active.scopedStats} />
           <ResultConversionCard stats={active.scopedStats} />
         </div>

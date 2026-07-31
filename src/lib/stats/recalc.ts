@@ -6,20 +6,28 @@
  * Head-to-head (PlayerOpponentStats) and composite indexes are later phases.
  */
 
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
 import { db as defaultDb, type Database } from "@/lib/db";
 import {
+  leagueMetricBenchmark,
   matchGames,
   matches,
   playerMetricSeriesPoint,
   playerOpponentStats,
   playerStatsAggregate,
   stages,
+  type NewLeagueMetricBenchmark,
   type NewMatchGame,
   type NewPlayerMetricSeriesPoint,
   type NewPlayerOpponentStats,
   type NewPlayerStatsAggregate,
+  type PlayerStatsAggregateRow,
 } from "@/lib/db/schema";
+import {
+  BENCHMARK_METRICS,
+  computeMetricBenchmark,
+  type BenchmarkScope,
+} from "./benchmarks";
 import {
   classifyMatchup,
   computeAggregate,
@@ -592,6 +600,106 @@ export function buildMatchGameRows(match: {
 }
 
 
+const BENCHMARK_SCOPES = ["career", "season", "season_division"] as const;
+
+/**
+ * Recompute the league median of every benchmark metric, per scope. Reads the
+ * aggregates, so it must run AFTER every recalcPlayer of the batch.
+ *
+ * Scopes are limited to career / season / season_division: a stage gives a
+ * player 4-5 matches, and a median over that is meaningless.
+ */
+export async function recalcBenchmarks(database: Database = defaultDb): Promise<{ rowsWritten: number }> {
+  const rows = await database
+    .select()
+    .from(playerStatsAggregate)
+    .where(inArray(playerStatsAggregate.scope, [...BENCHMARK_SCOPES]));
+
+  type Group = {
+    scope: BenchmarkScope;
+    seasonId: number | null;
+    division: number | null;
+    rows: PlayerStatsAggregateRow[];
+  };
+  const groups = new Map<string, Group>();
+  for (const row of rows) {
+    const scope = row.scope as BenchmarkScope;
+    const key = `${scope}:${row.seasonId ?? ""}:${row.division ?? ""}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { scope, seasonId: row.seasonId, division: row.division, rows: [] };
+      groups.set(key, group);
+    }
+    group.rows.push(row);
+  }
+
+  // One timestamp for the whole run: rows left with an older one are groups that
+  // dropped below the qualification bar and get pruned at the end.
+  const calculatedAt = new Date();
+  const byScope: Record<BenchmarkScope, NewLeagueMetricBenchmark[]> = {
+    career: [],
+    season: [],
+    season_division: [],
+  };
+  for (const group of groups.values()) {
+    for (const metric of BENCHMARK_METRICS) {
+      const result = computeMetricBenchmark(group.rows, metric, group.scope);
+      if (!result) continue;
+      byScope[group.scope].push({
+        scope: group.scope,
+        seasonId: group.seasonId,
+        division: group.division,
+        metricKey: metric.key,
+        median: result.median.toFixed(3),
+        qualifiedPlayers: result.qualifiedPlayers,
+        calculatedAt,
+      });
+    }
+  }
+
+  const updateSet = {
+    median: sql`excluded.median`,
+    qualifiedPlayers: sql`excluded.qualified_players`,
+    calculatedAt: sql`excluded.calculated_at`,
+  };
+
+  await database.transaction(async (tx) => {
+    if (byScope.career.length) {
+      await tx
+        .insert(leagueMetricBenchmark)
+        .values(byScope.career)
+        .onConflictDoUpdate({
+          target: [leagueMetricBenchmark.metricKey],
+          targetWhere: sql`scope = 'career'`,
+          set: updateSet,
+        });
+    }
+    if (byScope.season.length) {
+      await tx
+        .insert(leagueMetricBenchmark)
+        .values(byScope.season)
+        .onConflictDoUpdate({
+          target: [leagueMetricBenchmark.seasonId, leagueMetricBenchmark.metricKey],
+          targetWhere: sql`scope = 'season'`,
+          set: updateSet,
+        });
+    }
+    if (byScope.season_division.length) {
+      await tx
+        .insert(leagueMetricBenchmark)
+        .values(byScope.season_division)
+        .onConflictDoUpdate({
+          target: [leagueMetricBenchmark.seasonId, leagueMetricBenchmark.division, leagueMetricBenchmark.metricKey],
+          targetWhere: sql`scope = 'season_division'`,
+          set: updateSet,
+        });
+    }
+    await tx.delete(leagueMetricBenchmark).where(lt(leagueMetricBenchmark.calculatedAt, calculatedAt));
+  });
+
+  return { rowsWritten: byScope.career.length + byScope.season.length + byScope.season_division.length };
+}
+
 /** Backfill match_games for every match, then recompute every player's stats. */
 export async function backfillAll(database: Database = defaultDb): Promise<{
   matchesProcessed: number;
@@ -629,6 +737,8 @@ export async function backfillAll(database: Database = defaultDb): Promise<{
   }
   // Global Elo pass last: seeds strength_rating for every player from history.
   await recomputeStrengthRatings(database);
+  // Benchmarks read the aggregates, so they come after every recalcPlayer.
+  await recalcBenchmarks(database);
 
   return {
     matchesProcessed: allMatches.length,

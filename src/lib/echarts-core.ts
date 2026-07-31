@@ -8,6 +8,7 @@ import {
   TooltipComponent,
   LegendComponent,
   DataZoomComponent,
+  MarkLineComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 
@@ -18,6 +19,9 @@ echarts.use([
   TooltipComponent,
   LegendComponent,
   DataZoomComponent,
+  // Reference lines (league median on the Winrate chart). Without it a
+  // `markLine` in the option is silently dropped.
+  MarkLineComponent,
   CanvasRenderer,
 ]);
 
