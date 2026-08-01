@@ -10,6 +10,7 @@ import { fmtDate, matchesLabel, playerHref, pluralRu } from "@/lib/format";
 import { echarts, type EChartsOption } from "@/lib/echarts-core";
 import { ArrowLeft, ArrowRight, ChevronDown, Cross, ExternalLink, Info, Search, Snail, X } from "lucide-react";
 import { benchmarkBaseLabelDative, type BenchmarkRender } from "@/lib/stats/benchmarks";
+import { trackEvent } from "@/lib/analytics";
 import type {
   MatchListItem,
   PlayerOpponentStats,
@@ -2614,9 +2615,16 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
     }
   }, [chartItems, chartType]);
 
+  // Which profiles get opened at all. Keyed on the rid so a filter change (it
+  // rewrites the URL in place) does not count as a second visit.
+  React.useEffect(() => {
+    trackEvent("player-profile", { rid: model.player.rid, name: model.player.name });
+  }, [model.player.rid, model.player.name]);
+
   function applyFilter(next: FilterValue) {
     const normalized = next.seasonId === "all" ? { seasonId: "all", divisionId: "all" } : next;
     setFilter(normalized);
+    trackEvent("profile-filter", { season: normalized.seasonId, division: normalized.divisionId });
     const params = new URLSearchParams();
     if (normalized.seasonId !== "all") {
       params.set("seasonId", normalized.seasonId);
@@ -2717,7 +2725,12 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
       </div>
 
       <div className="flex flex-col gap-4 md:hidden">
-        <SegmentedControl items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]} value={mobileTab} onChange={setMobileTab} equal />
+        <SegmentedControl
+          items={MOBILE_TABS as unknown as { key: MobileTab; label: string }[]}
+          value={mobileTab}
+          onChange={(tab) => { setMobileTab(tab); trackEvent("profile-tab", { tab }); }}
+          equal
+        />
         <TabTransition tabKey={mobileTab} rise={false} className="flex flex-col gap-4">
           {mobileTab === "overview" ? <div className="flex flex-col gap-4">{overviewBlocks}</div> : null}
           {mobileTab === "charts" ? (

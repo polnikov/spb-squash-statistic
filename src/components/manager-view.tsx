@@ -73,6 +73,7 @@ import {
   type StageImportSubTournamentSelection,
 } from "@/app/(app)/manager/actions";
 import { fmtCourt, fmtDate, fmtDateFull, fmtNum, matchesLabel, playersLabel, pluralRu } from "@/lib/format";
+import { trackEvent } from "@/lib/analytics";
 import { isDeletedRankedinProfile, isFakeRankedinId, isLiveRankedinId, rankedinPlayerUrl } from "@/lib/rankedin-id";
 import { Th } from "@/components/ui/table-header";
 import { cn } from "@/lib/utils";
@@ -979,6 +980,7 @@ function UploadManager() {
     const key = `${s.season}-${s.division}-${s.stage}`;
     setDelKey(key);
     await deleteImportedStageAction({ season: s.season, division: s.division, stage: s.stage });
+    trackEvent("stage-delete", { season: s.season, division: s.division, stage: s.stage });
     setDelKey(null);
     await refreshImported();
     router.refresh();
@@ -1111,8 +1113,10 @@ function UploadManager() {
     setImporting(false);
     if (!res?.ok) {
       setError(res?.error ?? "Не удалось загрузить. Повторите.");
+      trackEvent("stage-import-failed", { season: preview.season, division: preview.division, stage: preview.stage });
       return;
     }
+    trackEvent("stage-import", { season: preview.season, division: preview.division, stage: preview.stage });
     setDone({ ...res, date: preview.date });
     setStep("done");
     await refreshImported();
@@ -2675,6 +2679,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
     setConfirmKey(null);
     setBusyKey(key);
     await deleteImportedStageAction({ season: s.season, division: s.division, stage: s.stage });
+    trackEvent("stage-delete", { season: s.season, division: s.division, stage: s.stage });
     setBusyKey(null);
     await refresh();
     router.refresh();

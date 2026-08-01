@@ -15,6 +15,21 @@ const makeConfig = (phase) => ({
   async redirects() {
     return [{ source: "/rating", destination: "/", permanent: true }];
   },
+  // Umami отдаётся со своего же домена под /u. Иначе трекер не заработает:
+  // CSP в deploy/caddy.bbrsquashspb.conf разрешает только 'self' для script-src
+  // и connect-src, да и блокировщики режут сторонние домены аналитики.
+  //
+  // Адрес берётся на этапе СБОРКИ: Next пишет destination в routes-manifest.json,
+  // и `next start` уже читает манифест, а не конфиг. Прод поэтому живёт на
+  // дефолте `http://umami:3000` (имя сервиса в docker-compose), а переменная
+  // нужна только когда гоняешь `next dev` против инстанса на другом адресе.
+  async rewrites() {
+    const umami = (process.env.UMAMI_INTERNAL_URL ?? "http://umami:3000").replace(/\/+$/, "");
+    return [
+      { source: "/u/script.js", destination: `${umami}/script.js` },
+      { source: "/u/api/send", destination: `${umami}/api/send` },
+    ];
+  },
   webpack(config, { dev }) {
     if (dev) {
       config.watchOptions = {

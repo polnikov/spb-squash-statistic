@@ -16,6 +16,9 @@
 #   ADMIN_USERNAME / ADMIN_PASSWORD_HASH   single admin (bcrypt hash; cookie key derived from them)
 #   APP_URL              public https URL
 #   RANKEDIN_BASE_URL    (optional) defaults to https://rankedin.com
+#   UMAMI_POSTGRES_PASSWORD  password of the analytics DB (separate from the app DB)
+#   UMAMI_APP_SECRET     random string, signs Umami sessions (`openssl rand -hex 32`)
+#   UMAMI_WEBSITE_ID     website id from the Umami dashboard; empty = no tracker rendered
 #
 # For local development / building the image locally see docker-compose.dev.yml.
 services:
@@ -48,6 +51,51 @@ services:
       timeout: 3s
       retries: 10
 
+  # Analytics (self-hosted Umami) and its own database. Kept apart from the app
+  # DB on purpose: pageview traffic must never contend with league queries, and
+  # the analytics stack can be dropped without touching league data.
+  umami-db:
+    image: postgres:16-alpine
+    container_name: bbr-umami-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_POSTGRES_PASSWORD:-umami}
+      POSTGRES_DB: umami
+    volumes:
+      - umamidata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: bbr-umami
+    restart: unless-stopped
+    environment:
+      DATABASE_TYPE: postgresql
+      DATABASE_URL: postgresql://umami:${UMAMI_POSTGRES_PASSWORD:-umami}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      # The tracker is served from the app's own domain (/u/... rewrites), so
+      # Umami itself needs no public port - only the dashboard site block does.
+      TRACKER_SCRIPT_NAME: script
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    networks:
+      - default
+      - caddy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   app:
     image: ghcr.io/${GITHUB_REPOSITORY:-polnikov/spb-squash-statistic}:${IMAGE_TAG:-latest}
     container_name: bbr-app
@@ -61,6 +109,10 @@ services:
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
       APP_URL: ${APP_URL}
       RANKEDIN_BASE_URL: ${RANKEDIN_BASE_URL:-https://rankedin.com}
+      # Read at runtime by the RSC layout: no website id, no tracker tag.
+      # (The /u proxy target is not configurable here - Next bakes rewrite
+      # destinations at build time, so it stays the `umami` service below.)
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,6 +135,7 @@ services:
 volumes:
   pgdata:
   redisdata:
+  umamidata:
 
 networks:
   # Shared with the host Caddy. Set CADDY_NETWORK in .env to the real network

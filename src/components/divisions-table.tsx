@@ -12,6 +12,7 @@ import { TabTransition } from "@/components/ui/tab-transition";
 import { SlideSwitch, useSlideDirection } from "@/components/ui/slide-switch";
 import { NumberPop } from "@/components/ui/number-pop";
 import { BENCHMARK_METRIC_BY_KEY, median, MIN_QUALIFIED_PLAYERS } from "@/lib/stats/benchmarks";
+import { trackEvent } from "@/lib/analytics";
 import { ChevronDown, Search, X } from "lucide-react";
 
 const MOBILE_PAGE = 10;
@@ -384,6 +385,7 @@ export function DivisionsTable({
       }
       return { key, dir: SORTABLE_DEFAULT_DIR[key] };
     });
+    trackEvent("divisions-sort", { key });
   }, []);
   const sortMark = React.useCallback((key: SortKey) => {
     if (sort.key !== key) return "";
@@ -399,7 +401,7 @@ export function DivisionsTable({
             <button
               key={d}
               ref={setRef(String(d))}
-              onClick={() => setDiv(d)}
+              onClick={() => { setDiv(d); trackEvent("divisions-tab", { division: d }); }}
               className={cn(
                 "relative z-10 h-9 flex-1 rounded-[12px] px-4 text-xs font-semibold transition-colors duration-200 ease-m3-standard md:flex-none md:px-5",
                 div === d ? "text-foreground" : "text-muted-foreground hover:text-foreground",
