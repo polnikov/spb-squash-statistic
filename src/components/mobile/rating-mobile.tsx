@@ -30,7 +30,7 @@ function ChangeBadge({ delta }: { delta: number }) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular text-on-surface">
+    <span className="inline-flex items-center rounded border border-hairline bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold leading-none tabular text-on-surface">
       {children}
     </span>
   );
@@ -94,7 +94,7 @@ export function RatingMobile({
       </div>
 
       {/* division tabs */}
-      <div className="relative mb-2 flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+      <div className="relative mb-2 flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1">
         <TabSliderPill ind={ind} />
         {DIVS.map((d) => (
           <button
@@ -112,7 +112,7 @@ export function RatingMobile({
       </div>
 
       {!hasDivisionData ? (
-        <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
+        <div className="rounded-lg border border-hairline bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
           Данных пока нет
         </div>
       ) : (
@@ -135,7 +135,7 @@ export function RatingMobile({
           <div className="overflow-hidden">
           <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
             {visibleList.length === 0 ? (
-              <div className="rounded-lg border border-outline-variant bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
+              <div className="rounded-lg border border-hairline bg-surface-container px-4 py-8 text-center text-sm font-semibold text-on-surface">
                 {q ? "Ничего не найдено" : "Данных пока нет"}
               </div>
             ) : visibleList.map((r) => (
@@ -144,10 +144,10 @@ export function RatingMobile({
                 ref={flip.setNode(r.rid)}
                 data-rating-rid={r.rid}
                 href={`/players/${encodeURIComponent(r.rid)}`}
-                className="flex flex-col gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-4 py-3"
+                className="flex flex-col gap-1.5 rounded-lg border border-hairline bg-surface-container px-4 py-3"
               >
-                <div className="flex items-center gap-2.5 border-b border-outline-variant pb-2">
-                  <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md border border-outline-variant bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-primary">
+                <div className="flex items-center gap-2.5 border-b border-divider pb-2">
+                  <span className="inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md border border-hairline bg-surface-container-high px-1.5 font-mono text-xs font-semibold tabular text-primary">
                     <NumberPop>{r.place}</NumberPop>
                   </span>
                   <span className="shrink-0">

@@ -69,7 +69,7 @@ const C = {
 };
 
 function cardClass(className?: string) {
-  return cn("rounded-lg border border-outline-variant bg-card", className);
+  return cn("rounded-lg border border-hairline bg-card", className);
 }
 
 function statusTone(status: MatchupStatus): "primary" | "error" | "neutral" {
@@ -82,7 +82,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border border-outline-variant px-2 py-0.5 text-[10.5px] font-semibold",
+        "inline-flex items-center rounded-full border border-hairline px-2 py-0.5 text-[10.5px] font-semibold",
         tone === "primary" && "bg-win/18 text-win",
         tone === "error" && "bg-loss/18 text-loss-soft",
         tone === "neutral" && "bg-surface-container-high text-on-surface-variant",
@@ -101,7 +101,7 @@ function KpiCard({ label, value, sub, bar, sign }: { label: string; value: strin
       <div className="text-[10px] leading-tight text-on-surface-variant md:text-[11px]">{label}</div>
       <div className={cn("mt-1.5 font-mono text-[17px] font-semibold leading-none tracking-tight tabular md:text-[23px]", valueTone)}><NumberPop>{value}</NumberPop></div>
       {bar ? (
-        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-hairline bg-surface-container-high">
           <div
             className={cn("absolute inset-y-0 left-0", bar.tone === "win" ? "bg-win" : bar.tone === "loss" ? "bg-loss" : "bg-primary")}
             style={{ width: `${Math.max(0, Math.min(100, bar.pct))}%` }}
@@ -118,7 +118,7 @@ function KpiCard({ label, value, sub, bar, sign }: { label: string; value: strin
 function MetricRow({ label, value, sign, dense = false }: { label: string; value: React.ReactNode; sign?: number | null; dense?: boolean }) {
   const tone = sign == null ? "" : sign > 0 ? "text-win" : sign < 0 ? "text-loss" : "";
   return (
-    <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant first:border-t-0", dense ? "py-1.5" : "py-2.5")}>
+    <div className={cn("flex items-center justify-between gap-4 border-t border-divider first:border-t-0", dense ? "py-1.5" : "py-2.5")}>
       <span className={cn("text-on-surface-variant", dense ? "text-[11.5px]" : "text-[12px]")}>{label}</span>
       <span className={cn("text-right font-mono font-semibold tabular text-on-surface", dense ? "text-[12px]" : "text-[13px]", tone)}><NumberPop>{value}</NumberPop></span>
     </div>
@@ -155,7 +155,7 @@ function Segmented<T extends string>({
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
-    <div className={cn("relative flex gap-1 overflow-x-auto rounded-[16px] border border-outline-variant bg-surface-container-low p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", equal && "w-full", className)}>
+    <div className={cn("relative flex gap-1 overflow-x-auto rounded-[16px] border border-hairline bg-surface-container-low p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", equal && "w-full", className)}>
       <TabSliderPill ind={ind} />
       {items.map((item) => (
         <button
@@ -348,7 +348,7 @@ function ChartView({ tab, meetings, stats, height }: { tab: ChartKey; meetings: 
   return option ? (
     <EChart echarts={echarts} option={option} style={{ height, width: "100%" }} notMerge lazyUpdate />
   ) : (
-    <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
+    <div className="grid place-items-center rounded-lg border border-hairline bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
       Недостаточно данных для графика
     </div>
   );
@@ -387,7 +387,7 @@ function MobileCharts({ meetings, stats }: { meetings: Meeting[]; stats: PlayerP
 
 function MeetingTimeline({ meetings }: { meetings: Meeting[] }) {
   if (!meetings.length) {
-    return <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant">Недостаточно данных для графика</div>;
+    return <div className="grid place-items-center rounded-lg border border-hairline bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant">Недостаточно данных для графика</div>;
   }
   const ordered = [...meetings].reverse();
   return (
@@ -400,7 +400,7 @@ function MeetingTimeline({ meetings }: { meetings: Meeting[] }) {
               {i > 0 ? <span className="shrink-0 text-on-surface-variant/50">←</span> : null}
               <span
                 className={cn(
-                  "grid h-9 min-w-[52px] shrink-0 place-items-center rounded-lg border border-outline-variant px-2 font-mono text-[13px] font-semibold tabular",
+                  "grid h-9 min-w-[52px] shrink-0 place-items-center rounded-lg border border-hairline px-2 font-mono text-[13px] font-semibold tabular",
                   won ? "bg-win/18 text-win" : "bg-loss/18 text-loss-soft",
                 )}
               >
@@ -445,7 +445,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex items-center rounded-full border border-outline-variant px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors",
+          "inline-flex items-center rounded-full border border-hairline px-2.5 py-0.5 text-[10.5px] font-semibold transition-colors",
           tone === "primary" ? "bg-win/18 text-win" : tone === "error" ? "bg-loss/18 text-loss-soft" : "bg-surface-container-high text-on-surface-variant",
         )}
       >
@@ -453,7 +453,7 @@ function ComfortInfoChip({ index, status }: { index: number; status: MatchupStat
       </button>
       <div
         className={cn(
-          "z-[90] rounded-xl border border-outline-variant bg-surface-container-high p-4 text-left shadow-e3 transition-all duration-300 ease-m3-emphasized-decel",
+          "z-[90] rounded-xl border border-hairline bg-surface-container-high p-4 text-left shadow-e3 transition-all duration-300 ease-m3-emphasized-decel",
           // mobile: fixed, centered on the viewport so it always fits the screen
           "fixed left-1/2 top-1/2 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 -translate-y-1/2",
           // desktop: anchored under the chip
@@ -727,7 +727,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
   }, [filter]);
 
   const renderCard = (m: MatchListItem) => (
-    <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+    <div key={m.id} className="rounded-lg border border-hairline bg-surface-container-low p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 whitespace-nowrap">
@@ -763,7 +763,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
-              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-hairline bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
                 aria-hidden
@@ -798,7 +798,7 @@ function MatchHistory({ matches, mobile = false }: { matches: MatchListItem[]; m
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                  className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                 >
                   {expanded ? "Свернуть" : `Показать ещё ${mRest.length}`}
                 </button>
@@ -1003,7 +1003,7 @@ export function H2hDetailView({
         <button
           type="button"
           onClick={requestClose}
-          className="flex shrink-0 items-center justify-center gap-2 border-t border-outline-variant bg-brand-bg/95 px-3 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] text-[13px] font-semibold text-on-surface backdrop-blur-lg"
+          className="flex shrink-0 items-center justify-center gap-2 border-t border-divider bg-brand-bg/95 px-3 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] text-[13px] font-semibold text-on-surface backdrop-blur-lg"
         >
           <ArrowLeft className="size-4" /> Назад в профиль
         </button>

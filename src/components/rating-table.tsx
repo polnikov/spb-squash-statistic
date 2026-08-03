@@ -236,7 +236,7 @@ export function RatingTable({
       />
 
       <div className="flex items-start gap-3">
-        <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-border bg-brand-surface p-1">
+        <div className="relative inline-flex shrink-0 gap-1 rounded-[16px] border border-hairline bg-brand-surface p-1">
           <TabSliderPill ind={ind} className="bg-brand-surface-2" />
           {SCOPES.map((s) => (
             <button
@@ -275,7 +275,7 @@ export function RatingTable({
         </div>
       ) : (
       <TabTransition tabKey={scope} rise={false}>
-      <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
+      <div className="overflow-hidden rounded-lg border border-hairline bg-card">
         <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
@@ -307,7 +307,7 @@ export function RatingTable({
                 key={row.id}
                 ref={flip.setNode(row.original.rid)}
                 data-rating-rid={row.original.rid}
-                className="group border-t border-border transition-colors hover:bg-brand-surface-2/40 md:h-[60px]"
+                className="group border-t border-table-divider transition-colors hover:bg-brand-surface-2/40 md:h-[60px]"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

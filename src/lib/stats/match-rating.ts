@@ -24,8 +24,8 @@ export function rateMatch(m: RealMatch): MatchRating {
   if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
   if (wentToDecider(m.gamesA, m.gamesB)) return { label: "Решающий", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
   if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-secondary/30 bg-secondary/15 text-secondary" };
-  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
-  return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
+  if (Math.min(m.gamesA, m.gamesB) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-hairline bg-surface-container-highest text-on-surface-variant" };
+  return { label: "Ровный", className: "border-hairline bg-surface-container-highest text-on-surface-variant" };
 }
 
 /** Priority weight of a rating label; higher = more notable for a "match of the stage" pick. */

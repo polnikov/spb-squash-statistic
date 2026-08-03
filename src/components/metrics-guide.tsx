@@ -467,13 +467,13 @@ const MATCH_BADGES: { label: string; className: string; desc: string }[] = [
   { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary", desc: "Победа после проигранных двух первых геймов." },
   { label: "Решающий", className: "border-[#ffa52a]/30 bg-[#ffa52a]/15 text-[#ffa52a]", desc: "Матч дошёл до решающего гейма: 5-го при игре до трёх побед, 3-го при игре до двух." },
   { label: "Плотный", className: "border-[#7eeaf5]/30 bg-[#7eeaf5]/15 text-[#7eeaf5]", desc: "Два и более геймов с разницей ≤ 2 очка либо матч сплошь из малых отрывов." },
-  { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant", desc: "3:0 с крупным средним отрывом в геймах." },
-  { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant", desc: "Обычный конкурентный матч без ярких особенностей." },
+  { label: "Разгром", className: "border-hairline bg-surface-container-highest text-on-surface-variant", desc: "3:0 с крупным средним отрывом в геймах." },
+  { label: "Ровный", className: "border-hairline bg-surface-container-highest text-on-surface-variant", desc: "Обычный конкурентный матч без ярких особенностей." },
 ];
 
 function Card({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="mb-3 break-inside-avoid scroll-mt-[70px] rounded-lg border border-outline-variant bg-card p-4 md:scroll-mt-24">
+    <section id={id} className="mb-3 break-inside-avoid scroll-mt-[70px] rounded-lg border border-hairline bg-card p-4 md:scroll-mt-24">
       <h2 className="text-base font-semibold tracking-tight">{title}</h2>
       {children}
     </section>
@@ -498,7 +498,7 @@ function ScaleList({ items }: { items: ScaleItem[] }) {
 
 function MetricBlock({ metric }: { metric: GuideMetric }) {
   return (
-    <div className="border-t border-outline-variant pt-3 first:border-t-0 first:pt-0">
+    <div className="border-t border-divider pt-3 first:border-t-0 first:pt-0">
       <div className="text-[14px] font-semibold text-on-surface">{metric.name}</div>
       {metric.formula ? (
         <div className="mt-1 inline-block rounded-md bg-surface-container-high px-2 py-1 font-mono text-[12px] tabular text-on-surface">
@@ -508,7 +508,7 @@ function MetricBlock({ metric }: { metric: GuideMetric }) {
       <div className="mt-1 text-[13px] leading-snug text-on-surface-variant">{metric.desc}</div>
       {metric.scale ? <ScaleList items={metric.scale} /> : null}
       {metric.example ? (
-        <div className="mt-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-[13px] leading-snug">
+        <div className="mt-2 rounded-md border border-hairline bg-surface-container-low px-3 py-2 text-[13px] leading-snug">
           <span className="font-mono font-semibold tabular text-primary">{metric.example.value}</span>
           <span className="text-on-surface-variant"> - {metric.example.read}</span>
         </div>
@@ -535,7 +535,7 @@ function GuideLink({ href, children }: { href: string; children: React.ReactNode
  * to the related sections.
  */
 function PyramidCard() {
-  const chip = "flex w-full items-center justify-between gap-1.5 whitespace-nowrap rounded-md border border-outline-variant bg-surface-container-high px-2.5 py-1.5 text-[12px] font-semibold";
+  const chip = "flex w-full items-center justify-between gap-1.5 whitespace-nowrap rounded-md border border-hairline bg-surface-container-high px-2.5 py-1.5 text-[12px] font-semibold";
   const wrLink = "rounded-full bg-primary/12 px-1.5 py-px font-mono text-[11px] font-semibold tabular text-primary transition-colors hover:bg-primary/20";
   const note = "self-center text-[12.5px] leading-snug text-on-surface-variant";
   const connectorText = "py-2 text-[12.5px] leading-snug text-on-surface-variant";
@@ -584,7 +584,7 @@ function PyramidCard() {
         </li>
       </ul>
       {/* Three sharply different WR profiles: same numbers, opposite stories. */}
-      <div className="mt-3 border-t border-outline-variant pt-3">
+      <div className="mt-3 border-t border-divider pt-3">
         <div className="text-[14px] font-semibold text-on-surface">Три профиля для сравнения</div>
         <div className="mt-2 flex flex-col gap-2">
           {[
@@ -604,7 +604,7 @@ function PyramidCard() {
               desc: "Очков выигрывает больше соперников, но геймы и матчи уходят: концовки проигрываются.",
             },
           ].map((e) => (
-            <div key={e.name} className="rounded-md border border-outline-variant bg-surface-container-low px-3 py-2">
+            <div key={e.name} className="rounded-md border border-hairline bg-surface-container-low px-3 py-2">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <span className="text-[12.5px] font-semibold text-on-surface">{e.name}</span>
                 <span className="font-mono text-[11.5px] tabular text-primary">{e.wr}</span>
@@ -659,7 +659,7 @@ export function MetricsGuide() {
         </div>
       ) : null}
       {s.seeAlso?.length ? (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-outline-variant pt-3 text-[12.5px] text-on-surface-variant">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-divider pt-3 text-[12.5px] text-on-surface-variant">
           <span>См. также:</span>
           {s.seeAlso.map((l) => (
             <GuideLink key={l.href} href={l.href}>{l.label}</GuideLink>
@@ -676,7 +676,7 @@ export function MetricsGuide() {
           <a
             key={c.id}
             href={`#${c.id}`}
-            className="shrink-0 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high px-3 py-1.5 text-[12px] font-medium text-on-surface-variant transition-colors hover:text-on-surface"
+            className="shrink-0 whitespace-nowrap rounded-full border border-hairline bg-surface-container-high px-3 py-1.5 text-[12px] font-medium text-on-surface-variant transition-colors hover:text-on-surface"
           >
             {c.label}
           </a>

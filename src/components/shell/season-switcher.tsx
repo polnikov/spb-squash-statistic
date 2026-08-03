@@ -61,7 +61,7 @@ export function SeasonSwitcher({
         className={cn(
           "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 transition-colors duration-200 ease-m3-standard",
           variant === "header"
-            ? "border border-outline-variant bg-surface-container-highest hover:bg-surface-bright"
+            ? "border border-hairline bg-surface-container-highest hover:bg-surface-bright"
             : "bg-brand-surface shadow-sm",
         )}
       >
@@ -78,7 +78,7 @@ export function SeasonSwitcher({
         )}
       >
         <div className="min-h-0 overflow-hidden rounded-[16px] shadow-e3">
-          <div className="rounded-[16px] border border-border bg-popover p-1">
+          <div className="rounded-[16px] border border-hairline bg-popover p-1">
             {seasons.map((s) => (
               <button
                 key={s}

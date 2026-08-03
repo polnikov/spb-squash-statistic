@@ -35,7 +35,7 @@ export function AdminLogin() {
             name="username"
             autoComplete="username"
             placeholder="admin"
-            className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
+            className="h-11 w-full rounded-[12px] border border-border bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
           />
         </label>
         <label className="flex flex-col gap-2">
@@ -45,7 +45,7 @@ export function AdminLogin() {
             type="password"
             autoComplete="current-password"
             placeholder="••••••••"
-            className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
+            className="h-11 w-full rounded-[12px] border border-border bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
           />
         </label>
         {state.error ? (

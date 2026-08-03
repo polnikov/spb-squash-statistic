@@ -22,7 +22,7 @@ export default function GlobalError({
     <html lang="ru">
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <main className="flex min-h-dvh items-center justify-center px-4">
-          <div className="w-full max-w-[520px] rounded-2xl border border-outline-variant bg-card p-5 text-center shadow-e2">
+          <div className="w-full max-w-[520px] rounded-2xl border border-hairline bg-card p-5 text-center shadow-e2">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-error-container text-on-error-container">
               <AlertTriangle className="size-6" />
             </div>

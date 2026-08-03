@@ -45,7 +45,7 @@ export function PlayerAvatar({
         "flex shrink-0 items-center justify-center rounded-full bg-cover bg-center font-semibold text-white",
         // Photo avatars get a subtle ring so the round image reads as distinct
         // from the surface behind it; the initials fallback needs no border.
-        avatar && "ring-1 ring-outline-variant",
+        avatar && "ring-1 ring-hairline",
         className,
       )}
       style={avatar ? avatarBackgroundStyle(avatar) : { background: color }}

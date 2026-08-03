@@ -34,7 +34,7 @@ const SCOPES: { key: DivisionScope; label: string }[] = [
 
 function MetricTile({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
+    <div className="rounded-lg border border-hairline bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex items-end gap-1.5 md:mt-2">
         <span className="font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl"><NumberPop>{value}</NumberPop></span>
@@ -77,7 +77,7 @@ function LongMatchCard({ m, league }: { m: IronLongMatch; league: League }) {
   const aRid = league.players[m.aIdx]?.rid ?? String(m.aIdx);
   const bRid = league.players[m.bIdx]?.rid ?? String(m.bIdx);
   return (
-    <div className="rounded-lg border border-outline-variant bg-card p-4">
+    <div className="rounded-lg border border-hairline bg-card p-4">
       <div className="grid gap-2">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
           <span
@@ -96,7 +96,7 @@ function LongMatchCard({ m, league }: { m: IronLongMatch; league: League }) {
           </span>
           <MatchScoreLine games={m.detail} player="a" />
         </div>
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-outline-variant pt-2">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-divider pt-2">
           <span
             className={cn(
               "rounded-md px-2.5 py-1 text-right font-mono text-[13px] font-semibold tabular",
@@ -125,7 +125,7 @@ function LongMatchCard({ m, league }: { m: IronLongMatch; league: League }) {
 function DivisionTabs({ scope, setScope }: { scope: DivisionScope; setScope: (scope: DivisionScope) => void }) {
   const { setRef, ind } = useTabSlider(String(scope));
   return (
-    <div className="relative flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:inline-flex md:self-start">
+    <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:inline-flex md:self-start">
       <TabSliderPill ind={ind} />
       {SCOPES.map((s) => (
         <button
@@ -154,7 +154,7 @@ function DivisionTabs({ scope, setScope }: { scope: DivisionScope; setScope: (sc
 function PartTabs({ half, setHalf }: { half: 1 | 2; setHalf: (h: 1 | 2) => void }) {
   const { setRef, ind } = useTabSlider(String(half));
   return (
-    <div className="relative flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:inline-flex md:self-start">
+    <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:inline-flex md:self-start">
       <TabSliderPill ind={ind} />
       {([1, 2] as const).map((h) => (
         <button
@@ -260,7 +260,7 @@ export function IronManView({ league }: { league: League }) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
+        <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
@@ -287,7 +287,7 @@ export function IronManView({ league }: { league: League }) {
             {visibleMobileRows.map((r) => {
               const isOpen = !!open[r.playerIdx];
               return (
-                <div key={r.playerIdx} className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={r.playerIdx} className="flex flex-col rounded-lg border border-hairline bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <Link href={playerHref(r.rid)} className="flex items-center gap-3">
                     <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">{r.pos}</span>
                     <PlayerAvatar rid={r.rid} initials={r.initials} color={r.color} className="size-9 text-[13px]" />
@@ -310,7 +310,7 @@ export function IronManView({ league }: { league: League }) {
                           { label: "Геймы", value: r.gamesWon + r.gamesLost },
                           { label: "Ср. матч", value: fmtCourt(r.perMatch) },
                         ].map((s) => (
-                          <div key={s.label} className="flex-1 rounded-md border border-outline-variant bg-surface-container-high px-1 py-2 text-center">
+                          <div key={s.label} className="flex-1 rounded-md border border-hairline bg-surface-container-high px-1 py-2 text-center">
                             <div className="text-[10px] text-on-surface-variant">{s.label}</div>
                             <div className="mt-0.5 font-mono text-[13px] font-semibold tabular">{s.value}</div>
                           </div>
@@ -324,7 +324,7 @@ export function IronManView({ league }: { league: League }) {
             {mobileMoreCount > 0 ? (
               <button
                 onClick={() => setExpanded(true)}
-                className="rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                className="rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
               >
                 Показать ещё {mobileMoreCount}
               </button>
@@ -333,7 +333,7 @@ export function IronManView({ league }: { league: League }) {
           </div>
 
           {/* desktop: table */}
-          <div className="hidden overflow-hidden rounded-lg border border-outline-variant bg-card md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-hairline bg-card md:block">
             <TabTransition tabKey={`${scope}-${half}`} rise={false}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
@@ -362,7 +362,7 @@ export function IronManView({ league }: { league: League }) {
                 </thead>
                 <tbody>
                   {visibleRows.map((r) => (
-                    <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-surface-container-high/40 md:h-[60px]">
+                    <tr key={r.playerIdx} className="group border-t border-table-divider transition-colors hover:bg-surface-container-high/40 md:h-[60px]">
                       <td className="w-px whitespace-nowrap px-4 py-3 text-center font-mono tabular text-on-surface-variant">{r.pos}</td>
                       <td className="px-4 py-3">
                         <Link href={playerHref(r.rid)} className="flex items-center gap-3">
@@ -386,7 +386,7 @@ export function IronManView({ league }: { league: League }) {
             {moreCount > 0 ? (
               <button
                 onClick={() => setExpanded(true)}
-                className="w-full border-t border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                className="w-full border-t border-table-divider bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
               >
                 Показать ещё {moreCount}
               </button>

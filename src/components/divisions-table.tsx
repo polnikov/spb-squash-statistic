@@ -88,7 +88,7 @@ function bestBy(rows: RatingRow[], value: (row: RatingRow) => number) {
 
 function MetricTile({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
+    <div className="rounded-lg border border-hairline bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4">
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex items-end gap-1.5 md:mt-2">
         <span className="font-mono text-[17px] font-semibold leading-none tracking-tight tabular text-foreground md:text-2xl">
@@ -116,7 +116,7 @@ function HighlightTile({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4", className)}>
+    <div className={cn("rounded-lg border border-hairline bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5 md:p-4", className)}>
       <div className="text-[10px] leading-tight text-muted-foreground md:text-[11.5px] md:leading-none">{label}</div>
       <div className="mt-1 flex min-w-0 items-end justify-between gap-3 md:mt-2">
         <span className="min-w-0 text-[13px] font-semibold text-on-surface">
@@ -156,7 +156,7 @@ function MetaBadge({ label, value, color }: { label: string; value: string; colo
   return (
     <span className="inline-flex items-center gap-1 text-[11px] leading-none text-on-surface-variant">
       {label}
-      <span className="rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}><NumberPop>{value}</NumberPop></span>
+      <span className="rounded border border-hairline bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}><NumberPop>{value}</NumberPop></span>
     </span>
   );
 }
@@ -204,7 +204,7 @@ function MedianTick({ position }: { position: number }) {
 
 function StatTile({ label, record, wrLabel, wr, wrPct, median: medianPct = null }: { label: string; record: string; wrLabel: string; wr: string; wrPct: number; median?: number | null }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-brand-surface-2 px-3 py-1.5">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-hairline bg-brand-surface-2 px-3 py-1.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] leading-none text-muted-foreground">{label}</span>
         <div className="flex shrink-0 items-baseline gap-1.5">
@@ -230,7 +230,7 @@ function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMed
   const gamesLost = r.games - r.gamesWon;
   const ballsLost = r.balls - r.ballsWon;
   return (
-    <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
+    <div className="overflow-hidden rounded-2xl border border-hairline bg-card">
       <div
         role="button"
         tabIndex={0}
@@ -241,7 +241,7 @@ function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMed
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
+            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-hairline bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
             <Link
               href={playerHref(r.rid)}
               onClick={(e) => e.stopPropagation()}
@@ -262,7 +262,7 @@ function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMed
       {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-1.5 border-t border-outline-variant px-3 py-2.5">
+          <div className="flex flex-col gap-1.5 border-t border-divider px-3 py-2.5">
             <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} median={medians.match} />
             <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} median={medians.game} />
             <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} median={medians.rally} />
@@ -395,7 +395,7 @@ export function DivisionsTable({
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative flex gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex md:self-start">
+        <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-brand-surface p-1 md:inline-flex md:self-start">
           <TabSliderPill ind={ind} className="bg-brand-surface-2" />
           {DIVS.map((d) => (
             <button
@@ -416,7 +416,7 @@ export function DivisionsTable({
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
+        <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center">
           <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
         </div>
       ) : (
@@ -442,7 +442,7 @@ export function DivisionsTable({
           <button
             key={pill.key}
             onClick={() => setSortKey(pill.key)}
-            className="relative h-9 shrink-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            className="relative h-9 shrink-0 overflow-hidden rounded-full border border-hairline bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
               aria-hidden
@@ -470,7 +470,7 @@ export function DivisionsTable({
             <DivisionMobileCard key={r.playerIdx} r={r} medians={medians} />
           ))}
           {filteredRows.length === 0 ? (
-            <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center text-sm text-muted-foreground">
               Игроки не найдены
             </div>
           ) : null}
@@ -478,7 +478,7 @@ export function DivisionsTable({
             <button
               type="button"
               onClick={() => setMobileCount((c) => c + MOBILE_PAGE)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+              className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
             >
               Показать ещё {filteredRows.length - mobileCount}
             </button>
@@ -488,7 +488,7 @@ export function DivisionsTable({
 
       {/* Desktop: full stats table. */}
       <TabTransition tabKey={div} rise={false}>
-      <div className="hidden min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-card md:block md:rounded-lg">
+      <div className="hidden min-w-0 overflow-hidden rounded-2xl border border-hairline bg-card md:block md:rounded-lg">
         <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <table className="w-max min-w-full table-auto border-collapse md:w-full">
           <thead>
@@ -521,7 +521,7 @@ export function DivisionsTable({
               const rallyWr = pctText(r.ballsWon, r.balls);
               const rallyWrPct = r.balls ? (r.ballsWon / r.balls) * 100 : 0;
               return (
-              <tr key={r.playerIdx} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:h-[60px]">
+              <tr key={r.playerIdx} className="group border-t border-table-divider transition-colors hover:bg-brand-surface-2/40 md:h-[60px]">
                 <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center md:static md:z-auto md:w-auto md:min-w-0 md:max-w-none md:bg-transparent">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                 </td>
@@ -578,7 +578,7 @@ export function DivisionsTable({
               </tr>
               );
             }) : (
-              <tr className="border-t border-border">
+              <tr className="border-t border-table-divider">
                 <td colSpan={12} className="px-4 py-8 text-center text-sm text-muted-foreground">
                   {nq ? "Игроки не найдены" : "Данных по дивизиону пока нет"}
                 </td>

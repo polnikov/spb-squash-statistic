@@ -115,7 +115,7 @@ function ManagerTabs({
 }) {
   const { setRef, ind } = useTabSlider(tab);
   return (
-    <div className="relative inline-flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+    <div className="relative inline-flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1">
       <TabSliderPill ind={ind} />
       {MANAGER_TABS.map((item) => {
         const Icon = item.icon;
@@ -167,7 +167,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 font-mono text-[13px] tabular text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
+        className="h-11 w-full rounded-[12px] border border-border bg-surface-container-low px-3.5 font-mono text-[13px] tabular text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
       />
     </label>
   );
@@ -454,7 +454,7 @@ function PlayersManager({ league }: { league: League }) {
               <div className="mt-1 flex justify-end gap-3">
                 <button
                   onClick={() => setCreating(false)}
-                  className="h-11 rounded-[12px] border border-outline-variant px-5 text-[13px] font-semibold text-on-surface-variant"
+                  className="h-11 rounded-[12px] border border-hairline px-5 text-[13px] font-semibold text-on-surface-variant"
                 >
                   Отмена
                 </button>
@@ -478,7 +478,7 @@ function PlayersManager({ league }: { league: League }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Поиск по имени или ID..."
-            className="h-11 w-full rounded-[14px] border border-outline-variant bg-surface-container-low py-2 pl-10 pr-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
+            className="h-11 w-full rounded-[14px] border border-border bg-surface-container-low py-2 pl-10 pr-3.5 text-[13px] text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/55 focus:border-primary"
           />
         </label>
         <div className="whitespace-nowrap text-xs text-on-surface-variant">
@@ -510,7 +510,7 @@ function PlayersManager({ league }: { league: League }) {
               {/* avatar */}
               <div className="flex flex-col items-center gap-3">
                 <span
-                  className="flex size-[216px] shrink-0 items-center justify-center rounded-full bg-surface-container-high bg-cover bg-center text-5xl font-semibold text-white ring-1 ring-outline-variant"
+                  className="flex size-[216px] shrink-0 items-center justify-center rounded-full bg-surface-container-high bg-cover bg-center text-5xl font-semibold text-white ring-1 ring-hairline"
                   style={editingAvatar ? avatarBackgroundStyle(editingAvatar) : { background: editingPlayer.color }}
                 >
                   {editingAvatar ? null : editingPlayer.initials}
@@ -575,7 +575,7 @@ function PlayersManager({ league }: { league: League }) {
               <div className="mt-1 flex justify-end gap-3">
                 <button
                   onClick={() => setEditingRid(null)}
-                  className="h-11 rounded-[12px] border border-outline-variant px-5 text-[13px] font-semibold text-on-surface-variant"
+                  className="h-11 rounded-[12px] border border-hairline px-5 text-[13px] font-semibold text-on-surface-variant"
                 >
                   Отмена
                 </button>
@@ -612,13 +612,13 @@ function PlayersManager({ league }: { league: League }) {
                 const rankedinId = edit?.rankedinId || player.rid;
                 const avatar = avatars[player.rid];
                 return (
-                  <tr key={player.rid} className="border-t border-outline-variant transition-colors hover:bg-surface-container-high/35">
+                  <tr key={player.rid} className="border-t border-table-divider transition-colors hover:bg-surface-container-high/35">
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-3">
                         <span
                           className={cn(
                             "flex size-8 shrink-0 items-center justify-center rounded-full bg-cover bg-center text-xs font-semibold text-white",
-                            avatar && "ring-1 ring-outline-variant",
+                            avatar && "ring-1 ring-hairline",
                           )}
                           style={avatar ? avatarBackgroundStyle(avatar) : { background: player.color }}
                         >
@@ -649,7 +649,7 @@ function PlayersManager({ league }: { league: League }) {
                 );
               })}
               {rows.length === 0 ? (
-                <tr className="border-t border-outline-variant">
+                <tr className="border-t border-table-divider">
                   <td colSpan={5} className="px-5 py-10 text-center text-sm text-on-surface-variant">
                     Игроки не найдены
                   </td>
@@ -661,7 +661,7 @@ function PlayersManager({ league }: { league: League }) {
         {moreCount > 0 ? (
           <button
             onClick={() => setVisibleCount((current) => current + PLAYER_PAGE_SIZE)}
-            className="w-full border-t border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+            className="w-full border-t border-table-divider bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
           >
             Показать еще {Math.min(PLAYER_PAGE_SIZE, moreCount)}
           </button>
@@ -674,7 +674,7 @@ function PlayersManager({ league }: { league: League }) {
 function DivisionPicker({ value, onChange }: { value: 1 | 2 | 3; onChange: (value: 1 | 2 | 3) => void }) {
   const { setRef, ind } = useTabSlider(String(value));
   return (
-    <div className="relative flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+    <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1">
       <TabSliderPill ind={ind} />
       {DIVISIONS.map((division) => (
         <button
@@ -707,7 +707,7 @@ function UploadStepper({ step }: { step: UploadStep }) {
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "flex size-[26px] items-center justify-center rounded-full border border-outline-variant font-mono text-xs font-semibold tabular",
+                "flex size-[26px] items-center justify-center rounded-full border border-hairline font-mono text-xs font-semibold tabular",
                 index <= current ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant",
               )}
             >
@@ -807,7 +807,7 @@ function LinkPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-full items-center justify-between gap-2 rounded-[10px] border border-outline-variant bg-surface-container-low px-2.5 text-[11.5px] text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary"
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-[10px] border border-border bg-surface-container-low px-2.5 text-[11.5px] text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary"
       >
         <span className={cn("truncate", !selected && "text-on-surface-variant")}>{label}</span>
         <ChevronDown className={cn("size-4 shrink-0 text-on-surface-variant transition-transform duration-300 ease-m3-emphasized-decel", open && "rotate-180")} />
@@ -816,7 +816,7 @@ function LinkPicker({
       {/* Accordion expand (transitions.dev): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="overflow-hidden">
-          <div className="mt-1 max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-outline-variant bg-surface-container-low p-1.5 shadow-e2">
+          <div className="mt-1 max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-hairline bg-surface-container-low p-1.5 shadow-e2">
             <button
               type="button"
               onClick={() => pick("")}
@@ -899,7 +899,7 @@ function FilterDropdown({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex w-full items-center justify-between gap-2 border border-outline-variant bg-surface-container-low text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary",
+          "flex w-full items-center justify-between gap-2 border border-border bg-surface-container-low text-on-surface outline-none transition-colors duration-200 ease-m3-standard hover:border-primary/60 focus:border-primary",
           sizeClass ?? "h-8 rounded-[10px] px-2.5 text-[12px]",
         )}
       >
@@ -915,7 +915,7 @@ function FilterDropdown({
         )}
       >
         <div className="min-h-0 overflow-hidden rounded-[10px] shadow-e2">
-          <div className="max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-outline-variant bg-surface-container-low p-1.5">
+          <div className="max-h-[240px] space-y-0.5 overflow-y-auto rounded-[10px] border border-hairline bg-surface-container-low p-1.5">
             {item("", allLabel)}
             {options.map((o) => item(o.value, o.label))}
           </div>
@@ -1130,8 +1130,8 @@ function UploadManager() {
 
       {subtournaments ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-[560px] rounded-[20px] border border-outline-variant bg-card p-5 shadow-e3">
-            <div className="flex items-start justify-between gap-4 border-b border-outline-variant pb-4">
+          <div className="w-full max-w-[560px] rounded-[20px] border border-hairline bg-card p-5 shadow-e3">
+            <div className="flex items-start justify-between gap-4 border-b border-divider pb-4">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight">Выберите подтурнир</h2>
                 <p className="mt-1 text-xs text-on-surface-variant">{subtournaments.tournamentName}</p>
@@ -1151,7 +1151,7 @@ function UploadManager() {
                   type="button"
                   onClick={() => runParse(option.id)}
                   disabled={parsing}
-                  className="flex min-h-12 w-full items-center justify-between gap-3 rounded-[12px] border border-outline-variant bg-surface-container-low px-4 py-3 text-left transition-colors duration-200 ease-m3-standard hover:border-primary/70 hover:bg-surface-container-high disabled:opacity-60"
+                  className="flex min-h-12 w-full items-center justify-between gap-3 rounded-[12px] border border-hairline bg-surface-container-low px-4 py-3 text-left transition-colors duration-200 ease-m3-standard hover:border-primary/70 hover:bg-surface-container-high disabled:opacity-60"
                 >
                   <span className="text-[13px] font-semibold text-on-surface">{option.name || `Подтурнир ${option.id}`}</span>
                   <span className="shrink-0 rounded-full bg-surface-container-high px-2.5 py-1 font-mono text-[11px] tabular text-on-surface-variant">{option.id}</span>
@@ -1165,7 +1165,7 @@ function UploadManager() {
       {step === "input" ? (
         <div className="grid grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-6">
           {/* left: form */}
-          <div className="flex h-fit flex-col gap-5 rounded-2xl border border-outline-variant bg-card p-6">
+          <div className="flex h-fit flex-col gap-5 rounded-2xl border border-hairline bg-card p-6">
             <Field label="ID или ссылка турнира" value={tournament} onChange={setTournament} placeholder="84213 или https://www.rankedin.com/..." />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Сезон" value={season} onChange={setSeason} placeholder="25/26" />
@@ -1173,7 +1173,7 @@ function UploadManager() {
               <Field label="Этап" value={stage} onChange={setStage} placeholder="7" />
               <Field label="Дата" value={date} onChange={setDate} type="date" />
             </div>
-            <div className="flex items-start gap-3 rounded-[14px] border border-outline-variant bg-surface-container-high px-4 py-3">
+            <div className="flex items-start gap-3 rounded-[14px] border border-hairline bg-surface-container-high px-4 py-3">
               <Info className="mt-0.5 size-4 shrink-0 text-on-surface-variant" />
               <span className="text-xs text-on-surface-variant">
                 Скрипт получает результаты по турниру и список матчей турнира из RankedIn.
@@ -1213,7 +1213,7 @@ function UploadManager() {
             const renderImp = (s: ImportedStage) => {
               const key = `${s.season}-${s.division}-${s.stage}`;
               return (
-                <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-2.5">
+                <div key={key} className="flex items-center justify-between gap-3 rounded-[12px] border border-hairline bg-surface-container-low px-3.5 py-2.5">
                   <div className="text-[13px]">
                     <span className="font-semibold">{s.season} · Див {s.division} · Этап {s.stage}</span>
                     <span className="ml-2 font-mono text-[11.5px] tabular text-on-surface-variant">
@@ -1231,7 +1231,7 @@ function UploadManager() {
               );
             };
             return (
-              <div className="flex h-fit flex-col gap-2 rounded-2xl border border-outline-variant bg-card p-5">
+              <div className="flex h-fit flex-col gap-2 rounded-2xl border border-hairline bg-card p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold">Загруженные этапы</div>
                   <div className="ml-auto flex items-center gap-2">
@@ -1357,8 +1357,8 @@ function UploadManager() {
               {error}
             </div>
           ) : null}
-          <div className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
-            <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+          <div className="overflow-hidden rounded-2xl border border-hairline bg-card">
+            <div className="flex items-center justify-between border-b border-divider px-5 py-4">
               <div className="min-w-0">
                 <h2 className="text-base font-semibold tracking-tight">Турнир · {preview.tournamentName}</h2>
                 <div className="mt-1 text-xs text-on-surface-variant">
@@ -1423,7 +1423,7 @@ function UploadManager() {
                       <tr
                         key={`${row.rankedinId}-${row.place}`}
                         className={cn(
-                          "border-t border-outline-variant",
+                          "border-t border-table-divider",
                           nameMatch && "bg-secondary-container/70",
                           deletedProfile && "bg-tertiary-container/70",
                           conflict && "bg-error-container/45",
@@ -1538,7 +1538,7 @@ function UploadManager() {
             <button
               onClick={() => setStep("input")}
               disabled={importing}
-              className="h-11 rounded-[12px] border border-outline-variant px-5 text-[13.5px] font-semibold text-on-surface-variant disabled:opacity-55"
+              className="h-11 rounded-[12px] border border-hairline px-5 text-[13.5px] font-semibold text-on-surface-variant disabled:opacity-55"
             >
               Отклонить
             </button>
@@ -1555,7 +1555,7 @@ function UploadManager() {
       ) : null}
 
       {step === "done" ? (
-        <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-outline-variant bg-card px-6 py-12 text-center">
+        <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-hairline bg-card px-6 py-12 text-center">
           <div className="flex size-16 items-center justify-center rounded-full bg-primary-container text-win">
             <CheckCircle2 className="size-8" />
           </div>
@@ -1668,7 +1668,7 @@ function PointsManager() {
 
       <div className="grid grid-cols-[minmax(0,480px)_minmax(0,1fr)] gap-6">
         {/* editor */}
-        <div className="flex w-full flex-col gap-4 self-start rounded-2xl border border-outline-variant bg-card p-5">
+        <div className="flex w-full flex-col gap-4 self-start rounded-2xl border border-hairline bg-card p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">{replaceFrom ? "Изменение таблицы" : "Новая таблица"}</span>
             {replaceFrom ? (
@@ -1685,7 +1685,7 @@ function PointsManager() {
                 type="date"
                 value={effectiveFrom}
                 onChange={(event) => setEffectiveFrom(event.target.value)}
-                className="h-11 w-full rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors focus:border-primary"
+                className="h-11 w-full rounded-[12px] border border-border bg-surface-container-low px-3.5 text-[13px] text-on-surface outline-none transition-colors focus:border-primary"
               />
             </label>
             <div>
@@ -1708,7 +1708,7 @@ function PointsManager() {
                       value={row.place}
                       onChange={(event) => setRow(index, { place: event.target.value })}
                       placeholder="место"
-                      className="h-10 w-20 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
+                      className="h-10 w-20 rounded-[10px] border border-border bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
                     />
                     <span className="text-on-surface-variant">→</span>
                     <input
@@ -1716,7 +1716,7 @@ function PointsManager() {
                       value={row.points}
                       onChange={(event) => setRow(index, { points: event.target.value })}
                       placeholder="20,5"
-                      className="h-10 w-24 rounded-[10px] border border-outline-variant bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
+                      className="h-10 w-24 rounded-[10px] border border-border bg-surface-container-low px-3 font-mono text-[13px] tabular outline-none focus:border-primary"
                     />
                     <button
                       onClick={() => removeRow(index)}
@@ -1758,15 +1758,15 @@ function PointsManager() {
         {/* existing tables */}
         <div className="flex flex-col gap-3">
           {existing.length === 0 ? (
-            <div className="rounded-2xl border border-outline-variant bg-card p-6 text-center text-sm text-on-surface-variant">
+            <div className="rounded-2xl border border-hairline bg-card p-6 text-center text-sm text-on-surface-variant">
               Нет сохранённых таблиц очков
             </div>
           ) : (
             existing.map((group) => {
               const key = `${group.division}-${group.effectiveFrom}`;
               return (
-                <div key={key} className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
-                  <div className="flex items-center justify-between border-b border-outline-variant px-5 py-3.5">
+                <div key={key} className="overflow-hidden rounded-2xl border border-hairline bg-card">
+                  <div className="flex items-center justify-between border-b border-divider px-5 py-3.5">
                     <div>
                       <div className="text-[13.5px] font-semibold">Дивизион {group.division}</div>
                       <div className="mt-0.5 text-[11.5px] text-on-surface-variant">действует с {fmtDate(group.effectiveFrom)}</div>
@@ -1774,7 +1774,7 @@ function PointsManager() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => loadForEdit(group)}
-                        className="rounded-[10px] border border-outline-variant bg-surface-container-high px-3 py-1.5 text-[11.5px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface"
+                        className="rounded-[10px] border border-hairline bg-surface-container-high px-3 py-1.5 text-[11.5px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface"
                       >
                         Изменить
                       </button>
@@ -1897,11 +1897,11 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
       ) : null}
 
       {groups === null ? (
-        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
+        <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
           Ищем дубликаты…
         </div>
       ) : groups.length === 0 ? (
-        <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
+        <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center text-sm text-on-surface-variant">
           Дубликатов не найдено.
         </div>
       ) : (
@@ -1909,8 +1909,8 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
           const picked = selected[group.key] ?? group.members.map((m) => m.id);
           const survivor = group.members.find((m) => picked.includes(m.id));
           return (
-            <div key={group.key} className="overflow-hidden rounded-2xl border border-outline-variant bg-card">
-              <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+            <div key={group.key} className="overflow-hidden rounded-2xl border border-hairline bg-card">
+              <div className="flex items-center justify-between border-b border-divider px-5 py-4">
                 <div className="flex items-center gap-3">
                   <h2 className="text-base font-semibold tracking-tight">{group.members[0].name}</h2>
                   <span
@@ -1936,7 +1936,7 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
                   <button
                     onClick={() => dismiss(group)}
                     disabled={merging !== null || dismissing === group.key}
-                    className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-outline-variant px-4 text-[13px] font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-55"
+                    className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-hairline px-4 text-[13px] font-semibold text-on-surface-variant hover:bg-surface-container-high disabled:opacity-55"
                   >
                     <X className="size-4" />
                     {dismissing === group.key ? "Отклоняем…" : "Отклонить"}
@@ -1970,7 +1970,7 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
                     return (
                       <tr
                         key={member.id}
-                        className={cn("border-t border-outline-variant", keep && "bg-secondary-container/40")}
+                        className={cn("border-t border-table-divider", keep && "bg-secondary-container/40")}
                       >
                         <td className="px-4 py-3 text-center">
                           <input
@@ -2027,7 +2027,7 @@ function DuplicatesManager({ onCount }: { onCount: (count: number) => void }) {
 
 function DigestRatingBadge({ rating }: { rating: { label: string; className: string } }) {
   return (
-    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold dark:border-transparent", rating.className)}>
       {rating.label}
     </span>
   );
@@ -2035,7 +2035,7 @@ function DigestRatingBadge({ rating }: { rating: { label: string; className: str
 
 function DigestMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex items-start justify-between gap-2 rounded-lg border border-outline-variant bg-card px-3 py-2">
+    <div className="flex items-start justify-between gap-2 rounded-lg border border-hairline bg-card px-3 py-2">
       <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
       <div className="shrink-0 font-mono text-[16px] font-semibold leading-tight tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
     </div>
@@ -2063,7 +2063,7 @@ function DigestCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-outline-variant bg-card p-4">
+    <div className="rounded-lg border border-hairline bg-card p-4">
       <div className="mb-3 flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
         <Icon className="size-4 text-primary" />
         {title}
@@ -2122,7 +2122,7 @@ function DigestManager({ league }: { league: League }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-start gap-3">
-        <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+        <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-hairline bg-surface-container-low p-1">
           <TabSliderPill ind={divSlider.ind} />
           {DIVISIONS.map((d) => (
             <button
@@ -2138,7 +2138,7 @@ function DigestManager({ league }: { league: League }) {
             </button>
           ))}
         </div>
-        <div className="relative grid flex-1 grid-cols-9 gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+        <div className="relative grid flex-1 grid-cols-9 gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1">
           <TabSliderPill ind={stageSlider.ind} />
           {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
             <button
@@ -2158,7 +2158,7 @@ function DigestManager({ league }: { league: League }) {
 
       <TabTransition tabKey={`${division}-${stage}`} rise={false}>
         {!digest.hasData ? (
-          <div className="rounded-lg border border-outline-variant bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
+          <div className="rounded-lg border border-hairline bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
             Этап {stage} в дивизионе {division} ещё не загружен
           </div>
         ) : (
@@ -2177,7 +2177,7 @@ function DigestManager({ league }: { league: League }) {
                 <ol className="space-y-2">
                   {digest.podium.map((p) => (
                     <li key={p.rid} className="flex items-center gap-3">
-                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-hairline bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
                         {p.place}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{p.name}</span>
@@ -2240,7 +2240,7 @@ function DigestManager({ league }: { league: League }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[11px] text-on-surface-variant">Сухие победы:</span>
                       {digest.sweeps.map((s) => (
-                        <span key={s.rid} className="inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
+                        <span key={s.rid} className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
                           {s.name} <span className="font-mono tabular text-win">{s.wins}-0</span>
                         </span>
                       ))}
@@ -2270,7 +2270,7 @@ function DigestManager({ league }: { league: League }) {
               </DigestCard>
             </div>
 
-            <div className="rounded-lg border border-outline-variant bg-card p-4">
+            <div className="rounded-lg border border-hairline bg-card p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
                   <Megaphone className="size-4 text-primary" />
@@ -2289,7 +2289,7 @@ function DigestManager({ league }: { league: League }) {
                 readOnly
                 value={caption}
                 rows={caption.split("\n").length + 1}
-                className="w-full resize-none rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
+                className="w-full resize-none rounded-[12px] border border-hairline bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
               />
             </div>
           </div>
@@ -2304,7 +2304,7 @@ function DigestManager({ league }: { league: League }) {
 /** Season metric tile: label heading left, value in the top-right corner. */
 function SeasonMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex items-start justify-between gap-2 rounded-lg border border-outline-variant bg-card px-3 py-2">
+    <div className="flex items-start justify-between gap-2 rounded-lg border border-hairline bg-card px-3 py-2">
       <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
       <div className="shrink-0 font-mono text-[16px] font-semibold leading-tight tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
     </div>
@@ -2348,7 +2348,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-outline-variant bg-surface-container-low p-1">
+      <div className="relative inline-flex gap-1 self-start rounded-[16px] border border-hairline bg-surface-container-low p-1">
         <TabSliderPill ind={slider.ind} />
         {SEASON_SCOPES.map((s) => (
           <button
@@ -2367,7 +2367,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
 
       <TabTransition tabKey={scopeKey} rise={false}>
         {!summary.hasData ? (
-          <div className="rounded-lg border border-outline-variant bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
+          <div className="rounded-lg border border-hairline bg-card px-5 py-12 text-center text-sm font-semibold text-on-surface-variant">
             В этом контексте пока нет данных
           </div>
         ) : (
@@ -2391,7 +2391,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                   <ol className="space-y-2">
                     {summary.podium.map((p) => (
                       <li key={p.rid} className="flex items-center gap-3">
-                        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
+                        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-hairline bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary">
                           {p.place}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{p.name}</span>
@@ -2401,7 +2401,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                     ))}
                   </ol>
                   {summary.promotion.length ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-outline-variant pt-3 text-[12.5px]">
+                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-divider pt-3 text-[12.5px]">
                       <TrendingUp className="size-4 shrink-0 text-win" />
                       <span className="text-[11px] text-on-surface-variant">Кандидаты на повышение:</span>
                       {summary.promotion.map((p) => (
@@ -2475,13 +2475,13 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[11px] text-on-surface-variant">Сыграли все этапы:</span>
                       {summary.attendance.perfect.map((p) => (
-                        <span key={p.rid} className="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
+                        <span key={p.rid} className="inline-flex items-center rounded-full border border-hairline bg-surface-container-high px-2 py-0.5 text-[12px] font-semibold text-on-surface">
                           {p.name}
                         </span>
                       ))}
                     </div>
                   ) : null}
-                  <div className="space-y-2 border-t border-outline-variant pt-3">
+                  <div className="space-y-2 border-t border-divider pt-3">
                     {summary.attendance.top.map((r) => (
                       <div key={r.rid} className="flex items-center gap-2.5">
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-on-surface">{r.name}</span>
@@ -2509,7 +2509,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                       <div className="mt-0.5 font-mono text-[12px] tabular text-on-surface-variant">{summary.derby.frequent.matches} {pluralRu(summary.derby.frequent.matches, ["встреча", "встречи", "встреч"])}</div>
                     </div>
                     {summary.derby.closest ? (
-                      <div className="border-t border-outline-variant pt-3">
+                      <div className="border-t border-divider pt-3">
                         <div className="text-[11px] text-on-surface-variant">Самая упорная</div>
                         <div className="mt-1 flex items-center justify-between gap-3">
                           <span className="min-w-0 truncate text-sm font-semibold text-on-surface">
@@ -2529,7 +2529,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
               ) : null}
             </div>
 
-            <div className="rounded-lg border border-outline-variant bg-card p-4">
+            <div className="rounded-lg border border-hairline bg-card p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-wide text-on-surface-variant">
                   <Megaphone className="size-4 text-primary" />
@@ -2548,7 +2548,7 @@ function SeasonSummaryManager({ league, strength }: { league: League; strength: 
                 readOnly
                 value={caption}
                 rows={Math.min(caption.split("\n").length + 1, 30)}
-                className="w-full resize-none rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
+                className="w-full resize-none rounded-[12px] border border-hairline bg-surface-container-low px-3.5 py-3 font-mono text-[13px] leading-relaxed text-on-surface outline-none"
               />
             </div>
           </div>
@@ -2570,7 +2570,7 @@ function OpsStat({ label, value, tone = "neutral" }: { label: string; value: num
   const color =
     tone === "bad" ? "text-loss" : tone === "warn" ? "text-[#ffa52a]" : tone === "ok" ? "text-win" : "text-on-surface";
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5">
+    <div className="rounded-lg border border-hairline bg-card px-3 py-2.5">
       <div className="text-[10.5px] leading-tight text-on-surface-variant">{label}</div>
       <div className={cn("mt-1 font-mono text-[20px] font-semibold tracking-tight tabular", color)}><NumberPop>{value}</NumberPop></div>
     </div>
@@ -2707,7 +2707,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
         </div>
         <div className="grid gap-3 lg:grid-cols-3">
           {ops.divisions.map((d) => (
-            <div key={d.division} className="rounded-lg border border-outline-variant bg-card p-4">
+            <div key={d.division} className="rounded-lg border border-hairline bg-card p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-semibold text-on-surface">Дивизион {d.division}</div>
                 <span className="font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
@@ -2734,10 +2734,10 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
         </div>
 
         {/* Calendar grid: stages down, divisions across. */}
-        <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
+        <div className="overflow-hidden rounded-lg border border-hairline bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-outline-variant text-[11px] uppercase tracking-wide text-on-surface-variant">
+              <tr className="border-b border-table-divider text-[11px] uppercase tracking-wide text-on-surface-variant">
                 <th className="px-4 py-2.5 text-left font-medium">Этап</th>
                 <th className="px-4 py-2.5 text-left font-medium">Дата</th>
                 {divisions.map((d) => (
@@ -2747,7 +2747,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
             </thead>
             <tbody>
               {ops.calendar.map((row) => (
-                <tr key={row.stage} className="border-t border-outline-variant first:border-t-0">
+                <tr key={row.stage} className="border-t border-table-divider first:border-t-0">
                   <td className="px-4 py-2.5 font-mono text-[13px] font-semibold tabular">{row.stage}</td>
                   <td className={cn("px-4 py-2.5 font-mono text-[12.5px] tabular", row.overdue ? "text-loss" : "text-on-surface-variant")}>
                     {row.date ? fmtDate(row.date) : "—"}
@@ -2784,10 +2784,10 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
           Полнота данных
         </div>
         {/* Per-division completeness matrix. Duplicates are a global concern. */}
-        <div className="overflow-hidden rounded-lg border border-outline-variant bg-card">
+        <div className="overflow-hidden rounded-lg border border-hairline bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-outline-variant text-[11px] uppercase tracking-wide text-on-surface-variant">
+              <tr className="border-b border-table-divider text-[11px] uppercase tracking-wide text-on-surface-variant">
                 <th className="px-4 py-2.5 text-left font-medium">Дивизион</th>
                 <th className="px-4 py-2.5 text-center font-medium">Этапы не загружены</th>
                 <th className="px-4 py-2.5 text-center font-medium">Без счёта</th>
@@ -2797,7 +2797,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
             </thead>
             <tbody>
               {ops.divisions.map((d) => (
-                <tr key={d.division} className="border-t border-outline-variant first:border-t-0">
+                <tr key={d.division} className="border-t border-table-divider first:border-t-0">
                   <td className="px-4 py-2.5 text-[13px] font-semibold text-on-surface">Дивизион {d.division}</td>
                   <OpsCountCell value={d.missingCount} tone="bad" />
                   <OpsCountCell value={d.noScoreCount} tone="warn" />
@@ -2878,14 +2878,14 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
           «Удалить» стирает загруженный этап дивизиона: его матчи и результаты удаляются, рейтинги и агрегаты пересчитываются. Отменить нельзя, поэтому кнопка требует второго клика.
         </p>
         {audit.length === 0 ? (
-          <div className="rounded-lg border border-outline-variant bg-card px-4 py-8 text-center text-sm text-on-surface-variant">Нет загруженных этапов</div>
+          <div className="rounded-lg border border-hairline bg-card px-4 py-8 text-center text-sm text-on-surface-variant">Нет загруженных этапов</div>
         ) : (
           <div className="grid gap-3 lg:grid-cols-3">
             {auditDivs.map((dv) => {
               const rows = audit.filter((s) => s.division === dv);
               return (
-                <div key={dv} className="flex flex-col overflow-hidden rounded-lg border border-outline-variant bg-card">
-                  <div className="flex items-center justify-between border-b border-outline-variant px-4 py-2.5">
+                <div key={dv} className="flex flex-col overflow-hidden rounded-lg border border-hairline bg-card">
+                  <div className="flex items-center justify-between border-b border-divider px-4 py-2.5">
                     <span className="text-[13px] font-semibold text-on-surface">Дивизион {dv}</span>
                     <CountBadge value={rows.length} />
                   </div>
@@ -2893,7 +2893,7 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
                     const key = `${s.season}-${s.division}-${s.stage}`;
                     const confirming = confirmKey === key;
                     return (
-                      <div key={key} className="flex items-center justify-between gap-2 border-t border-outline-variant px-4 py-2.5 first:border-t-0">
+                      <div key={key} className="flex items-center justify-between gap-2 border-t border-divider px-4 py-2.5 first:border-t-0">
                         <div className="min-w-0">
                           <div className="text-[12.5px] font-semibold text-on-surface">{s.season} · Этап {s.stage}</div>
                           <div className="mt-0.5 font-mono text-[11px] tabular text-on-surface-variant">

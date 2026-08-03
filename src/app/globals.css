@@ -75,9 +75,7 @@
  * on mobile). The fixed pseudo-element is its own composited layer, so scroll
  * only moves the content above it. */
 :root {
-  --app-bg-image:
-    radial-gradient(circle at center, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 18%, rgba(255,255,255,0.05) 34%, transparent 58%),
-    linear-gradient(180deg, #2E2E2E 0%, #1A1A1A 52%, #101010 100%);
+  --app-bg-image: linear-gradient(180deg, #0d0c0c 0%, #0d0c0c 100%);
 }
 
 .app-bg::before {
@@ -159,7 +157,16 @@
   --color-accent-foreground: var(--m3-on-surface);
   --color-destructive: var(--m3-error);
   --color-destructive-foreground: var(--m3-on-error);
+  /* Three border weights. `border` (= outline-variant) is the deliberate control
+     edge: search/form fields, header + tab bar. `divider` is the horizontal rule
+     between table rows and card sections - it stays visible on both themes.
+     `hairline` is the decorative outline around cards/chips/pills: transparent on
+     dark, where the surface ladder alone separates elements from the near-black
+     background. */
   --color-border: var(--m3-outline-variant);
+  --color-divider: var(--m3-divider);
+  --color-table-divider: var(--m3-table-divider);
+  --color-hairline: var(--m3-hairline);
   --color-input: var(--m3-outline-variant);
   --color-ring: var(--m3-primary);
   --color-primary-foreground: var(--m3-on-primary);
@@ -230,21 +237,26 @@
   --m3-on-error: #ffffff;
   --m3-error-container: rgba(255, 79, 71, 0.15);
   --m3-on-error-container: #ffd7d3;
-  --m3-background: #252525;
+  /* Flat near-black page under a lifted surface ladder: with decorative borders
+     off on dark, the step between the page and each container is what separates
+     cards, rows and chips from the background. */
+  --m3-background: #0d0c0c;
   --m3-on-background: #ededed;
-  --m3-surface: #252525;
+  --m3-surface: #0d0c0c;
   --m3-on-surface: #ededed;
-  --m3-surface-variant: #303030;
+  --m3-surface-variant: #232222;
   --m3-on-surface-variant: #b6b6b6;
-  --m3-surface-dim: #171717;
-  --m3-surface-bright: #333333;
-  --m3-surface-container-lowest: #171717;
-  --m3-surface-container-low: #1e1e1f;
-  --m3-surface-container: #222222;
-  --m3-surface-container-high: #2c2c2c;
-  --m3-surface-container-highest: #333333;
-  --m3-outline: #747474;
-  --m3-outline-variant: rgba(255, 255, 255, 0.09);
+  --m3-surface-dim: #0a0909;
+  --m3-surface-bright: #333232;
+  --m3-surface-container-lowest: #131212;
+  --m3-surface-container-low: #191818;
+  --m3-surface-container: #1e1d1d;
+  --m3-surface-container-high: #272626;
+  --m3-surface-container-highest: #302f2f;
+  --m3-outline: #7a7878;
+  --m3-outline-variant: rgba(255, 255, 255, 0.12);
+  --m3-divider: rgba(255, 255, 255, 0.10);
+  --m3-hairline: transparent;
   --m3-inverse-surface: #dedede;
   --m3-inverse-on-surface: #212121;
   --m3-inverse-primary: #f9a8d4;
@@ -258,8 +270,8 @@
   --m3-loss: #ff4747;
   --m3-loss-soft: #ff6b63;
   /* Translucent chrome fill (sticky header/sidebar/bottom-nav over the app bg). */
-  --chrome-bg: rgba(22, 22, 22, 0.94);
-  --chrome-bg-strong: rgba(22, 22, 22, 0.96);
+  --chrome-bg: rgba(13, 12, 12, 0.92);
+  --chrome-bg-strong: rgba(13, 12, 12, 0.96);
   /* ECharts palette (read live in JS; ECharts can't use var()). */
   --chart-primary: #f472b6;
   --chart-secondary: #7eeaf5;
@@ -268,8 +280,8 @@
   --chart-success: #22c55e;
   --chart-strength: #dff7a5;
   --chart-text: #b6b6b6;
-  --chart-grid: rgba(255, 255, 255, 0.09);
-  --chart-tooltip-bg: #1e1e1f;
+  --chart-grid: rgba(255, 255, 255, 0.10);
+  --chart-tooltip-bg: #1e1d1d;
   --chart-tooltip-ink: #ededed;
 }
 
@@ -319,6 +331,10 @@
   --m3-surface-container-highest: #dedcd5;
   --m3-outline: #8a877f;
   --m3-outline-variant: rgba(0, 0, 0, 0.10);
+  /* Light keeps its decorative edges: paper surfaces are too close in value to
+     separate on the surface step alone. */
+  --m3-divider: rgba(0, 0, 0, 0.10);
+  --m3-hairline: rgba(0, 0, 0, 0.10);
   --m3-inverse-surface: #1d1c1a;
   --m3-inverse-on-surface: #f6f5f2;
   --m3-inverse-primary: #f9a8d4;
@@ -350,11 +366,29 @@
   --chart-tooltip-ink: #1d1c1a;
 }
 
+/* Table row rules. Dropped on desktop dark: a wide table is 30+ hairlines, and
+ * against the near-black page that reads as a grid rather than as rows - the
+ * row hover already carries the scan line. Mobile keeps them (stacked cards
+ * need the split) and light keeps them (paper surfaces sit too close in value
+ * to separate on the row background alone). `var(--m3-divider)` resolves per
+ * theme, so the light override needs no literal. */
+:root {
+  --m3-table-divider: var(--m3-divider);
+}
+@media (min-width: 768px) {
+  :root {
+    --m3-table-divider: transparent;
+  }
+  :root.light {
+    --m3-table-divider: var(--m3-divider);
+  }
+}
+
 @layer base {
   *,
   ::before,
   ::after {
-    border-color: var(--color-border);
+    border-color: var(--color-hairline);
   }
   html,
   body {

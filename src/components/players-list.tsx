@@ -103,7 +103,7 @@ function DivBadges({ items }: { items: { div: number; place: number | null }[] }
   return (
     <>
       {items.map((it) => (
-        <span key={it.div} className="rounded-full border border-outline-variant bg-brand-surface-2 px-1.5 py-0.5 text-[10.5px] font-semibold text-brand-ink-2">
+        <span key={it.div} className="rounded-full border border-hairline bg-brand-surface-2 px-1.5 py-0.5 text-[10.5px] font-semibold text-brand-ink-2">
           Д{it.div}{it.place ? ` · #${it.place}` : ""}
         </span>
       ))}
@@ -120,7 +120,7 @@ function MobilePlayersViewTabs({
 }) {
   const { setRef, ind } = useTabSlider(value);
   return (
-    <div className="relative flex w-full gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:hidden">
+    <div className="relative flex w-full gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:hidden">
       <TabSliderPill ind={ind} />
       {MOBILE_VIEW_TABS.map((tab) => (
         <button
@@ -157,7 +157,7 @@ function MobileLeaderboardSort({
             key={sort.key}
             type="button"
             onClick={() => onChange(sort.key)}
-            className="relative h-9 shrink-0 overflow-hidden rounded-full border border-outline-variant bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
+            className="relative h-9 shrink-0 overflow-hidden rounded-full border border-hairline bg-brand-surface-2 p-1 text-[12px] font-semibold transition-colors duration-200 ease-m3-standard hover:text-on-surface"
           >
             <span
               aria-hidden
@@ -208,7 +208,7 @@ function StrengthInlineBadge({ value, className }: { value: number | null; class
 
 function LeaderboardTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <div className="min-w-0 rounded-md border border-outline-variant bg-surface-container-high px-1 py-2 text-center">
+    <div className="min-w-0 rounded-md border border-hairline bg-surface-container-high px-1 py-2 text-center">
       <div className="text-[9px] leading-tight text-on-surface-variant">{label}</div>
       <div className={cn("mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular text-on-surface", valueClassName)}>
         {value}
@@ -232,7 +232,7 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({
     <Link
       href={playerHref(player.rid)}
       data-rating-rid={player.rid}
-      className="flex flex-col rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel active:scale-[0.99]"
+      className="flex flex-col rounded-lg border border-hairline bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel active:scale-[0.99]"
     >
       <div className="flex items-center gap-3">
         <span className="w-[22px] shrink-0 text-center font-mono text-sm font-semibold text-on-surface-variant">
@@ -254,7 +254,7 @@ const MobileLeaderboardCard = React.memo(function MobileLeaderboardCard({
           </div>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-on-surface-variant">
             <span className="min-w-0">
-              Матчи <span className="inline-flex rounded-full border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
+              Матчи <span className="inline-flex rounded-full border border-hairline bg-surface-container-high px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular text-on-surface">
                 {`${player.matches} | ${player.matchesWon} - ${player.matchesLost}`}
               </span>
             </span>
@@ -297,7 +297,7 @@ function MobilePlayerCard({ player }: { player: PlayerOverview }) {
   return (
     <Link
       href={playerHref(player.rid)}
-      className="relative flex flex-col items-center gap-[11px] rounded-lg border border-outline-variant bg-card px-3.5 pb-4 pt-5 text-center"
+      className="relative flex flex-col items-center gap-[11px] rounded-lg border border-hairline bg-card px-3.5 pb-4 pt-5 text-center"
     >
       <StrengthMiniBadge value={player.strengthRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-[60px] text-xl" />
@@ -334,7 +334,7 @@ const DesktopPlayerCard = React.memo(function DesktopPlayerCard({ player }: { pl
   return (
     <Link
       href={playerHref(player.rid)}
-      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-outline-variant bg-card p-4 text-center"
+      className="group relative flex min-h-[168px] flex-col items-center justify-center gap-3 rounded-lg border border-hairline bg-card p-4 text-center"
     >
       <StrengthMiniBadge value={player.strengthRating} />
       <PlayerAvatar rid={player.rid} initials={player.initials} color={player.color} className="size-16 text-xl" />
@@ -482,7 +482,7 @@ function DesktopLeaderboardHeader({
       {/* title occupies the position + avatar + name tracks; -ml cancels the
           header's px-4 so the icon lines up with the card's outer edge */}
       <div className="col-span-3 -ml-4 flex items-center gap-2.5">
-        <span className="flex size-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high">
+        <span className="flex size-9 items-center justify-center rounded-full border border-hairline bg-surface-container-high">
           <Rocket className="size-4 text-primary" />
         </span>
         <h2 className="text-base font-semibold text-on-surface">Leader Board</h2>
@@ -594,7 +594,7 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
   return (
     <div
       data-rating-rid={player.rid}
-      className="group grid items-center gap-2 rounded-lg border border-outline-variant bg-card px-4 py-3"
+      className="group grid items-center gap-2 rounded-lg border border-hairline bg-card px-4 py-3"
       style={DESKTOP_LEADERBOARD_GRID}
     >
       <span className="text-center font-mono text-sm font-semibold tabular text-on-surface-variant">{position}</span>
@@ -612,7 +612,7 @@ const DesktopLeaderboardCard = React.memo(function DesktopLeaderboardCard({
       <WrCell value={formatPct(player.rallyWinRatePct)} pct={player.rallyWinRatePct ?? null} />
       <PlainCell value={formatSigned(player.rallyBalancePerMatch)} valueClassName={balanceToneClass(player.rallyBalancePerMatch)} />
       <div className="flex min-w-0 justify-center px-1.5">
-        <span className="inline-flex items-center justify-center rounded-md border border-outline-variant bg-surface-container-high px-2 py-1 font-mono text-[12.5px] font-semibold tabular text-on-surface">
+        <span className="inline-flex items-center justify-center rounded-md border border-hairline bg-surface-container-high px-2 py-1 font-mono text-[12.5px] font-semibold tabular text-on-surface">
           {player.longestWinStreak > 0 ? player.longestWinStreak : "x"}
         </span>
       </div>
@@ -646,7 +646,7 @@ function MobileDivisionTabs({
 }) {
   const { setRef, ind } = useTabSlider(String(value));
   return (
-    <div className="relative flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:hidden">
+    <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:hidden">
       <TabSliderPill ind={ind} />
       {MOBILE_DIV_SCOPES.map((s) => (
         <button
@@ -809,7 +809,7 @@ export function PlayersList({
 
       <div className="hidden items-center gap-2 md:flex">
         {/* desktop: division filter tabs (left) */}
-        <div className="relative hidden gap-1 rounded-[16px] border border-border bg-brand-surface p-1 md:inline-flex">
+        <div className="relative hidden gap-1 rounded-[16px] border border-hairline bg-brand-surface p-1 md:inline-flex">
           <TabSliderPill ind={ind} className="bg-brand-surface-2" />
           {DIV_SCOPES.map((s) => (
             <button
@@ -892,7 +892,7 @@ export function PlayersList({
                     </div>
                     <button
                       onClick={() => setExpanded((v) => !v)}
-                      className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                      className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                     >
                       {expanded ? "Свернуть" : `Показать еще ${mobileRest.length}`}
                     </button>
@@ -943,7 +943,7 @@ export function PlayersList({
                 </div>
                 <button
                   onClick={() => setExpanded((v) => !v)}
-                  className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                  className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                 >
                   {expanded ? "Свернуть" : `Показать еще ${leaderboardRest.length}`}
                 </button>
@@ -1012,7 +1012,7 @@ export function PlayersList({
       </div>
 
       {filtered.length === 0 ? (
-        <div className={cn("rounded-lg border border-outline-variant bg-card p-8 text-center text-sm text-muted-foreground", mobileView === "leaderboard" && "hidden md:block")}>
+        <div className={cn("rounded-lg border border-hairline bg-card p-8 text-center text-sm text-muted-foreground", mobileView === "leaderboard" && "hidden md:block")}>
           Игроки не найдены
         </div>
       ) : null}

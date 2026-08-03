@@ -25,7 +25,7 @@ export function RatingPinButton({
         "inline-flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors",
         pinned
           ? "border-primary bg-transparent text-primary"
-          : "border-outline-variant text-on-surface-variant hover:text-on-surface",
+          : "border-hairline text-on-surface-variant hover:text-on-surface",
         className,
       )}
     >

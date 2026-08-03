@@ -32,7 +32,10 @@ const MATCH_CARD_LIMIT = 12;
 
 function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   return (
-    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+    // `dark:border-transparent` overrides the tone border the rating carries
+    // (border-primary/30 and friends): on dark the tinted fill alone reads the
+    // status, and the outline only muddies it. Light keeps the border.
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold dark:border-transparent", rating.className)}>
       {rating.label}
     </span>
   );
@@ -40,7 +43,7 @@ function MatchRatingBadge({ rating }: { rating: MatchRating }) {
 
 function StageTile({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-outline-variant bg-brand-surface-2 px-1.5 py-1.5 text-center">
+    <div className="min-w-0 rounded-lg border border-hairline bg-brand-surface-2 px-1.5 py-1.5 text-center">
       <div className="text-[10px] leading-none text-muted-foreground">{label}</div>
       <div className="mt-1 truncate font-mono text-[12px] font-semibold tabular text-on-surface" style={color ? { color } : undefined}><NumberPop>{value}</NumberPop></div>
     </div>
@@ -51,7 +54,7 @@ function MetricTile({ label, value, sub, compact }: { label: string; value: stri
   if (compact) {
     // mobile: value first, metric description below it
     return (
-      <div className="rounded-lg border border-outline-variant bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+      <div className="rounded-lg border border-hairline bg-card px-3 py-2.5 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
         <div className="font-mono text-[17px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
         <div className="mt-1 text-[10px] leading-tight text-on-surface-variant">{label}</div>
         {sub ? <div className="mt-0.5 text-[10px] text-on-surface-variant">{sub}</div> : null}
@@ -59,7 +62,7 @@ function MetricTile({ label, value, sub, compact }: { label: string; value: stri
     );
   }
   return (
-    <div className="rounded-lg border border-outline-variant bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+    <div className="rounded-lg border border-hairline bg-card px-4 py-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
       <div className="text-[11px] text-on-surface-variant">{label}</div>
       <div className="mt-1.5 font-mono text-[22px] font-semibold tracking-tight tabular"><NumberPop>{value}</NumberPop></div>
       {sub ? <div className="mt-1 text-[10.5px] text-on-surface-variant">{sub}</div> : null}
@@ -110,7 +113,7 @@ function RetiredBadge({ iconOnly = false }: { iconOnly?: boolean }) {
 function MatchDetailAccordion({ durationMin, detail }: { durationMin: number; detail: { a: number; b: number }[] }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div className="mt-2 border-t border-outline-variant pt-1.5">
+    <div className="mt-2 border-t border-divider pt-1.5">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -231,7 +234,7 @@ export function StageSummary({ league }: { league: League }) {
       {/* desktop: division + stage tabs on one row; mobile: stacked */}
       <div className="flex flex-col gap-2.5 md:flex-row md:items-start md:gap-3">
       {/* division tabs */}
-      <div className="relative flex gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:inline-flex md:self-start">
+      <div className="relative flex gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:inline-flex md:self-start">
         <TabSliderPill ind={divSlider.ind} />
         {SCOPES.map((s) => (
           <button
@@ -250,7 +253,7 @@ export function StageSummary({ league }: { league: League }) {
       </div>
 
       {/* stage tabs (horizontal scroll) */}
-      <div className="relative grid grid-cols-9 gap-1 rounded-[16px] border border-outline-variant bg-surface-container-low p-1 md:flex-1">
+      <div className="relative grid grid-cols-9 gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:flex-1">
         <TabSliderPill ind={stageSlider.ind} />
         {stages.map((n) => {
           const hasData = stageDivisions.get(n)?.includes(scope);
@@ -303,16 +306,16 @@ export function StageSummary({ league }: { league: League }) {
       {/* mobile results: player cards */}
       <div className="flex flex-col gap-2 overflow-hidden md:hidden">
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-outline-variant bg-card px-5 py-8 text-center">
+          <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center">
             <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
           </div>
         ) : (
           <>
             <SlideSwitch tabKey={`${scope}-${stage}`} direction={slideDir} className="flex flex-col gap-2">
                 {visibleRows.map((r) => (
-                  <div key={`m-${r.div}-${r.playerIdx}`} className="rounded-2xl border border-outline-variant bg-card p-3">
+                  <div key={`m-${r.div}-${r.playerIdx}`} className="rounded-2xl border border-hairline bg-card p-3">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-hairline bg-surface-container-high font-mono text-[11px] font-semibold tabular text-primary"><NumberPop>{r.place}</NumberPop></span>
                       <Link href={playerHref(r.playerIdx)} className="block min-w-0 flex-1 truncate text-sm font-semibold text-on-surface transition-colors hover:text-primary">{r.name}</Link>
                       <span className="shrink-0 font-mono text-sm font-semibold tabular text-on-surface"><NumberPop>{fmtNum(r.points)}</NumberPop></span>
                     </div>
@@ -329,7 +332,7 @@ export function StageSummary({ league }: { league: League }) {
             {moreCount > 0 ? (
               <button
                 onClick={() => setExpanded(true)}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
               >
                 Показать ещё {moreCount}
               </button>
@@ -339,7 +342,7 @@ export function StageSummary({ league }: { league: League }) {
       </div>
 
       {/* desktop results table */}
-      <div className="hidden overflow-hidden rounded-2xl border border-outline-variant bg-card md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-hairline bg-card md:block">
         {rows.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <div className="text-sm font-semibold text-on-surface">Данных пока нет</div>
@@ -365,7 +368,7 @@ export function StageSummary({ league }: { league: League }) {
                   {visibleRows.map((r) => {
                     const name = splitPlayerName(r.name);
                     return (
-                    <tr key={`${r.div}-${r.playerIdx}`} className="group border-t border-outline-variant transition-colors hover:bg-brand-surface-2/40 md:h-[60px] md:hover:bg-surface-container-high/40">
+                    <tr key={`${r.div}-${r.playerIdx}`} className="group border-t border-table-divider transition-colors hover:bg-brand-surface-2/40 md:h-[60px] md:hover:bg-surface-container-high/40">
                       <td className="sticky left-0 z-10 w-8 min-w-8 max-w-8 whitespace-nowrap bg-card px-2 py-[11px] text-center transition-colors group-hover:bg-brand-surface-2/40 md:static md:z-auto md:bg-transparent md:group-hover:bg-transparent">
                         <span className="font-mono text-sm tabular text-on-surface-variant">{r.place}</span>
                       </td>
@@ -402,7 +405,7 @@ export function StageSummary({ league }: { league: League }) {
             {moreCount > 0 && (
               <button
                 onClick={() => setExpanded(true)}
-                className="w-full border-0 border-t border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                className="w-full border-0 border-t border-table-divider bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
               >
                 Показать ещё {moreCount}
               </button>
@@ -414,7 +417,7 @@ export function StageSummary({ league }: { league: League }) {
       {rows.length > 0 ? (
         <div className="flex items-center gap-3">
           <h2 className="flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight">
-            <span className="hidden size-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-high md:flex">
+            <span className="hidden size-9 items-center justify-center rounded-full border border-hairline bg-surface-container-high md:flex">
               <Swords className="size-4 text-primary" />
             </span>
             Матчи этапа
@@ -451,7 +454,7 @@ export function StageSummary({ league }: { league: League }) {
               const aRetired = Boolean(m.retired && !aWon);
               const bRetired = Boolean(m.retired && aWon);
               return (
-                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="flex flex-col self-start rounded-lg border border-outline-variant bg-card p-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="flex flex-col self-start rounded-lg border border-hairline bg-card p-3 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <div className="grid gap-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex min-w-0 items-center gap-1.5">
@@ -500,7 +503,7 @@ export function StageSummary({ league }: { league: League }) {
           {moreMatchesCount > 0 ? (
             <button
               onClick={() => setMatchesExpanded(true)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+              className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
             >
               Показать ещё {moreMatchesCount}
             </button>
@@ -518,12 +521,14 @@ export function StageSummary({ league }: { league: League }) {
               const aRetired = Boolean(m.retired && !aWon);
               const bRetired = Boolean(m.retired && aWon);
               return (
-                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="rounded-lg border border-outline-variant bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
+                <div key={`${m.stage}-${m.division}-${m.aIdx}-${m.bIdx}-${index}`} className="rounded-lg border border-hairline bg-card p-4 transition-transform duration-300 ease-m3-emphasized-decel hover:-translate-y-0.5">
                   <div className="grid gap-2">
                     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
                       <span
                         className={cn(
-                          "rounded-md px-2.5 py-1 text-right font-mono text-[13px] font-semibold tabular",
+                          // Fixed square + rounded-full: games won is a single digit,
+                          // so the badge is a true circle rather than a stadium.
+                          "inline-grid size-7 place-items-center rounded-full font-mono text-[13px] font-semibold tabular",
                           aWon ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant",
                         )}
                       >
@@ -540,10 +545,10 @@ export function StageSummary({ league }: { league: League }) {
                       </span>
                       <MatchScoreLine games={m.detail} player="a" />
                     </div>
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-outline-variant pt-2">
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-divider pt-2">
                       <span
                         className={cn(
-                          "rounded-md px-2.5 py-1 text-right font-mono text-[13px] font-semibold tabular",
+                          "inline-grid size-7 place-items-center rounded-full font-mono text-[13px] font-semibold tabular",
                           !aWon ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant",
                         )}
                       >

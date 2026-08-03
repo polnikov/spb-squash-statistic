@@ -152,7 +152,7 @@ type H2hMode = "career" | "current";
 type H2hSort = "meetings" | "comfortable" | "uncomfortable" | "equal" | "load" | "closing" | "trend";
 
 function cardClass(className?: string) {
-  return cn("rounded-lg border border-outline-variant bg-card", className);
+  return cn("rounded-lg border border-hairline bg-card", className);
 }
 
 function labelClass() {
@@ -259,28 +259,36 @@ function lineSeries(name: string, data: (number | null)[], color?: string) {
  * Grey reference line across a chart: the league median of the metric in the
  * selected scope. A markLine instead of a series - no legend entry, no tooltip
  * row, so the player's own curves stay the subject.
+ *
+ * Unlabelled on purpose. The line sits at the median, which is exactly where the
+ * player's own curves converge, so any in-plot caption lands on top of them.
+ * `MedianCaption` names the line below the canvas instead.
  */
-function medianMarkLine(value: number, label: string) {
+function medianMarkLine(value: number) {
   return {
     silent: true,
     symbol: "none" as const,
     lineStyle: { color: CHART_COLORS.text, width: 1.5, type: "dashed" as const, opacity: 0.85 },
-    label: {
-      show: true,
-      position: "insideEndTop" as const,
-      // Chip, not bare text: the line crosses the player's own curves, and grey
-      // text on top of them is unreadable.
-      color: CHART_COLORS.tooltipInk,
-      backgroundColor: CHART_COLORS.tooltipBg,
-      borderColor: CHART_COLORS.grid,
-      borderWidth: 1,
-      borderRadius: 4,
-      padding: [3, 5, 2, 5],
-      fontSize: 10,
-      formatter: `${label} ${value.toFixed(1)}%`,
-    },
+    label: { show: false },
     data: [{ yAxis: value }],
   };
+}
+
+/** Charts that draw the median reference line. */
+const MEDIAN_LINE_CHARTS: PlayerProfileChartType[] = ["careerWinrateBySeason", "winrateByStage"];
+
+/** Caption for the dashed median line, rendered under the canvas so it can never
+ *  cover the curves. Mirrors the legend's visual language: swatch + name. */
+function MedianCaption({ type, benchmarks }: { type: PlayerProfileChartType; benchmarks?: PlayerProfileBenchmarks }) {
+  if (!MEDIAN_LINE_CHARTS.includes(type)) return null;
+  const bench = benchmarks?.matchWinRatePct;
+  if (!bench || bench.median == null) return null;
+  return (
+    <p className="mt-2 flex items-center justify-end gap-1.5 text-[11px] text-on-surface-variant">
+      <span aria-hidden className="inline-block w-5 border-t border-dashed border-current opacity-85" />
+      {bench.baseLabel} {bench.median.toFixed(1)}%
+    </p>
+  );
 }
 
 type BarRadius = [number, number, number, number];
@@ -316,10 +324,8 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
   const stats = payload.stats;
   // Match WR is the headline winrate, so its median is the one the Winrate
   // chart references; game and rally medians sit within a point of it anyway.
-  // The caption travels with the entry, so a fallback median names its own scope.
-  const matchWrBenchmark = payload.benchmarks?.matchWinRatePct ?? null;
-  const matchWrMedian = matchWrBenchmark?.median ?? null;
-  const medianLabel = matchWrBenchmark?.baseLabel ?? "";
+  // `MedianCaption` names it outside the canvas, so no label is needed here.
+  const matchWrMedian = payload.benchmarks?.matchWinRatePct?.median ?? null;
   const career = payload.careerBySeason ?? [];
   const stages = payload.stages ?? [];
   const places = payload.places ?? [];
@@ -455,7 +461,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       series: [
         {
           ...lineSeries("Матчи", career.map((p) => pctValue(p.matchWinRatePct)), CHART_COLORS.primary),
-          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian, medianLabel) }),
+          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian) }),
         },
         lineSeries("Геймы", career.map((p) => pctValue(p.gameWinRatePct)), CHART_COLORS.tertiary),
         lineSeries("Розыгрыши", career.map((p) => pctValue(p.rallyWinRatePct)), CHART_COLORS.secondary),
@@ -508,7 +514,7 @@ function chartOption(type: PlayerProfileChartType, data: unknown, isMobile = fal
       series: [
         {
           ...lineSeries("Матчи", stages.map((p) => (p.matchesPlayed ? pctValue(p.matchWinRatePct) : null)), CHART_COLORS.primary),
-          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian, medianLabel) }),
+          ...(matchWrMedian == null ? {} : { markLine: medianMarkLine(matchWrMedian) }),
         },
         lineSeries("Геймы", stages.map((p) => (p.gamesPlayed ? pctValue(p.gameWinRatePct) : null)), CHART_COLORS.tertiary),
         lineSeries("Розыгрыши", stages.map((p) => (p.ralliesPlayed ? pctValue(p.rallyWinRatePct) : null)), CHART_COLORS.secondary),
@@ -671,7 +677,7 @@ export function PlayerProfileChart({ type, data, height = 280 }: PlayerProfileCh
 
   if (!option) {
     return (
-      <div className="grid place-items-center rounded-lg border border-outline-variant bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
+      <div className="grid place-items-center rounded-lg border border-hairline bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant" style={{ minHeight: height }}>
         Недостаточно данных для графика
       </div>
     );
@@ -687,7 +693,7 @@ function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border border-outline-variant px-2 py-0.5 text-[10.5px] font-semibold",
+        "inline-flex items-center rounded-full border border-hairline px-2 py-0.5 text-[10.5px] font-semibold",
         tone === "primary" && "bg-primary-container text-primary",
         tone === "error" && "bg-error-container text-on-error-container",
         tone === "neutral" && "bg-surface-container-high text-on-surface-variant",
@@ -707,20 +713,20 @@ function HintChip({ children, hint }: { children: React.ReactNode; hint: string 
       <span
         tabIndex={0}
         aria-label={hint}
-        className="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant outline-none"
+        className="inline-flex items-center rounded-full border border-hairline bg-surface-container-high px-2 py-0.5 text-[10.5px] font-semibold text-on-surface-variant outline-none"
       >
         {children}
       </span>
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute left-0 top-full z-[38] mt-2 w-max max-w-[190px] origin-top-left translate-y-1 scale-95 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-popover-foreground opacity-0 shadow-lg shadow-black/25 md:z-50",
+          "pointer-events-none absolute left-0 top-full z-[38] mt-2 w-max max-w-[190px] origin-top-left translate-y-1 scale-95 rounded-lg border border-hairline bg-popover px-2.5 py-1.5 text-left text-[11px] font-medium leading-snug text-popover-foreground opacity-0 shadow-lg shadow-black/25 md:z-50",
           "transition-[opacity,transform] duration-75 ease-m3-standard",
           "group-hover/hint:translate-y-0 group-hover/hint:scale-100 group-hover/hint:opacity-100 group-hover/hint:delay-150",
           "group-focus-within/hint:translate-y-0 group-focus-within/hint:scale-100 group-focus-within/hint:opacity-100 group-focus-within/hint:delay-150",
         )}
       >
-        <span className="absolute left-3 top-[-4px] size-2 rotate-45 border-l border-t border-border bg-popover" />
+        <span className="absolute left-3 top-[-4px] size-2 rotate-45 border-l border-t border-hairline bg-popover" />
         {hint}
       </span>
     </span>
@@ -747,7 +753,7 @@ function KpiCard({ label, value, sub, bar, percent = null, benchmark = null }: {
       </div>
       {bar ? (
         // Percent sits inside a compact win-share bar (like the H2H Матчи tile).
-        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+        <div className="relative mt-1.5 h-[17px] overflow-hidden rounded-md border border-hairline bg-surface-container-high">
           <div
             className={cn("absolute inset-y-0 left-0", bar.tone === "win" ? "bg-win" : bar.tone === "loss" ? "bg-loss" : "bg-primary")}
             style={{ width: `${Math.max(0, Math.min(100, bar.pct))}%` }}
@@ -788,7 +794,7 @@ function FormIndexCard({ formIndex, benchmark = null }: { formIndex: number | nu
         <div className={cn(valueClass(), "min-w-0 truncate")}><NumberPop>{formIndex === null ? "x" : formIndex.toFixed(1)}</NumberPop></div>
       </div>
       <div className="relative mt-1.5">
-        <div className="relative h-[17px] overflow-hidden rounded-md border border-outline-variant bg-surface-container-high">
+        <div className="relative h-[17px] overflow-hidden rounded-md border border-hairline bg-surface-container-high">
           <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, backgroundColor: tier.color }} />
           <span className="absolute inset-y-0 left-1.5 z-10 flex items-center text-[10px] font-semibold text-on-surface">{tier.label}</span>
         </div>
@@ -804,7 +810,7 @@ function MetricRow({ label, value, sign, noBorder = false, noBorderDesktop = fal
   return (
     // `noBorderDesktop`: keep the divider in the single mobile column, drop it for
     // the top-right cell of the two-column desktop grid.
-    <div className={cn("flex items-center justify-between gap-4 border-t border-outline-variant py-2.5 first:border-t-0", noBorder && "border-t-0", noBorderDesktop && "md:border-t-0")}>
+    <div className={cn("flex items-center justify-between gap-4 border-t border-divider py-2.5 first:border-t-0", noBorder && "border-t-0", noBorderDesktop && "md:border-t-0")}>
 
       <span className="text-[12px] text-on-surface-variant">{label}</span>
       <span className={cn("text-right font-mono text-[13px] font-semibold tabular text-on-surface", tone)}><NumberPop>{value}</NumberPop></span>
@@ -913,7 +919,7 @@ function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "relative flex overflow-x-auto rounded-[16px] border border-outline-variant bg-surface-container-low [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "relative flex overflow-x-auto rounded-[16px] border border-hairline bg-surface-container-low [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         dense ? "gap-0.5 p-0.5" : "gap-1 p-1",
         className,
       )}
@@ -1034,7 +1040,7 @@ function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank:
       </button>
       <div
         className={cn(
-          "absolute right-0 top-[calc(100%+8px)] w-[min(340px,calc(100vw-32px))] rounded-xl border border-outline-variant bg-surface-container-high p-3 text-left text-on-surface backdrop-blur-md transition-all duration-200 ease-m3-emphasized-decel",
+          "absolute right-0 top-[calc(100%+8px)] w-[min(340px,calc(100vw-32px))] rounded-xl border border-hairline bg-surface-container-high p-3 text-left text-on-surface backdrop-blur-md transition-all duration-200 ease-m3-emphasized-decel",
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
         )}
       >
@@ -1050,7 +1056,7 @@ function StrengthRatingBadge({ stats, rank }: { stats: PlayerProfileStats; rank:
                 "rounded-[10px] border px-2.5 py-2",
                 b === band
                   ? "border-[color:var(--rating-badge-hue)]/65 bg-[color:var(--rating-badge-hue)]/12 text-on-surface"
-                  : "border-outline-variant bg-surface-container-low text-on-surface-variant",
+                  : "border-hairline bg-surface-container-low text-on-surface-variant",
               )}
             >
               <div className="flex items-center justify-between gap-3">
@@ -1104,7 +1110,7 @@ function PlayerSwitcher({ roster }: { roster: { rid: string; name: string }[] })
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-9 items-center gap-2 rounded-[12px] border border-outline-variant bg-surface-container-low px-3.5 text-[12.5px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface"
+        className="inline-flex h-9 items-center gap-2 rounded-[12px] border border-hairline bg-surface-container-low px-3.5 text-[12.5px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface"
       >
         <Search className="size-3.5" />
         Другой игрок
@@ -1118,7 +1124,7 @@ function PlayerSwitcher({ roster }: { roster: { rid: string; name: string }[] })
         )}
       >
         <div className="min-h-0 overflow-hidden rounded-xl shadow-e3">
-          <div className="rounded-xl border border-outline-variant bg-surface-container-high p-2">
+          <div className="rounded-xl border border-hairline bg-surface-container-high p-2">
             <label className="flex h-9 items-center gap-2 rounded-[10px] bg-surface-container-low px-3">
               <Search className="size-3.5 text-on-surface-variant" />
               <input
@@ -1168,7 +1174,7 @@ function HeroPhotoCard({ model, stats, seasonId, className }: { model: PlayerPro
       <div
         className={cn(
           "absolute inset-0 overflow-hidden rounded-xl bg-card",
-          avatar ? "bg-cover bg-center" : "border border-outline-variant",
+          avatar ? "bg-cover bg-center" : "border border-hairline",
         )}
         style={avatar ? avatarBackgroundStyle(avatar) : undefined}
       >
@@ -1381,7 +1387,7 @@ function InfoPopover({
       </button>
       <div
         className={cn(
-          "rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-lg shadow-black/25 transition-all duration-300 ease-m3-emphasized-decel",
+          "rounded-lg border border-hairline bg-popover p-4 text-popover-foreground shadow-lg shadow-black/25 transition-all duration-300 ease-m3-emphasized-decel",
           mobileSafe
             // Height cap keeps the sheet clear of the chrome it now sits under:
             // 115px of stuck header + filter bar on top, 76px of tabbar below.
@@ -1399,7 +1405,7 @@ function InfoPopover({
         {/* Diamond pointer toward the (i) trigger, same look as the stage-9 tooltip. */}
         <span
           className={cn(
-            "absolute size-2 rotate-45 border-border bg-popover",
+            "absolute size-2 rotate-45 border-hairline bg-popover",
             mobileSafe && "hidden md:block",
             inline ? "left-3" : "right-3",
             placement === "up" ? "bottom-[-4px] border-b border-r" : "top-[-4px] border-l border-t",
@@ -1409,7 +1415,7 @@ function InfoPopover({
           {items.map((it) => {
             const active = it.match ? it.match(stats) : null;
             return (
-              <div key={it.label} className="border-t border-outline-variant pt-3 first:border-t-0 first:pt-0">
+              <div key={it.label} className="border-t border-divider pt-3 first:border-t-0 first:pt-0">
                 <div className="text-[14px] font-semibold text-on-surface">{it.label}</div>
                 <div className="mt-1 text-[13px] leading-snug text-on-surface-variant">{it.desc}</div>
                 <ul className="mt-2 flex flex-col gap-1 text-[13px] leading-snug">
@@ -1754,6 +1760,7 @@ function ChartPanel({ active, chartType, setChartType }: { active: PlayerProfile
       </div>
       <div className="mt-3">
         <PlayerProfileChart type={chartType} data={chartData} />
+        <MedianCaption type={chartType} benchmarks={active.benchmarks} />
       </div>
     </div>
   );
@@ -1818,7 +1825,7 @@ function WinRing({ pct, color, small = false }: { pct: number | null; color: str
 
 function MobileOppTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-outline-variant bg-surface-container-high px-2 py-1.5 text-center">
+    <div className="rounded-md border border-hairline bg-surface-container-high px-2 py-1.5 text-center">
       <div className="text-[10px] leading-tight text-on-surface-variant">{label}</div>
       <div className="mt-0.5 font-mono text-[12.5px] font-semibold tabular">{value}</div>
     </div>
@@ -1830,7 +1837,7 @@ function MobileOpponentCard({ o, onOpen, lastMet }: { o: PlayerOpponentStats; on
     <button
       type="button"
       onClick={() => onOpen(o.opponentRid)}
-      className="flex w-full flex-col rounded-lg border border-outline-variant bg-surface-container-low p-3 text-left transition-colors hover:bg-surface-container"
+      className="flex w-full flex-col rounded-lg border border-hairline bg-surface-container-low p-3 text-left transition-colors hover:bg-surface-container"
     >
       <div className="flex items-center gap-3">
         <WinRing pct={o.h2hMatchWinRatePct} color={ringColor(o)} small />
@@ -1839,7 +1846,7 @@ function MobileOpponentCard({ o, onOpen, lastMet }: { o: PlayerOpponentStats; on
           <div className="mt-0.5 font-mono text-[11.5px] tabular text-on-surface-variant">{o.meetingsPlayed} | {o.h2hMatchesWon} - {o.h2hMatchesLost}</div>
         </div>
         {lastMet ? (
-          <span className="shrink-0 self-start rounded-full border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
+          <span className="shrink-0 self-start rounded-full border border-hairline bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
             {fmtDate(lastMet)}
           </span>
         ) : null}
@@ -1857,7 +1864,7 @@ function MobileOpponentCard({ o, onOpen, lastMet }: { o: PlayerOpponentStats; on
 function OpponentRow({ o, onOpen }: { o: PlayerOpponentStats; onOpen: (rid: string) => void }) {
   return (
     <tr
-      className="group cursor-pointer border-t border-outline-variant transition-colors hover:bg-surface-container-low"
+      className="group cursor-pointer border-t border-table-divider transition-colors hover:bg-surface-container-low"
       onClick={() => onOpen(o.opponentRid)}
       tabIndex={0}
       onKeyDown={(e) => {
@@ -1944,7 +1951,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
         )}
         <div className={cn("flex items-center gap-2", !hideModeTabs && "mt-3")}>
           <MatchSearch value={query} onChange={setQuery} className="min-w-0 flex-1" />
-          <span className="flex h-9 shrink-0 items-center rounded-full border border-outline-variant bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
+          <span className="flex h-9 shrink-0 items-center rounded-full border border-hairline bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
             {(mode === "career" ? active.h2h.career : active.h2h.scoped).length}
           </span>
         </div>
@@ -1954,7 +1961,7 @@ function OpponentsSection({ active, onOpen, lastMetByRid, mobile = false, hideMo
               key={o.key}
               type="button"
               onClick={() => setSort(o.key)}
-              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-hairline bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
                 aria-hidden
@@ -2199,13 +2206,14 @@ function rateProfileMatch(m: MatchListItem): MatchRating {
   if (lostFirstTwo && total >= 4) return { label: "Камбэк", className: "border-primary/30 bg-primary/15 text-primary" };
   if (m.isDeciderMatch) return { label: "Решающий", className: "border-tertiary/30 bg-tertiary/15 text-tertiary" };
   if (closeGames >= 2 || (total >= 4 && avgMargin <= 4)) return { label: "Плотный", className: "border-secondary/30 bg-secondary/15 text-secondary" };
-  if (Math.min(m.gamesFor, m.gamesAgainst) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
-  return { label: "Ровный", className: "border-outline-variant bg-surface-container-highest text-on-surface-variant" };
+  if (Math.min(m.gamesFor, m.gamesAgainst) === 0 && avgMargin >= 5) return { label: "Разгром", className: "border-hairline bg-surface-container-highest text-on-surface-variant" };
+  return { label: "Ровный", className: "border-hairline bg-surface-container-highest text-on-surface-variant" };
 }
 
 function MatchRatingBadge({ rating }: { rating: MatchRating }) {
   return (
-    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold", rating.className)}>
+    // Same as the Stages badge: the tone border is dropped on dark, kept on light.
+    <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold dark:border-transparent", rating.className)}>
       {rating.label}
     </span>
   );
@@ -2238,7 +2246,7 @@ function MatchSearch({ value, onChange, className, variant = "pill" }: { value: 
     );
   }
   return (
-    <div className={cn("flex h-9 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-high px-3 focus-within:border-primary/60", className)}>
+    <div className={cn("flex h-9 items-center gap-2 rounded-full border border-hairline bg-surface-container-high px-3 focus-within:border-primary/60", className)}>
       <Search className="size-4 shrink-0 text-on-surface-variant" />
       <input
         value={value}
@@ -2279,7 +2287,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
     // the league roster (deleted profile); that id has no page, so skip the link.
     const linkable = !/^\d+$/.test(m.opponentRid);
     return (
-      <div key={m.id} className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+      <div key={m.id} className="rounded-lg border border-hairline bg-surface-container-low p-3">
         <div className="flex items-start justify-between gap-3">
           {/* left: score + time / retired badge, then opponent name */}
           <div className="min-w-0">
@@ -2331,7 +2339,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
       <div className={cardClass("p-4")}>
         <div className="mb-3 flex items-center gap-2">
           <MatchSearch value={query} onChange={setQuery} className="min-w-0 flex-1" />
-          <span className="flex h-9 shrink-0 items-center rounded-full border border-outline-variant bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
+          <span className="flex h-9 shrink-0 items-center rounded-full border border-hairline bg-surface-container-high px-3 font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
             {active.matches.length}
           </span>
         </div>
@@ -2341,7 +2349,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
               key={o.key}
               type="button"
               onClick={() => setFilter(o.key)}
-              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
+              className="relative h-9 shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-hairline bg-surface-container-high p-1 text-[12px] font-medium transition-colors hover:text-on-surface"
             >
               <span
                 aria-hidden
@@ -2376,7 +2384,7 @@ function MatchHistorySection({ active, mobile = false }: { active: PlayerProfile
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="w-full rounded-lg border border-outline-variant bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
+                  className="w-full rounded-lg border border-hairline bg-surface-container-high py-[13px] text-[12.5px] font-semibold text-primary transition-colors duration-200 ease-m3-standard hover:bg-surface-container-highest"
                 >
                   {expanded ? "Свернуть" : `Показать ещё ${mRest.length}`}
                 </button>
@@ -2492,7 +2500,7 @@ function ResultsTimeline({ matches, longestWinStreak, className }: { matches: Ma
   const cell = "grid size-7 shrink-0 place-items-center rounded-full font-sans text-[11px] font-semibold";
   return (
     <div className={cn("min-w-0", className)}>
-      <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3">
+      <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-hairline bg-card px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <div className="flex min-w-0 items-baseline gap-2">
             <h2 className="text-[13px] font-semibold tracking-tight">Форма</h2>
@@ -2548,7 +2556,7 @@ function StrengthHistoryCard({
   const peak = Math.max(...history.map((p) => p.rating));
   return (
     <div className={cn("min-w-0", className)}>
-      <div className={cn("min-w-0 overflow-hidden rounded-lg border border-outline-variant bg-card px-4 py-3", fill && "flex h-full flex-col")}>
+      <div className={cn("min-w-0 overflow-hidden rounded-lg border border-hairline bg-card px-4 py-3", fill && "flex h-full flex-col")}>
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
             <Snail className="size-3.5 text-[color:var(--rating-badge-hue)]" />
@@ -2742,6 +2750,7 @@ export function PlayerProfileView({ model }: { model: PlayerProfileModel }) {
                   <SegmentedControl items={chartItems} value={chartType} onChange={setChartType} dense />
                 </div>
                 <PlayerProfileChart type={chartType} data={chartPayload(active)} height={260} />
+                <MedianCaption type={chartType} benchmarks={active.benchmarks} />
                 <p className="mt-3 text-[11.5px] text-on-surface-variant">{active.context.description}</p>
               </div>
             </div>
