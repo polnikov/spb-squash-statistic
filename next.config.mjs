@@ -28,6 +28,14 @@ const makeConfig = (phase) => ({
     return [
       { source: "/u/script.js", destination: `${umami}/script.js` },
       { source: "/u/api/send", destination: `${umami}/api/send` },
+      // Запись сессий. `recorder.js` перед стартом читает настройки записи
+      // (включена ли, sample rate, маскирование) с /api/websites/:id/recorder,
+      // так что одного скрипта мало: без этого роута он молча ничего не пишет.
+      { source: "/u/recorder.js", destination: `${umami}/recorder.js` },
+      {
+        source: "/u/api/websites/:websiteId/recorder",
+        destination: `${umami}/api/websites/:websiteId/recorder`,
+      },
     ];
   },
   webpack(config, { dev }) {

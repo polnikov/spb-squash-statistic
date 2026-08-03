@@ -16,14 +16,27 @@ export function UmamiScript() {
   if (!websiteId) return null;
 
   return (
-    <script
-      defer
-      src="/u/script.js"
-      data-website-id={websiteId}
-      data-host-url="/u"
-      // Hash carries the profile tab / filter state; keeping it out leaves one
-      // row per page instead of one per UI state.
-      data-exclude-hash="true"
-    />
+    <>
+      <script
+        defer
+        src="/u/script.js"
+        data-website-id={websiteId}
+        data-host-url="/u"
+        // Hash carries the profile tab / filter state; keeping it out leaves one
+        // row per page instead of one per UI state.
+        data-exclude-hash="true"
+      />
+      {/*
+       * Session recording (replay + heatmaps). Same website id and same `/u`
+       * proxy as the tracker - the vendor snippet points straight at the Umami
+       * host, which the site CSP ('self' only) blocks.
+       *
+       * Whether anything is actually recorded is decided server-side: the
+       * script fetches /api/websites/:id/recorder and stays idle unless
+       * recording is enabled for the site in the Umami dashboard. Sample rate
+       * and masking live there too, so this tag needs no flag of its own.
+       */}
+      <script defer src="/u/recorder.js" data-website-id={websiteId} data-host-url="/u" />
+    </>
   );
 }
