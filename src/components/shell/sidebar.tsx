@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { BookOpen } from "lucide-react";
 import { NAV_ITEMS, isActive } from "./nav-items";
+import { LogoCredit } from "@/components/shell/logo-credit";
 import { cn } from "@/lib/utils";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,10 +16,7 @@ export function Sidebar({ seasons }: { seasons: string[] }) {
   return (
     <div className="fixed inset-x-0 top-0 z-40 hidden justify-center md:flex">
       <header className="flex h-16 w-full max-w-[1280px] items-center rounded-b-lg border-x border-b border-border bg-[var(--chrome-bg)] px-6 shadow-[0_4px_18px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-        <div className="flex min-w-0 items-center gap-3">
-        <Image src="/icons/icon-192x192.png" alt="SPB Squash Statistics" width={36} height={36} className="size-9 shrink-0 rounded-md object-contain" />
-        <div className="font-brand whitespace-nowrap text-[25px] font-semibold tracking-tight">SPB Squash Statistics</div>
-        </div>
+        <LogoCredit variant="desktop" />
 
         <nav className="ml-auto flex min-w-0 items-center gap-1">
           {NAV_ITEMS.map((item) => {
