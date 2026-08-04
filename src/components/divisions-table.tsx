@@ -262,7 +262,7 @@ function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMed
       {/* Accordion expand (Iron Man): grid-template-rows 0fr -> 1fr. */}
       <div className={cn("grid transition-[grid-template-rows] duration-300 ease-m3-emphasized-decel", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className="min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-1.5 border-t border-divider px-3 py-2.5">
+          <div className="flex flex-col gap-1.5 px-3 py-2.5">
             <StatTile label="Матчи" record={`${fmtNum(r.matches)} | ${fmtNum(r.wins)}-${fmtNum(r.matches - r.wins)}`} wrLabel="Match WR" wr={pctText(r.wins, r.matches)} wrPct={pct(r.wins, r.matches)} median={medians.match} />
             <StatTile label="Геймы" record={`${fmtNum(r.games)} | ${fmtNum(r.gamesWon)}-${fmtNum(gamesLost)}`} wrLabel="Game WR" wr={pctText(r.gamesWon, r.games)} wrPct={pct(r.gamesWon, r.games)} median={medians.game} />
             <StatTile label="Розыгрыши" record={`${fmtNum(r.balls)} | ${fmtNum(r.ballsWon)}-${fmtNum(ballsLost)}`} wrLabel="Rally WR" wr={pctText(r.ballsWon, r.balls)} wrPct={pct(r.ballsWon, r.balls)} median={medians.rally} />
