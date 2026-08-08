@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Th } from "@/components/ui/table-header";
-import { TOTAL_STAGES, type DivisionSummary, type RatingRow } from "@/lib/league";
+import { divisionFormat, type DivisionSummary, type RatingRow } from "@/lib/league";
 import { fmtCourt, fmtNum, splitPlayerName, playerHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -225,7 +225,7 @@ function StatTile({ label, record, wrLabel, wr, wrPct, median: medianPct = null 
   );
 }
 
-function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMedians }) {
+function DivisionMobileCard({ r, medians, totalStages }: { r: RatingRow; medians: DivisionMedians; totalStages: number }) {
   const [open, setOpen] = React.useState(false);
   const gamesLost = r.games - r.gamesWon;
   const ballsLost = r.balls - r.ballsWon;
@@ -251,7 +251,7 @@ function DivisionMobileCard({ r, medians }: { r: RatingRow; medians: DivisionMed
             </Link>
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <MetaBadge label="Этапы" value={`${r.stages}/${TOTAL_STAGES}`} />
+            <MetaBadge label="Этапы" value={`${r.stages}/${totalStages}`} />
             <MetaBadge label="Форма" value={formIndex(r).toFixed(1)} color={formIndexColor(formIndex(r))} />
             <MetaBadge label="Время" value={fmtCourt(r.court)} />
           </div>
@@ -307,9 +307,11 @@ function DivisionSearch({ value, onChange, className }: { value: string; onChang
 export function DivisionsTable({
   rowsByDivision,
   summaries,
+  season,
 }: {
   rowsByDivision: Record<1 | 2 | 3, RatingRow[]>;
   summaries: Record<1 | 2 | 3, DivisionSummary>;
+  season: string;
 }) {
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
   const [sort, setSort] = React.useState<SortState>({ key: "points", dir: "desc" });
@@ -378,6 +380,8 @@ export function DivisionsTable({
   // Second tile row: leader cards (form, court, rally WR, decider matches).
   const secondRowTiles = [highlightTiles[1], highlightTiles[2], highlightTiles[4], highlightTiles[5]];
   const summary = summaries[div];
+  // Stage count is per division from 26/27: division 1 plays three, 2 and 3 nine.
+  const totalStages = divisionFormat(season, div).totalStages;
   const setSortKey = React.useCallback((key: SortKey) => {
     setSort((current) => {
       if (current.key === key) {
@@ -422,7 +426,7 @@ export function DivisionsTable({
       ) : (
       <>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
-        <MetricTile label="Сыграно этапов" value={summary.stagesDone} unit={`из ${TOTAL_STAGES}`} />
+        <MetricTile label="Сыграно этапов" value={summary.stagesDone} unit={`из ${totalStages}`} />
         <MetricTile label="Активных игроков" value={summary.activePlayers} unit="чел" />
         <MetricTile label="Сыграно матчей" value={summary.matches} />
         <MetricTile label="Время на корте" value={Math.round(summary.court / 60)} unit="часов" />
@@ -467,7 +471,7 @@ export function DivisionsTable({
       <div className="overflow-hidden md:hidden">
         <SlideSwitch tabKey={div} direction={slideDir} className="flex flex-col gap-2">
           {filteredRows.slice(0, mobileCount).map((r) => (
-            <DivisionMobileCard key={r.playerIdx} r={r} medians={medians} />
+            <DivisionMobileCard key={r.playerIdx} r={r} medians={medians} totalStages={totalStages} />
           ))}
           {filteredRows.length === 0 ? (
             <div className="rounded-2xl border border-hairline bg-card px-5 py-8 text-center text-sm text-muted-foreground">
@@ -539,7 +543,7 @@ export function DivisionsTable({
                 </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4"><span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.points)}</span></td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[11px] text-center md:w-auto md:px-4">
-                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.stages}/{TOTAL_STAGES}</span>
+                  <span className="font-mono text-sm tabular text-on-surface-variant">{r.stages}/{totalStages}</span>
                 </td>
                 <td className="w-px whitespace-nowrap px-2.5 py-[9px] text-center md:w-auto md:px-4">
                   <span className="font-mono text-sm tabular text-on-surface-variant">{fmtNum(r.matches)} | {fmtNum(r.wins)}-{fmtNum(r.matches - r.wins)}</span>

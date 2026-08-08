@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown, Cross, Search, Swords, X } from "lucide-react";
 import {
   FINAL_STAGE,
+  divisionFormat,
   getStageResults,
   wentToDecider,
   type DivisionScope,
@@ -136,7 +137,7 @@ function MatchDetailAccordion({ durationMin, detail }: { durationMin: number; de
 }
 
 export function StageSummary({ league }: { league: League }) {
-  const stages = React.useMemo(() => league.stages.map((s) => s.no), [league]);
+  const allStages = React.useMemo(() => league.stages.map((s) => s.no), [league]);
   const stageDivisions = React.useMemo(() => {
     const map = new Map<number, DivisionScope[]>();
     for (const r of league.results) {
@@ -152,6 +153,15 @@ export function StageSummary({ league }: { league: League }) {
 
   // Latest stage with loaded results in the current division, or 1 before it has
   // played any. Drives the default tab and follows division / season changes.
+  // Stage slots the selected division actually plays: from 26/27 division 1 runs
+  // three of them while 2 and 3 keep all nine.
+  const format = divisionFormat(league.season, scope === "all" ? null : scope);
+  const stages = React.useMemo(
+    () => allStages.filter((n) => n <= format.totalStages),
+    [allStages, format.totalStages],
+  );
+  const shortStrip = stages.length < allStages.length;
+
   const lastLoadedStage = React.useMemo(() => {
     const played = stages.filter((n) => stageDivisions.get(n)?.includes(scope));
     return played.length ? Math.max(...played) : 1;
@@ -252,8 +262,17 @@ export function StageSummary({ league }: { league: League }) {
         ))}
       </div>
 
-      {/* stage tabs (horizontal scroll) */}
-      <div className="relative grid grid-cols-9 gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1 md:flex-1">
+      {/* stage tabs. A short strip is not stretched: it keeps its own width and
+          hugs the left edge on mobile, the right one on desktop. */}
+      <div
+        className={cn(
+          "relative gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1",
+          // Short strip sizes itself off the buttons; the full one keeps equal
+          // grid columns so nine tabs share the row evenly.
+          shortStrip ? "mr-auto flex w-fit md:ml-auto md:mr-0 md:flex-none" : "grid md:flex-1",
+        )}
+        style={shortStrip ? undefined : { gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))` }}
+      >
         <TabSliderPill ind={stageSlider.ind} />
         {stages.map((n) => {
           const hasData = stageDivisions.get(n)?.includes(scope);
@@ -264,6 +283,8 @@ export function StageSummary({ league }: { league: League }) {
               onClick={() => selectStage(n)}
               className={cn(
                 "relative z-10 h-9 min-w-0 rounded-[12px] px-0 font-mono text-[12px] font-semibold tabular transition-colors duration-200 ease-m3-standard md:px-3",
+                // Flex layout gives no implicit width, so a bare digit needs one.
+                shortStrip && "w-9 md:w-auto",
                 hasData ? "text-primary" : "text-on-surface-variant",
               )}
             >
@@ -299,7 +320,7 @@ export function StageSummary({ league }: { league: League }) {
 
       {selectedStageDate ? (
         <div className="-my-2.5 pr-4 text-right text-[11.5px] text-on-surface-variant md:my-0">
-          {stage === FINAL_STAGE ? `Финал ${fmtDate(selectedStageDate)}` : fmtDate(selectedStageDate)}
+          {format.hasFinal && stage === FINAL_STAGE ? `Финал ${fmtDate(selectedStageDate)}` : fmtDate(selectedStageDate)}
         </div>
       ) : null}
 

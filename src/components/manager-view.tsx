@@ -34,6 +34,8 @@ import {
   X,
 } from "lucide-react";
 import {
+  TOTAL_STAGES,
+  divisionFormat,
   getPlayersOverview,
   type League,
 } from "@/lib/league";
@@ -245,7 +247,8 @@ function PlayersManager({ league }: { league: League }) {
       ]),
     ),
   );
-  // League points (best-7 stage sum) per player, shown in the "Очки" column.
+  // League points per player for the "Очки" column. How many stages are summed
+  // is the division's format, not a fixed seven (see `divisionFormat`).
   const pointsByRid = React.useMemo(
     () => new Map(getPlayersOverview(league).map((o) => [o.rid, o.points])),
     [league],
@@ -2098,10 +2101,16 @@ function DigestManager({ league }: { league: League }) {
     [league],
   );
   const [division, setDivision] = React.useState<1 | 2 | 3>(1);
+  // Stage list follows the division's format: from 26/27 division 1 plays three.
+  const stages = React.useMemo(
+    () => Array.from({ length: divisionFormat(league.season, division).totalStages }, (_, i) => i + 1),
+    [league.season, division],
+  );
+  const shortStrip = stages.length < TOTAL_STAGES;
   const lastLoaded = React.useMemo(() => {
-    const played = Array.from({ length: 9 }, (_, i) => i + 1).filter((n) => stageHasData(division, n));
+    const played = stages.filter((n) => stageHasData(division, n));
     return played.length ? Math.max(...played) : 1;
-  }, [division, stageHasData]);
+  }, [division, stageHasData, stages]);
   const [stage, setStage] = React.useState(lastLoaded);
   React.useEffect(() => setStage(lastLoaded), [lastLoaded]);
 
@@ -2138,15 +2147,22 @@ function DigestManager({ league }: { league: League }) {
             </button>
           ))}
         </div>
-        <div className="relative grid flex-1 grid-cols-9 gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1">
+        <div
+          className={cn(
+            "relative gap-1 rounded-[16px] border border-hairline bg-surface-container-low p-1",
+            shortStrip ? "ml-auto flex" : "grid flex-1",
+          )}
+          style={shortStrip ? undefined : { gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))` }}
+        >
           <TabSliderPill ind={stageSlider.ind} />
-          {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
+          {stages.map((n) => (
             <button
               key={n}
               ref={stageSlider.setRef(String(n))}
               onClick={() => setStage(n)}
               className={cn(
                 "relative z-10 h-9 rounded-[12px] font-mono text-[12px] font-semibold tabular transition-colors duration-200 ease-m3-standard",
+                shortStrip && "px-4",
                 stageHasData(division, n) ? "text-primary" : "text-on-surface-variant",
               )}
             >
@@ -2711,11 +2727,11 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-semibold text-on-surface">Дивизион {d.division}</div>
                 <span className="font-mono text-[12.5px] font-semibold tabular text-on-surface-variant">
-                  {d.played}/{ops.totalStages}
+                  {d.played}/{d.totalStages}
                 </span>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${(d.played / ops.totalStages) * 100}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${(d.played / d.totalStages) * 100}%` }} />
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-on-surface-variant">
                 <span>{d.players} {pluralRu(d.players, ["игрок", "игрока", "игроков"])}</span>
@@ -2753,11 +2769,16 @@ function OperationsManager({ league, duplicatesCount }: { league: League; duplic
                     {row.date ? fmtDate(row.date) : "—"}
                   </td>
                   {divisions.map((d) => {
+                    // Absent key = the stage is past this division's format, which
+                    // is not the same as "scheduled but not loaded yet".
+                    const inFormat = d in row.loaded;
                     const loaded = row.loaded[d];
                     const overdue = missingSet.has(`${d}:${row.stage}`);
                     return (
                       <td key={d} className="px-4 py-2.5 text-center">
-                        {loaded ? (
+                        {!inFormat ? (
+                          <span title="Этапа нет в формате дивизиона" className="text-on-surface-variant/25">·</span>
+                        ) : loaded ? (
                           <Check className="mx-auto size-4 text-win" />
                         ) : overdue ? (
                           <span className="inline-flex items-center justify-center rounded-full bg-loss/15 px-2 py-0.5 text-[10.5px] font-semibold text-loss">просрочен</span>

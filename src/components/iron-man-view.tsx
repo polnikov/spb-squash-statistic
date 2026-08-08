@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { Th } from "@/components/ui/table-header";
 import {
   getIronManLongMatches,
+  isShortFormatSeason,
   getIronManRows,
   getIronManSummary,
   type DivisionScope,
@@ -196,6 +197,7 @@ function ironSortValue(row: IronRow, key: IronSortKey) {
 export function IronManView({ league }: { league: League }) {
   const [scope, setScope] = React.useState<DivisionScope>("all");
   const [half, setHalf] = React.useState<1 | 2>(1);
+  const splitIntoHalves = !isShortFormatSeason(league.season);
   const slideDir = useSlideDirection((scope === "all" ? 0 : scope) * 10 + half);
   const [open, setOpen] = React.useState<Record<number, boolean>>({});
   const [expanded, setExpanded] = React.useState(false);
@@ -253,7 +255,9 @@ export function IronManView({ league }: { league: League }) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2.5 md:flex-row md:items-start md:gap-3">
         <DivisionTabs scope={scope} setScope={setScope} />
-        <PartTabs half={half} setHalf={setHalf} />
+        {/* From 26/27 court time runs through the whole season, so there are no
+            halves to pick between and the tabs would select nothing. */}
+        {splitIntoHalves ? <PartTabs half={half} setHalf={setHalf} /> : null}
         {rows.length > 0 ? (
           <SearchBox value={query} onChange={setQuery} className="w-full md:ml-auto md:w-[240px]" />
         ) : null}

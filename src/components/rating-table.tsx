@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, Star } from "lucide-react";
-import type { RatingRow } from "@/lib/league";
+import { TOTAL_STAGES, divisionFormat, type RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { RatingPinButton } from "@/components/rating-pin-button";
@@ -156,20 +156,22 @@ export function RatingTable({
   rowsByScope,
   rowsByDivisionStage,
   stagesByDivision,
-  totalStages,
-  ratingMaxStage,
+  season,
 }: {
   rowsByScope: Record<RatingDivision, RatingRow[]>;
   rowsByDivisionStage: Record<RatingDivision, Record<number, RatingRow[]>>;
   stagesByDivision: Record<RatingDivision, number>;
-  totalStages: number;
-  ratingMaxStage: number;
+  season: string;
 }) {
   const [scope, setScope] = React.useState<RatingDivision>(1);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  // Stage count is per division from 26/27, so the strip and the "x/N" column
+  // both follow the selected division rather than one season-wide number.
+  const { totalStages, ratingMaxStage } = divisionFormat(season, scope);
   const initialStage = React.useCallback(
-    (division: RatingDivision) => Math.max(1, Math.min(stagesByDivision[division], ratingMaxStage)),
-    [ratingMaxStage, stagesByDivision],
+    (division: RatingDivision) =>
+      Math.max(1, Math.min(stagesByDivision[division], divisionFormat(season, division).ratingMaxStage)),
+    [season, stagesByDivision],
   );
   const [selectedStageByDivision, setSelectedStageByDivision] = React.useState<Record<RatingDivision, number>>(() => ({
     1: initialStage(1),
@@ -264,7 +266,9 @@ export function RatingTable({
             ratingMaxStage={ratingMaxStage}
             onSelect={selectStage}
             variant="strip"
-            className="flex-1"
+            // A three-stage strip would look stretched across the row, so it
+            // keeps its natural width and sits against the right edge instead.
+            className={totalStages < TOTAL_STAGES ? "ml-auto shrink-0" : "flex-1"}
           />
         ) : null}
       </div>

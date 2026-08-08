@@ -1,5 +1,6 @@
 import {
   TOTAL_STAGES,
+  divisionFormat,
   getRatingRows,
   getStageResults,
   wentToDecider,
@@ -99,14 +100,19 @@ export function buildSeasonSummary(
   const stageSet = new Set<number>();
   for (const d of divisions) for (const s of playedStages(league, d)) stageSet.add(s);
   const stagesDone = stageSet.size;
-  const seasonFinished = divisions.length > 0 && divisions.every((d) => playedStages(league, d).has(TOTAL_STAGES));
+  // Each division finishes on its own last stage: from 26/27 division 1 ends at
+  // stage 3 while 2 and 3 still run to 9.
+  const divisionTotal = (d: 1 | 2 | 3) => divisionFormat(league.season, d).totalStages;
+  const seasonFinished =
+    divisions.length > 0 && divisions.every((d) => playedStages(league, d).has(divisionTotal(d)));
+  const totalStages = divisions.length ? Math.max(...divisions.map(divisionTotal)) : TOTAL_STAGES;
 
   const empty: SeasonSummary = {
     season: league.season,
     scope,
     hasData: rows.length > 0,
     stagesDone,
-    totalStages: TOTAL_STAGES,
+    totalStages,
     seasonFinished,
     metrics: { players: 0, matches: 0, totalTime: 0, decider: 0 },
     podium: [],

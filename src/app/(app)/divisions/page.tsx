@@ -28,7 +28,7 @@ export default async function DivisionsPage({ searchParams }: { searchParams?: {
     <div className="flex flex-col gap-3 md:gap-8">
       <PageHeader title="Дивизионы" icon={Layers} />
       <Suspense fallback={null}>
-        <DivisionsTable rowsByDivision={rowsByDivision} summaries={summaries} />
+        <DivisionsTable rowsByDivision={rowsByDivision} summaries={summaries} season={season} />
       </Suspense>
     </div>
   );

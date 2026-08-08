@@ -1,4 +1,4 @@
-import { TOTAL_STAGES, type League } from "@/lib/league";
+import { TOTAL_STAGES, divisionFormat, type League } from "@/lib/league";
 import { isFakeRankedinId, isLiveRankedinId } from "@/lib/rankedin-id";
 
 /**
@@ -11,6 +11,8 @@ export type OpsDivisionStatus = {
   division: number;
   players: number;
   played: number;
+  /** Stages this division plays in this season; formats differ from 26/27. */
+  totalStages: number;
   remaining: number;
   /** First unplayed stage number, or null when the division is complete. */
   nextStage: number | null;
@@ -100,6 +102,9 @@ export function buildManagerOps(league: League): ManagerOps {
     const loaded: Record<number, boolean> = {};
     let overdue = false;
     for (const division of divisions) {
+      // A stage past the division's format is not a gap: from 26/27 division 1
+      // plays three, so stages 4..9 simply do not exist for it.
+      if (stage > divisionFormat(league.season, division).totalStages) continue;
       const isLoaded = playedByDiv.get(division)?.has(stage) ?? false;
       loaded[division] = isLoaded;
       if (!isLoaded && date && date < today) {
@@ -150,8 +155,9 @@ export function buildManagerOps(league: League): ManagerOps {
 
   const divisionStatus: OpsDivisionStatus[] = divisions.map((division) => {
     const played = playedByDiv.get(division) ?? new Set<number>();
+    const divisionStages = divisionFormat(league.season, division).totalStages;
     let nextStage: number | null = null;
-    for (let n = 1; n <= TOTAL_STAGES; n++) {
+    for (let n = 1; n <= divisionStages; n++) {
       if (!played.has(n)) {
         nextStage = n;
         break;
@@ -162,7 +168,8 @@ export function buildManagerOps(league: League): ManagerOps {
       division,
       players: league.rosters[division]?.length ?? 0,
       played: played.size,
-      remaining: Math.max(0, TOTAL_STAGES - played.size),
+      totalStages: divisionStages,
+      remaining: Math.max(0, divisionStages - played.size),
       nextStage,
       nextDate,
       nextOverdue: Boolean(nextDate && nextDate < today),

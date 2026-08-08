@@ -1,4 +1,4 @@
-import { RATING_MAX_STAGE, getRatingRows, getRatingRowsThroughStage, type RatingRow } from "@/lib/league";
+import { divisionFormat, getRatingRows, getRatingRowsThroughStage, type RatingRow } from "@/lib/league";
 import { loadLeague, resolveSeason } from "@/lib/db/league";
 import { RatingTable } from "@/components/rating-table";
 import { RatingMobile } from "@/components/mobile/rating-mobile";
@@ -11,12 +11,18 @@ function latestStageForDivision(results: { div: number; stage: number }[], divis
     .reduce((latest, r) => Math.max(latest, r.stage), 0);
 }
 
+/** One standings snapshot per counting stage, per division: the stage strip
+ *  flips between them without a refetch. Divisions can run different formats
+ *  from 26/27, so the depth of each map follows its own division. */
 function buildRowsByStage(league: Awaited<ReturnType<typeof loadLeague>>): RatingRowsByDivisionStage {
-  return {
-    1: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 1, i + 1)])),
-    2: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 2, i + 1)])),
-    3: Object.fromEntries(Array.from({ length: RATING_MAX_STAGE }, (_, i) => [i + 1, getRatingRowsThroughStage(league, 3, i + 1)])),
-  } as RatingRowsByDivisionStage;
+  const forDivision = (division: 1 | 2 | 3) =>
+    Object.fromEntries(
+      Array.from({ length: divisionFormat(league.season, division).ratingMaxStage }, (_, i) => [
+        i + 1,
+        getRatingRowsThroughStage(league, division, i + 1),
+      ]),
+    );
+  return { 1: forDivision(1), 2: forDivision(2), 3: forDivision(3) } as RatingRowsByDivisionStage;
 }
 
 export default async function RatingPage({ searchParams }: { searchParams?: { season?: string } }) {
@@ -43,8 +49,7 @@ export default async function RatingPage({ searchParams }: { searchParams?: { se
           listByDivision={listByDivision}
           rowsByDivisionStage={rowsByDivisionStage}
           stagesByDivision={stagesByDivision}
-          totalStages={league.stages.length}
-          ratingMaxStage={RATING_MAX_STAGE}
+          season={league.season}
         />
       </div>
 
@@ -54,8 +59,7 @@ export default async function RatingPage({ searchParams }: { searchParams?: { se
           rowsByScope={listByDivision}
           rowsByDivisionStage={rowsByDivisionStage}
           stagesByDivision={stagesByDivision}
-          totalStages={league.stages.length}
-          ratingMaxStage={RATING_MAX_STAGE}
+          season={league.season}
         />
       </div>
     </>

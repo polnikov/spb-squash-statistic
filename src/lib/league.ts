@@ -91,11 +91,53 @@ export function currentSeasonOf(leagues: Record<string, League>): string | null 
   return Object.keys(leagues).sort((a, b) => seasonStart(b) - seasonStart(a))[0] ?? null;
 }
 
-/** Stages in a season: 1..8 count toward the rating, 9 is the final. */
+/**
+ * Stage slots a season can hold. The widest format defines the grid: the DB
+ * fills 1..TOTAL_STAGES for every season, and a division on a shorter format
+ * simply leaves the tail empty. Per-division limits come from `divisionFormat`,
+ * never from this constant.
+ */
 export const TOTAL_STAGES = 9;
 export const FINAL_STAGE = TOTAL_STAGES;
 export const RATING_MAX_STAGE = 8;
 const RATING_BEST_STAGE_COUNT = 7;
+
+/** First season (by leading year) where division 1 switched to three stages. */
+export const SHORT_FORMAT_SEASON_START = 26;
+
+export type DivisionFormat = {
+  /** Stages the division plays, final included when the format has one. */
+  totalStages: number;
+  /** Last stage that counts toward the standings. */
+  ratingMaxStage: number;
+  /** How many of the counting stages are summed; the rest are dropped. */
+  bestStageCount: number;
+  /** Last stage is a final that sits outside the standings. */
+  hasFinal: boolean;
+};
+
+/** Nine stages, 1..8 counting, best seven summed, 9th an out-of-standings final. */
+const CLASSIC_FORMAT: DivisionFormat = { totalStages: 9, ratingMaxStage: 8, bestStageCount: 7, hasFinal: true };
+/** Three stages, all counting, all summed: no drop, no separate final. */
+const SHORT_FORMAT: DivisionFormat = { totalStages: 3, ratingMaxStage: 3, bestStageCount: 3, hasFinal: false };
+
+/**
+ * Format a division plays in a season. From 26/27 division 1 plays three
+ * stages and the winner is the sum of all three; divisions 2 and 3 keep the
+ * nine-stage format, so the answer depends on both season and division.
+ *
+ * A missing division means "across divisions", which has no single format -
+ * the classic one is the safe answer there, since it is the wider grid.
+ */
+export function divisionFormat(season: string, division?: number | null): DivisionFormat {
+  const short = seasonStart(season) >= SHORT_FORMAT_SEASON_START && division === 1;
+  return short ? SHORT_FORMAT : CLASSIC_FORMAT;
+}
+
+/** True once the season runs the short division-1 format. */
+export function isShortFormatSeason(season: string): boolean {
+  return seasonStart(season) >= SHORT_FORMAT_SEASON_START;
+}
 
 export type Aggregate = {
   points: number;
@@ -112,12 +154,12 @@ export type Aggregate = {
   deciderMatches: number;
 };
 
-function ratingPoints(results: MockResult[]): number {
+function ratingPoints(results: MockResult[], format: DivisionFormat): number {
   return results
-    .filter((r) => r.stage <= RATING_MAX_STAGE)
+    .filter((r) => r.stage <= format.ratingMaxStage)
     .map((r) => r.points)
     .sort((a, b) => b - a)
-    .slice(0, RATING_BEST_STAGE_COUNT)
+    .slice(0, format.bestStageCount)
     .reduce((sum, points) => sum + points, 0);
 }
 
@@ -149,7 +191,7 @@ export function aggregate(
     stagesSet.add(r.stage);
     if (a.best == null || r.place < a.best) a.best = r.place;
   }
-  a.points = ratingPoints(rs);
+  a.points = ratingPoints(rs, divisionFormat(league.season, division));
   a.stages = stagesSet.size;
   a.deciderMatches = league.matches.filter(
     (m) =>
@@ -253,6 +295,7 @@ function getRatingRowsAtStage(
   maxStage: number,
 ): RatingRow[] {
   const division = scope === "all" ? undefined : scope;
+  const format = divisionFormat(league.season, division);
   const inScope =
     scope === "all"
       ? league.players
@@ -279,9 +322,9 @@ function getRatingRowsAtStage(
         ballsWon: a.wonB,
         court: a.court,
         points: a.points,
-        // Actual stages played, final (9th) included. Only points/standings stop
-        // at RATING_MAX_STAGE; the count reflects real participation.
-        stages: playerStagesParticipated(league, p.idx, division, TOTAL_STAGES),
+        // Actual stages played, final included. Only points/standings stop at
+        // the format's ratingMaxStage; the count reflects real participation.
+        stages: playerStagesParticipated(league, p.idx, division, format.totalStages),
         best: a.best,
         deciderMatches: a.deciderMatches,
       };
@@ -303,10 +346,11 @@ function getDivisionStandingPlacesAtStage(
 }
 
 export function getRatingRows(league: League, scope: DivisionScope): RatingRow[] {
+  const { ratingMaxStage } = divisionFormat(league.season, scope === "all" ? null : scope);
   const latestStage =
     league.results
-      .filter((r) => r.stage <= RATING_MAX_STAGE && (scope === "all" ? true : r.div === scope))
-      .reduce((latest, r) => Math.max(latest, r.stage), 0) || RATING_MAX_STAGE;
+      .filter((r) => r.stage <= ratingMaxStage && (scope === "all" ? true : r.div === scope))
+      .reduce((latest, r) => Math.max(latest, r.stage), 0) || ratingMaxStage;
 
   return getRatingRowsThroughStage(league, scope, latestStage);
 }
@@ -316,7 +360,8 @@ export function getRatingRowsThroughStage(
   scope: DivisionScope,
   maxStage: number,
 ): RatingRow[] {
-  const stage = Math.min(Math.max(1, Math.trunc(maxStage)), RATING_MAX_STAGE);
+  const { ratingMaxStage } = divisionFormat(league.season, scope === "all" ? null : scope);
+  const stage = Math.min(Math.max(1, Math.trunc(maxStage)), ratingMaxStage);
   const rows = getRatingRowsAtStage(league, scope, stage);
   if (scope === "all" || stage <= 1) return rows;
 
@@ -372,14 +417,22 @@ export type IronLongMatch = {
   retired?: boolean;
 };
 
-/** Stage bounds for an Iron Man half. The 9th stage never counts (see RATING_MAX_STAGE). */
-function ironStageRange(half: 1 | 2): (stage: number) => boolean {
+/**
+ * Stages an Iron Man table covers.
+ *
+ * Up to 25/26 the season is split in halves (1-4 and 5-8) and the 9th stage,
+ * the final, never counts. From 26/27 court time runs straight through the
+ * whole season, final included, so `half` no longer selects anything and the
+ * UI hides its tabs.
+ */
+function ironStageRange(season: string, half: 1 | 2): (stage: number) => boolean {
+  if (isShortFormatSeason(season)) return (stage: number) => stage >= 1 && stage <= TOTAL_STAGES;
   const [lo, hi] = half === 1 ? [1, 4] : [5, RATING_MAX_STAGE];
   return (stage: number) => stage >= lo && stage <= hi && stage <= RATING_MAX_STAGE;
 }
 
 export function getIronManRows(league: League, half: 1 | 2, scope: DivisionScope = "all"): IronRow[] {
-  const inRange = ironStageRange(half);
+  const inRange = ironStageRange(league.season, half);
   const inScope = (div: number) => scope === "all" || div === scope;
   const acc = new Map<
     number,
@@ -436,7 +489,7 @@ export function getIronManRows(league: League, half: 1 | 2, scope: DivisionScope
 
 /** Tiles for the Iron Man header — recomputed per scope+half. */
 export function getIronManSummary(league: League, half: 1 | 2, scope: DivisionScope = "all"): IronManSummary {
-  const inRange = ironStageRange(half);
+  const inRange = ironStageRange(league.season, half);
   const inScope = (div: number) => scope === "all" || div === scope;
   let totalCourt = 0;
   const players = new Set<number>();
@@ -462,7 +515,7 @@ export function getIronManLongMatches(
   scope: DivisionScope = "all",
   minMin = 45,
 ): IronLongMatch[] {
-  const inRange = ironStageRange(half);
+  const inRange = ironStageRange(league.season, half);
   const inScope = (div: number) => scope === "all" || div === scope;
   return league.matches
     .filter((m) => inRange(m.stage) && inScope(m.division) && m.durationMin >= minMin)

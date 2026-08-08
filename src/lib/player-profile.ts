@@ -1,6 +1,6 @@
 import {
-  TOTAL_STAGES,
   currentSeasonOf,
+  divisionFormat,
   getRatingRows,
   seasonStart,
   type League,
@@ -873,7 +873,8 @@ function buildStageSeries(
   matches: PlayerMatchRecord[],
   results: PlayerResultRecord[],
 ): PlayerProfileSeriesPoint[] {
-  return Array.from({ length: TOTAL_STAGES }, (_, i) => {
+  // Stage axis stops at the division's own last stage; formats differ from 26/27.
+  return Array.from({ length: divisionFormat(seasonId, divisionId).totalStages }, (_, i) => {
     const stage = i + 1;
     const stageMatches = matches.filter(
       (m) => m.seasonId === seasonId && m.stage === stage && (!divisionId || m.divisionId === divisionId),

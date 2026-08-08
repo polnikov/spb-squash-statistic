@@ -21,7 +21,7 @@ import {
   type PlayerOpponentStatsRow,
   type PlayerStatsAggregateRow,
 } from "@/lib/db/schema";
-import { currentSeasonOf, seasonStart, type League } from "@/lib/league";
+import { currentSeasonOf, divisionFormat, seasonStart, type League } from "@/lib/league";
 import {
   BENCHMARK_METRICS,
   resolveBenchmark,
@@ -209,8 +209,6 @@ function mapOpponent(
     isHighLoad: r.isHighLoadOpponent,
   };
 }
-
-const STAGE_COUNT = 9;
 
 export async function buildPlayerProfileModelFromDb(
   leagues: Record<string, League>,
@@ -409,7 +407,10 @@ export async function buildPlayerProfileModelFromDb(
     const source = division == null ? stageBySeason.get(label) ?? [] : stageDivByKey.get(`${label}::${division}`) ?? [];
     const byStage = new Map(source.map((s) => [s.stage, s.stats]));
     const league = leagues[label];
-    return Array.from({ length: STAGE_COUNT }, (_, i) => {
+    // Series runs to the division's own last stage: a division-1 season from
+    // 26/27 has three, so a nine-point axis would trail six empty stages.
+    const stageCount = divisionFormat(label, division).totalStages;
+    return Array.from({ length: stageCount }, (_, i) => {
       const stage = i + 1;
       const stats = byStage.get(stage) ?? emptyStats();
       return { ...stats, orderIndex: stage, label: `Этап ${stage}`, seasonId: label, stage, date: league?.stages.find((s) => s.no === stage)?.date };

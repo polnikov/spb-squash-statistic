@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Star } from "lucide-react";
-import type { RatingRow } from "@/lib/league";
+import { TOTAL_STAGES, divisionFormat, type RatingRow } from "@/lib/league";
 import { cn } from "@/lib/utils";
 import { RatingPinButton } from "@/components/rating-pin-button";
 import { RatingPinnedBar, findRowNode } from "@/components/rating-pinned-bar";
@@ -40,19 +40,20 @@ export function RatingMobile({
   listByDivision,
   rowsByDivisionStage,
   stagesByDivision,
-  totalStages,
-  ratingMaxStage,
+  season,
 }: {
   listByDivision: Record<1 | 2 | 3, RatingRow[]>;
   rowsByDivisionStage: Record<1 | 2 | 3, Record<number, RatingRow[]>>;
   stagesByDivision: Record<1 | 2 | 3, number>;
-  totalStages: number;
-  ratingMaxStage: number;
+  season: string;
 }) {
   const [div, setDiv] = React.useState<1 | 2 | 3>(1);
+  // Per-division format: from 26/27 division 1 runs three stages, 2 and 3 nine.
+  const { totalStages, ratingMaxStage } = divisionFormat(season, div);
   const initialStage = React.useCallback(
-    (division: 1 | 2 | 3) => Math.max(1, Math.min(stagesByDivision[division], ratingMaxStage)),
-    [ratingMaxStage, stagesByDivision],
+    (division: 1 | 2 | 3) =>
+      Math.max(1, Math.min(stagesByDivision[division], divisionFormat(season, division).ratingMaxStage)),
+    [season, stagesByDivision],
   );
   const [selectedStageByDivision, setSelectedStageByDivision] = React.useState<Record<1 | 2 | 3, number>>(() => ({
     1: initialStage(1),
@@ -117,15 +118,17 @@ export function RatingMobile({
         </div>
       ) : (
         <>
-          {/* stage progress: 9 circles, played stages accent-filled; full width */}
+          {/* stage progress: one circle per stage, played ones accent-filled */}
           <RatingStageSelector
             totalStages={totalStages}
             playedStage={stagesByDivision[div]}
             selectedStage={selectedStage}
             ratingMaxStage={ratingMaxStage}
             onSelect={selectStage}
-            className="mb-4"
-            itemClassName="aspect-square flex-1"
+            // A short strip keeps its natural size against the left edge; the
+            // nine-stage one still spreads over the full width.
+            className={cn("mb-4", totalStages < TOTAL_STAGES && "mr-auto w-fit")}
+            itemClassName={totalStages < TOTAL_STAGES ? "aspect-square size-9 shrink-0" : "aspect-square flex-1"}
           />
 
           {/* search: after the stage element, full width */}
