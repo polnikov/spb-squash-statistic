@@ -2559,7 +2559,7 @@ function StrengthHistoryCard({
       <div className={cn("min-w-0 overflow-hidden rounded-lg border border-hairline bg-card px-4 py-3", fill && "flex h-full flex-col")}>
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight">
-            <Snail className="size-3.5 text-[color:var(--rating-badge-hue)]" />
+            <Snail className="size-3.5 text-[color:var(--rating-badge-icon)]" />
             Рейтинг силы
           </h2>
           <span className="inline-flex shrink-0 items-baseline gap-2 font-mono text-[11px] text-on-surface-variant">

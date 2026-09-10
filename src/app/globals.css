@@ -292,6 +292,13 @@
   --rating-badge-bg: rgba(223, 247, 165, 0.92);
   --rating-badge-border: rgba(223, 247, 165, 0.45);
   --rating-badge-ink: #26320b;
+  /* Bare snail icon on a card surface (no lime chip behind it): pale lime sinks
+     into light paper, so on light the icon borrows the chip ink. */
+  --rating-badge-icon: #dff7a5;
+}
+
+.light {
+  --rating-badge-icon: #26320b;
 }
 
 /* Light theme - "warm paper": soft off-white surfaces, deep-pink accent so
