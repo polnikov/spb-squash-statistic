@@ -6,6 +6,7 @@ import { BookOpen } from "lucide-react";
 import { NAV_ITEMS, isActive } from "./nav-items";
 import { LogoCredit } from "@/components/shell/logo-credit";
 import { cn } from "@/lib/utils";
+import { OH_MY_SQUASH_URL, OhMySquashIcon } from "@/components/shell/oh-my-squash-icon";
 import { SeasonSwitcher } from "@/components/shell/season-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -56,6 +57,17 @@ export function Sidebar({ seasons }: { seasons: string[] }) {
         </nav>
 
         <div className="ml-6 flex items-center gap-1">
+          {/* Sister app. Icon-only, same 32px slot as the theme switch. */}
+          <a
+            href={OH_MY_SQUASH_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="OhMySquash - твой сквош в цифрах"
+            title="Твой сквош в цифрах"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+          >
+            <OhMySquashIcon className="size-5" />
+          </a>
           <ThemeToggle />
           <SeasonSwitcher variant="header" seasons={seasons} />
         </div>

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, CircleEllipsis, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { OH_MY_SQUASH_URL, OhMySquashIcon } from "@/components/shell/oh-my-squash-icon";
 
 /** Close the panel when a pointer lands outside `ref`. */
 function useClickOutside(ref: React.RefObject<HTMLElement | null>, onOutside: () => void) {
@@ -27,8 +28,9 @@ const rowClass = "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm tr
 
 /**
  * Mobile overflow menu: a CircleEllipsis trigger that morphs (cult-ui popover-form
- * style) into a small card holding the metrics handbook link and the theme
- * switch. No title. Sits left of the Season dropdown in the mobile header.
+ * style) into a small card holding the metrics handbook link, the theme switch
+ * and a link out to the OhMySquash app. No title. Sits left of the Season
+ * dropdown in the mobile header.
  */
 export function MobileMenu() {
   const [open, setOpen] = React.useState(false);
@@ -98,6 +100,20 @@ export function MobileMenu() {
                 </button>
               );
             })}
+
+            <div className="my-1 h-px bg-border" />
+
+            {/* Sister app. Opens in a new tab: it is a separate site. */}
+            <a
+              href={OH_MY_SQUASH_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className={cn(rowClass, "text-on-surface hover:bg-surface-container-high")}
+            >
+              <OhMySquashIcon className="size-[18px] shrink-0" />
+              OhMySquash
+            </a>
           </motion.div>
         ) : null}
       </AnimatePresence>
