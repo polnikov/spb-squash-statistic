@@ -117,6 +117,54 @@ d("recalc (DB, transactional rollback)", () => {
     expect(career!.skillIndexStatus).toBe(getSkillIndexStatus(expectedSkill));
   });
 
+  it("recalcPlayer computes streaks over the canonical chronology", async () => {
+    // Regression: sorting matches by stages.date left same-date rows (a whole
+    // stage shares one date) in arbitrary order, so streak runs were split or
+    // merged at random and the longest-streak badge diverged from the Форма
+    // strip. The stored streak must match the run over the canonical order
+    // (season start year → stage number → match id) exactly.
+    const idRows = await db.execute(sql`
+      select distinct player_id as id from player_stats_aggregate
+      where scope = 'career' and matches_played > 0
+      order by player_id limit 5
+    `);
+    const ids = (idRows as unknown as { id: number }[]).map((r) => r.id);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
+      let longest = -1;
+      try {
+        await db.transaction(async (tx) => {
+          await recalcPlayer(id, tx);
+          const [career] = await tx
+            .select({ longestWinStreak: playerStatsAggregate.longestWinStreak })
+            .from(playerStatsAggregate)
+            .where(and(eq(playerStatsAggregate.playerId, id), eq(playerStatsAggregate.scope, "career")));
+          longest = career.longestWinStreak;
+          throw ROLLBACK;
+        });
+      } catch (e) {
+        if (e !== ROLLBACK) throw e;
+      }
+
+      const rows = await db.execute(sql`
+        select m.games_a as "gamesA", m.games_b as "gamesB", m.player_a_id as "a"
+        from matches m
+        join stages s on s.id = m.stage_id
+        join seasons se on se.id = s.season_id
+        where m.player_a_id = ${id} or m.player_b_id = ${id}
+        order by se.start_year, s.number, m.id
+      `);
+      let run = 0;
+      let best = 0;
+      for (const r of rows as unknown as { gamesA: number; gamesB: number; a: number }[]) {
+        const isWin = r.a === id ? r.gamesA > r.gamesB : r.gamesB > r.gamesA;
+        run = isWin ? run + 1 : 0;
+        if (run > best) best = run;
+      }
+      expect(longest).toBe(best);
+    }
+  });
+
   it("recalcStageDivision regenerates match_games", async () => {
     const [m] = await db
       .select({ stageId: matches.stageId, division: matches.division })

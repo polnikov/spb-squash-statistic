@@ -15,6 +15,7 @@ import {
   playerMetricSeriesPoint,
   playerOpponentStats,
   playerStatsAggregate,
+  seasons,
   stages,
   type NewLeagueMetricBenchmark,
   type NewMatchGame,
@@ -60,6 +61,8 @@ type JoinedMatch = {
   stageNumber: number;
   division: number;
   seasonId: number;
+  /** Season start year — the first key of the canonical match chronology. */
+  seasonStart: number;
   date: string | null;
 };
 
@@ -77,10 +80,12 @@ function loadPlayerMatches(database: Database, playerId: number) {
       stageNumber: stages.number,
       division: matches.division,
       seasonId: stages.seasonId,
+      seasonStart: seasons.startYear,
       date: stages.date,
     })
     .from(matches)
     .innerJoin(stages, eq(matches.stageId, stages.id))
+    .innerJoin(seasons, eq(stages.seasonId, seasons.id))
     .where(or(eq(matches.playerAId, playerId), eq(matches.playerBId, playerId)));
 }
 
@@ -418,8 +423,14 @@ export async function recalcPlayer(
   database: Database = defaultDb,
 ): Promise<void> {
   const rows = (await loadPlayerMatches(database, playerId)) as JoinedMatch[];
-  // chronological order drives streaks / last-N / trend metrics
-  rows.sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+  // Chronological order drives streaks / last-N / trend metrics. The canonical
+  // deterministic chronology (§11) is season start year → stage number → match
+  // id — the same order the profile timeline and the strength-rating engine
+  // use. (Sorting by `stages.date` left every same-date group — one date covers
+  // a whole stage of ~200 matches — in arbitrary row order, so streak runs got
+  // split or merged at random and the longest-streak badge diverged from the
+  // Форма strip.)
+  rows.sort((a, b) => a.seasonStart - b.seasonStart || a.stageNumber - b.stageNumber || a.id - b.id);
 
   const bySeason = new Map<number, JoinedMatch[]>();
   const byStage = new Map<number, JoinedMatch[]>();
@@ -500,9 +511,8 @@ export async function recalcPlayer(
     }
     for (const [opponentId, oppRows] of byOpponent) {
       const persp = oppRows.map((r) => toPerspective(r, playerId));
-      const desc = [...oppRows]
-        .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
-        .map((r) => toPerspective(r, playerId));
+      // oppRows follows the canonical oldest-first order; reversed = newest-first.
+      const desc = [...oppRows].reverse().map((r) => toPerspective(r, playerId));
       oppOut.push(opponentRow(playerId, opponentId, persp, desc, scope, seasonId, division));
     }
   };

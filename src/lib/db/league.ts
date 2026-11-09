@@ -106,7 +106,11 @@ export async function loadLeague(
     .from(matches)
     .innerJoin(stages, eq(matches.stageId, stages.id))
     .where(eq(stages.seasonId, seasonId))
-    .orderBy(asc(stages.number), asc(matches.division));
+    // Canonical match chronology (§11): stage number → match id. The id
+    // tiebreak keeps the loaded order (and thus the Форма strip built from it)
+    // deterministic and aligned with recalc/strength-rating; without it the
+    // in-stage order was whatever the row sort produced.
+    .orderBy(asc(stages.number), asc(matches.id));
 
   // stage numbers/dates (shaped into the fixed 1..9 list below)
   const stageRowsQ = database
